@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import ReactDOM from 'react-dom'
 import '@/styles/index.css'
 import Routes from '@/app/routes'
