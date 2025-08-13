@@ -9,7 +9,11 @@ import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { useSignup } from '@/hooks/useSignup';
 import { useWhatsAppValidation } from '@/hooks/useWhatsAppValidation';
+import { useAssinatura, Plano } from '@/hooks/useAssinatura';
 import { formatCPF, validateCPF, isCPFFormatComplete } from '@/utils/cpfUtils';
+
+// AI dev note: Modal de cadastro integrado com sistema de assinaturas
+// Mostra planos dinâmicos do banco e cria trial de 7 dias automaticamente
 
 interface SignupModalProps {
   isOpen: boolean;
@@ -28,6 +32,7 @@ interface FormData {
   cpf: string;
   tipo_conta: AccountType;
   nome_empresa?: string;
+  plano_codigo?: string;
 }
 
 interface FormErrors {
@@ -43,22 +48,7 @@ interface ValidationStates {
   cpf: 'idle' | 'valid' | 'invalid';
 }
 
-const PLANS = {
-  INDIVIDUAL: {
-    id: 1,
-    nome: 'Guido Individual',
-    preco: 'R$ 59,90/mês',
-    limite: '1 corretor',
-    features: ['IA para atendimento', 'CRM básico', 'WhatsApp integrado']
-  },
-  IMOBILIARIA: {
-    id: 2,
-    nome: 'Guido Imobiliária', 
-    preco: 'R$ 199,90/mês',
-    limite: 'Até 10 corretores',
-    features: ['Múltiplos corretores', 'CRM avançado', 'Relatórios completos']
-  }
-};
+// Planos são carregados dinamicamente via useAssinatura
 
 export const SignupModal: React.FC<SignupModalProps> = ({ 
   isOpen, 
@@ -68,7 +58,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
   defaultPlan = 'INDIVIDUAL' 
 }) => {
   const [step, setStep] = useState<'plan' | 'form' | 'loading' | 'success' | 'error'>('plan');
-  const [selectedPlan, setSelectedPlan] = useState<AccountType>('INDIVIDUAL');
+  const [selectedPlan, setSelectedPlan] = useState<Plano | null>(null);
   const [formData, setFormData] = useState<FormData>({
     nome: '',
     email: '',
@@ -84,19 +74,26 @@ export const SignupModal: React.FC<SignupModalProps> = ({
   
   const { signup, isLoading, error: signupError, clearError } = useSignup();
   const { validateWhatsApp } = useWhatsAppValidation();
+  const { planos, isLoading: planosLoading } = useAssinatura();
 
   // Reset form when modal opens
   React.useEffect(() => {
     if (isOpen) {
       const initialStep = skipPlanSelection ? 'form' : 'plan';
       setStep(initialStep);
-      setSelectedPlan(defaultPlan);
+      
+      // Selecionar plano padrão baseado no tipo
+      const planosPorTipo = planos.filter(p => p.tipo_plano === defaultPlan);
+      const planoDefault = planosPorTipo[0] || null;
+      setSelectedPlan(planoDefault);
+      
       setFormData({
         nome: '',
         email: '',
         whatsapp: '',
         cpf: '',
-        tipo_conta: defaultPlan
+        tipo_conta: defaultPlan,
+        plano_codigo: planoDefault?.codigo_externo
       });
       setErrors({});
       setValidationStates({
@@ -105,7 +102,22 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       });
       clearError();
     }
-  }, [isOpen, skipPlanSelection, defaultPlan, clearError]);
+  }, [isOpen, skipPlanSelection, defaultPlan, clearError, planos]);
+
+  // Função para obter planos por tipo
+  const getPlanosPorTipo = (tipo: AccountType): Plano[] => {
+    return planos.filter(plano => plano.tipo_plano === tipo);
+  };
+
+  // Função para formatar preço
+  const formatarPreco = (preco: number, ciclo: 'mensal' | 'anual' = 'mensal'): string => {
+    const valor = ciclo === 'anual' ? preco * 12 : preco;
+    const formatted = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor);
+    return `${formatted}/${ciclo === 'anual' ? 'ano' : 'mês'}`;
+  };
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -222,9 +234,14 @@ export const SignupModal: React.FC<SignupModalProps> = ({
     }
   };
 
-  const handlePlanSelect = (plan: AccountType) => {
-    setSelectedPlan(plan);
-    setFormData(prev => ({ ...prev, tipo_conta: plan }));
+  const handlePlanSelect = (plano: Plano) => {
+    console.log('[SignupModal] Plano selecionado:', plano.nome_plano);
+    setSelectedPlan(plano);
+    setFormData(prev => ({ 
+      ...prev, 
+      tipo_conta: plano.tipo_plano,
+      plano_codigo: plano.codigo_externo
+    }));
     setStep('form');
   };
 
@@ -347,67 +364,144 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                     exit="exit"
                     className="space-y-4"
                   >
-                    {/* Individual Plan */}
-                    <div
-                      onClick={() => handlePlanSelect('INDIVIDUAL')}
-                      className={cn(
-                        "p-4 rounded-xl border-2 cursor-pointer transition-all",
-                        "hover:border-primary/50 hover:bg-primary/5",
-                        selectedPlan === 'INDIVIDUAL' && "border-primary bg-primary/10"
-                      )}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <UserCheck className="w-5 h-5 text-primary" />
+                    {planosLoading ? (
+                      <div className="space-y-4">
+                        {[1, 2].map((i) => (
+                          <div key={i} className="p-4 rounded-xl border-2 animate-pulse">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 bg-gray-200 rounded-lg"></div>
+                                <div>
+                                  <div className="h-4 w-24 bg-gray-200 rounded mb-1"></div>
+                                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                                </div>
+                              </div>
+                              <div className="h-6 w-20 bg-gray-200 rounded"></div>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-foreground">{PLANS.INDIVIDUAL.nome}</h3>
-                            <p className="text-sm text-muted-foreground">{PLANS.INDIVIDUAL.limite}</p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">{PLANS.INDIVIDUAL.preco}</Badge>
-                      </div>
-                      <ul className="mt-3 space-y-1">
-                        {PLANS.INDIVIDUAL.features.map((feature, idx) => (
-                          <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
-                            <CheckCircle className="w-3 h-3 text-primary" />
-                            {feature}
-                          </li>
                         ))}
-                      </ul>
-                    </div>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Planos Individuais */}
+                        {getPlanosPorTipo('INDIVIDUAL').map((plano) => (
+                          <div
+                            key={plano.id}
+                            onClick={() => handlePlanSelect(plano)}
+                            className={cn(
+                              "p-4 rounded-xl border-2 cursor-pointer transition-all",
+                              "hover:border-primary/50 hover:bg-primary/5",
+                              selectedPlan?.id === plano.id && "border-primary bg-primary/10"
+                            )}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-primary/10">
+                                  <UserCheck className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-foreground">{plano.nome_plano}</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {plano.limite_corretores === 1 ? '1 corretor' : `Até ${plano.limite_corretores} corretores`}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant="secondary">{formatarPreco(plano.preco_mensal)}</Badge>
+                                {plano.preco_anual && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    ou {formatarPreco(plano.preco_anual / 12, 'anual')}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {plano.descricao && (
+                              <p className="text-sm text-muted-foreground mt-2">{plano.descricao}</p>
+                            )}
+                            
+                            {/* Features do plano */}
+                            {plano.recursos && Object.keys(plano.recursos).length > 0 && (
+                              <ul className="mt-3 space-y-1">
+                                {Object.entries(plano.recursos).map(([key, value], idx) => {
+                                  if (value === true) {
+                                    const featureName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    return (
+                                      <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                                        <CheckCircle className="w-3 h-3 text-primary" />
+                                        {featureName}
+                                      </li>
+                                    );
+                                  }
+                                  return null;
+                                })}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
 
-                    {/* Imobiliária Plan */}
-                    <div
-                      onClick={() => handlePlanSelect('IMOBILIARIA')}
-                      className={cn(
-                        "p-4 rounded-xl border-2 cursor-pointer transition-all",
-                        "hover:border-primary/50 hover:bg-primary/5",
-                        selectedPlan === 'IMOBILIARIA' && "border-primary bg-primary/10"
-                      )}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <Building className="w-5 h-5 text-primary" />
+                        {/* Planos para Imobiliária */}
+                        {getPlanosPorTipo('IMOBILIARIA').map((plano) => (
+                          <div
+                            key={plano.id}
+                            onClick={() => handlePlanSelect(plano)}
+                            className={cn(
+                              "p-4 rounded-xl border-2 cursor-pointer transition-all",
+                              "hover:border-primary/50 hover:bg-primary/5",
+                              selectedPlan?.id === plano.id && "border-primary bg-primary/10"
+                            )}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-primary/10">
+                                  <Building className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-foreground">{plano.nome_plano}</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {plano.limite_corretores === 999999 
+                                      ? 'Corretores ilimitados' 
+                                      : `Até ${plano.limite_corretores} corretores`
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant="secondary">{formatarPreco(plano.preco_mensal)}</Badge>
+                                <p className="text-xs text-muted-foreground mt-1">por corretor</p>
+                                {plano.preco_anual && (
+                                  <p className="text-xs text-muted-foreground">
+                                    ou {formatarPreco(plano.preco_anual / 12, 'anual')}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {plano.descricao && (
+                              <p className="text-sm text-muted-foreground mt-2">{plano.descricao}</p>
+                            )}
+                            
+                            {/* Features do plano */}
+                            {plano.recursos && Object.keys(plano.recursos).length > 0 && (
+                              <ul className="mt-3 space-y-1">
+                                {Object.entries(plano.recursos).map(([key, value], idx) => {
+                                  if (value === true) {
+                                    const featureName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                    return (
+                                      <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                                        <CheckCircle className="w-3 h-3 text-primary" />
+                                        {featureName}
+                                      </li>
+                                    );
+                                  }
+                                  return null;
+                                })}
+                              </ul>
+                            )}
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-foreground">{PLANS.IMOBILIARIA.nome}</h3>
-                            <p className="text-sm text-muted-foreground">{PLANS.IMOBILIARIA.limite}</p>
-                          </div>
-                        </div>
-                        <Badge variant="secondary">{PLANS.IMOBILIARIA.preco}</Badge>
-                      </div>
-                      <ul className="mt-3 space-y-1">
-                        {PLANS.IMOBILIARIA.features.map((feature, idx) => (
-                          <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
-                            <CheckCircle className="w-3 h-3 text-primary" />
-                            {feature}
-                          </li>
                         ))}
-                      </ul>
-                    </div>
+                      </>
+                    )}
                   </motion.div>
                 )}
 
@@ -430,7 +524,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                         <Building className="w-4 h-4 text-primary" />
                       )}
                       <span className="text-sm font-medium text-primary">
-                        {PLANS[formData.tipo_conta].nome} - 7 dias grátis
+                        {selectedPlan?.nome_plano || 'Plano selecionado'} - 7 dias grátis
                       </span>
                       <button
                         type="button"
