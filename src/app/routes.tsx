@@ -6,11 +6,23 @@ import Landing from '@/pages/Landing'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 
-// Simple auth state placeholder (Fase 5 vai trocar por sessão Supabase)
-const useAuth = () => ({ isAuthenticated: false })
+// Auth
+import { AuthProvider, useAuth } from '@/hooks/useAuth'
 
 function PrivateRoute({ children, ...rest }: { children: React.ReactNode; [k: string]: unknown }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Verificando autenticação...</p>
+        </div>
+      </div>
+    )
+  }
+  
   return (
     <Route
       {...rest}
@@ -25,7 +37,7 @@ function PrivateRoute({ children, ...rest }: { children: React.ReactNode; [k: st
   )
 }
 
-export default function Routes() {
+function AppRoutes() {
   return (
     <BrowserRouter>
       <Switch>
@@ -37,6 +49,14 @@ export default function Routes() {
         <Redirect to="/" />
       </Switch>
     </BrowserRouter>
+  )
+}
+
+export default function Routes() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   )
 }
 

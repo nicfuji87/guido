@@ -278,8 +278,8 @@ export const AssinaturaStatus: React.FC<AssinaturaStatusProps> = ({
       <ModalUpgrade
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
-        onSuccess={(result) => {
-          console.log('[AssinaturaStatus] Upgrade realizado com sucesso:', result);
+        onSuccess={(_result) => {
+          // Upgrade realizado com sucesso
           // Refresh da página ou callback específico se necessário
         }}
         planoSugerido={null} // Deixar o usuário escolher

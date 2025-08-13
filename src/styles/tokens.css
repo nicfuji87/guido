@@ -3,6 +3,16 @@
   --color-accent: #00F6FF;
   --color-text: #F0F6FC;
   --gradient-main: linear-gradient(135deg, #0D1117 0%, #00F6FF 100%);
+  
+  /* Sidebar específicos */
+  --sidebar-bg: linear-gradient(180deg, #111827 0%, #1f2937 50%, #111827 100%);
+  --sidebar-border: rgba(75, 85, 99, 0.5);
+  --sidebar-item-hover: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
+  --sidebar-item-active: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+  --sidebar-badge: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+  --sidebar-text: #d1d5db;
+  --sidebar-text-hover: #ffffff;
+  --sidebar-text-active: #60a5fa;
 }
 
 

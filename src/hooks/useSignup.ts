@@ -43,16 +43,15 @@ export const useSignup = () => {
     setIsLoading(true);
     setError(null);
 
-    const logPrefix = '[useSignup]';
-    console.log(`${logPrefix} Iniciando cadastro para:`, { 
-      email: data.email, 
-      tipo_conta: data.tipo_conta,
-      nome: data.nome 
-    });
+    // console.log('[useSignup] Iniciando cadastro para:', { 
+    //   email: data.email, 
+    //   tipo_conta: data.tipo_conta,
+    //   nome: data.nome 
+    // });
 
     try {
       // === PASSO 1: VALIDAÇÕES INICIAIS ===
-      console.log(`${logPrefix} Passo 1: Validações iniciais`);
+      // console.log(`${logPrefix} Passo 1: Validações iniciais`);
       
       // 1.1 Validar email único
       const { data: existingEmail, error: emailCheckError } = await supabase
@@ -62,12 +61,12 @@ export const useSignup = () => {
         .single();
 
       if (emailCheckError && emailCheckError.code !== 'PGRST116') {
-        console.error(`${logPrefix} Erro ao verificar email:`, emailCheckError);
+        // console.error(`${logPrefix} Erro ao verificar email:`, emailCheckError);
         throw new Error('Erro ao verificar email. Tente novamente.');
       }
 
       if (existingEmail) {
-        console.warn(`${logPrefix} Email já cadastrado:`, data.email);
+        // console.warn(`${logPrefix} Email já cadastrado:`, data.email);
         throw new Error('Este email já está cadastrado. Faça login ou use outro email.');
       }
 
@@ -82,12 +81,12 @@ export const useSignup = () => {
         .single();
 
       if (cpfCheckError && cpfCheckError.code !== 'PGRST116') {
-        console.error(`${logPrefix} Erro ao verificar CPF:`, cpfCheckError);
+        // console.error(`${logPrefix} Erro ao verificar CPF:`, cpfCheckError);
         throw new Error('Erro ao verificar CPF. Tente novamente.');
       }
 
       if (existingCPF) {
-        console.warn(`${logPrefix} CPF já cadastrado:`, formattedCPF);
+        // console.warn(`${logPrefix} CPF já cadastrado:`, formattedCPF);
         throw new Error('Este CPF já está cadastrado. Entre em contato se precisar de ajuda.');
       }
 
@@ -99,17 +98,17 @@ export const useSignup = () => {
         .single();
 
       if (whatsappCheckError && whatsappCheckError.code !== 'PGRST116') {
-        console.error(`${logPrefix} Erro ao verificar WhatsApp:`, whatsappCheckError);
+        // console.error(`${logPrefix} Erro ao verificar WhatsApp:`, whatsappCheckError);
         // Não falha aqui, continua processo
       } else if (existingWhatsApp) {
-        console.warn(`${logPrefix} WhatsApp já cadastrado:`, data.whatsapp);
+        // console.warn(`${logPrefix} WhatsApp já cadastrado:`, data.whatsapp);
         throw new Error('Este número do WhatsApp já está cadastrado.');
       }
 
-      console.log(`${logPrefix} ✅ Validações iniciais concluídas`);
+      // console.log(`${logPrefix} ✅ Validações iniciais concluídas`);
 
       // === PASSO 2: BUSCAR PLANO SELECIONADO ===
-      console.log(`${logPrefix} Passo 2: Buscando plano`);
+      // console.log(`${logPrefix} Passo 2: Buscando plano`);
       
       const plano_codigo = data.plano_codigo || (data.tipo_conta === 'INDIVIDUAL' ? 'individual' : 'imobiliaria_basica');
       
@@ -121,14 +120,14 @@ export const useSignup = () => {
         .single();
 
       if (planoError || !planoSelecionado) {
-        console.error(`${logPrefix} Plano não encontrado:`, plano_codigo, planoError);
+        // console.error(`${logPrefix} Plano não encontrado:`, plano_codigo, planoError);
         throw new Error('Plano selecionado não está disponível. Recarregue a página.');
       }
 
-      console.log(`${logPrefix} ✅ Plano encontrado:`, planoSelecionado.nome_plano);
+      // console.log(`${logPrefix} ✅ Plano encontrado:`, planoSelecionado.nome_plano);
 
       // === PASSO 3: PREPARAR DADOS PARA ASAAS (NÃO CRIAR AINDA) ===
-      console.log(`${logPrefix} Passo 3: Preparando dados para Asaas`);
+      // console.log(`${logPrefix} Passo 3: Preparando dados para Asaas`);
       
       const dadosAsaas: DadosAsaas = {
         name: data.nome,
@@ -138,10 +137,10 @@ export const useSignup = () => {
         mobilePhone: data.whatsapp,
       };
 
-      console.log(`${logPrefix} ✅ Dados Asaas preparados (cliente será criado apenas quando pagar)`);
+      // console.log(`${logPrefix} ✅ Dados Asaas preparados (cliente será criado apenas quando pagar)`);
 
       // === PASSO 4: CRIAR CONTA ===
-      console.log(`${logPrefix} Passo 4: Criando conta`);
+      // console.log(`${logPrefix} Passo 4: Criando conta`);
       
       const nomeContaFinal = data.tipo_conta === 'IMOBILIARIA' && data.nome_empresa 
         ? data.nome_empresa.trim() 
@@ -159,14 +158,14 @@ export const useSignup = () => {
         .single();
 
       if (erroNovaConta) {
-        console.error(`${logPrefix} Erro ao criar conta:`, erroNovaConta);
+        // console.error(`${logPrefix} Erro ao criar conta:`, erroNovaConta);
         throw new Error(`Erro ao criar conta: ${erroNovaConta.message}`);
       }
 
-      console.log(`${logPrefix} ✅ Conta criada:`, novaConta.id);
+      // console.log(`${logPrefix} ✅ Conta criada:`, novaConta.id);
 
       // === PASSO 5: CRIAR USUÁRIO LOCAL ===
-      console.log(`${logPrefix} Passo 5: Criando usuário local`);
+      // console.log(`${logPrefix} Passo 5: Criando usuário local`);
       
       const { data: novoUsuario, error: erroNovoUsuario } = await supabase
         .from('usuarios')
@@ -183,14 +182,14 @@ export const useSignup = () => {
         .single();
 
       if (erroNovoUsuario) {
-        console.error(`${logPrefix} Erro ao criar usuário:`, erroNovoUsuario);
+        // console.error(`${logPrefix} Erro ao criar usuário:`, erroNovoUsuario);
         throw new Error(`Erro ao criar usuário: ${erroNovoUsuario.message}`);
       }
 
-      console.log(`${logPrefix} ✅ Usuário criado:`, novoUsuario.id);
+      // console.log(`${logPrefix} ✅ Usuário criado:`, novoUsuario.id);
 
       // === PASSO 6: CRIAR CORRETOR (DONO DA CONTA) ===
-      console.log(`${logPrefix} Passo 6: Criando corretor principal`);
+      // console.log(`${logPrefix} Passo 6: Criando corretor principal`);
       
       const { data: novoCorretor, error: erroNovoCorretor } = await supabase
         .from('corretores')
@@ -207,14 +206,14 @@ export const useSignup = () => {
         .single();
 
       if (erroNovoCorretor) {
-        console.error(`${logPrefix} Erro ao criar corretor:`, erroNovoCorretor);
+        // console.error(`${logPrefix} Erro ao criar corretor:`, erroNovoCorretor);
         throw new Error(`Erro ao criar corretor: ${erroNovoCorretor.message}`);
       }
 
-      console.log(`${logPrefix} ✅ Corretor criado:`, novoCorretor.id);
+      // console.log(`${logPrefix} ✅ Corretor criado:`, novoCorretor.id);
 
       // === PASSO 7: ATUALIZAR CONTA COM ADMIN PRINCIPAL ===
-      console.log(`${logPrefix} Passo 7: Definindo admin principal`);
+      // console.log(`${logPrefix} Passo 7: Definindo admin principal`);
       
       const { error: erroUpdateConta } = await supabase
         .from('contas')
@@ -222,12 +221,12 @@ export const useSignup = () => {
         .eq('id', novaConta.id);
 
       if (erroUpdateConta) {
-        console.error(`${logPrefix} Erro ao definir admin principal:`, erroUpdateConta);
+        // console.error(`${logPrefix} Erro ao definir admin principal:`, erroUpdateConta);
         // Não falha aqui, é complementar
       }
 
       // === PASSO 8: CRIAR ASSINATURA DE TRIAL ===
-      console.log(`${logPrefix} Passo 8: Criando assinatura de trial`);
+      // console.log(`${logPrefix} Passo 8: Criando assinatura de trial`);
       
       const dataInicioTrial = new Date();
       const dataFimTrial = new Date(dataInicioTrial);
@@ -250,11 +249,11 @@ export const useSignup = () => {
         .single();
 
       if (erroNovaAssinatura) {
-        console.error(`${logPrefix} Erro ao criar assinatura:`, erroNovaAssinatura);
+        // console.error(`${logPrefix} Erro ao criar assinatura:`, erroNovaAssinatura);
         throw new Error(`Erro ao criar assinatura: ${erroNovaAssinatura.message}`);
       }
 
-      console.log(`${logPrefix} ✅ Assinatura criada:`, novaAssinatura.id);
+      // console.log(`${logPrefix} ✅ Assinatura criada:`, novaAssinatura.id);
 
       // === SUCESSO TOTAL ===
       const resultado = {
@@ -267,12 +266,12 @@ export const useSignup = () => {
         }
       };
 
-      console.log(`${logPrefix} 🎉 Cadastro concluído com sucesso!`, resultado.data);
+      // console.log(`${logPrefix} 🎉 Cadastro concluído com sucesso!`, resultado.data);
       return resultado;
 
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro interno. Tente novamente.';
-      console.error(`${logPrefix} ❌ Erro no cadastro:`, errorMessage);
+      // console.error(`${logPrefix} ❌ Erro no cadastro:`, errorMessage);
       setError(errorMessage);
       
       return {

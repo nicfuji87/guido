@@ -1335,3 +1335,74 @@ Admin Cadastra → Convida Corretores → Trial Coletivo → Pagamento por Sede
 ```
 
 **🎯 Meta: Sistema completo funcionando em 4 semanas!**
+📋 PLANO DETALHADO: Dashboard Unificado Guido
+🎯 1. ANÁLISE DO BANCO DE DADOS
+✅ Estrutura atual está PERFEITA para o dashboard:
+Multi-tenancy: conta_id em todas as tabelas ✅
+Hierarquia de usuários: corretores.funcao (DONO, ADMIN, AGENTE) ✅
+Relacionamentos completos: clientes → conversas → mensagens ✅
+Status tracking: conversas.status_conversa, lembretes.status ✅
+Métricas prontas: clientes.status_funil, timestamps ✅
+🔧 Ajustes MÍNIMOS necessários:
+🏗️ 2. ARQUITETURA DO DASHBOARD
+Layout Base (shadcn dashboard-01 + sidebar-01)
+Componentes Principais:
+<AppSidebar /> - Navegação lateral inteligente
+<SiteHeader /> - Header com filtro de usuário (gestores)
+<WidgetGrid /> - Grid responsivo de widgets
+<ViewFilter /> - Dropdown para gestores filtrarem visualização
+🎛️ 3. SISTEMA DE FILTROS INTELIGENTE
+Hook useViewContext:
+Componente <ViewFilter />:
+📊 4. WIDGETS POR TIPO DE USUÁRIO
+A. Widgets do CORRETOR (AGENTE ou Individual):
+Widget 1: 🔥 Conversas Prioritárias
+Widget 2: ⏰ Lembretes de Hoje
+Widget 3: 📊 Métricas Pessoais
+Widget 4: ⚡ Atividade Recente
+B. Widgets do GESTOR (DONO/ADMIN):
+Widget 1: 📈 Desempenho da Equipe
+Widget 2: 🚨 Conversas que Exigem Atenção
+Widget 3: 🏆 Ranking de Atividade
+Widget 4: 📊 Funil de Vendas da Equipe
+🧩 5. COMPONENTES DETALHADOS
+A. Sidebar Inteligente:
+B. Hook useDashboardData:
+C. Componente <ConversationItem />:
+🚀 6. HOOKS E UTILITÁRIOS
+A. useRealTimeUpdates:
+B. useDashboardMetrics:
+C. Função SQL otimizada:
+📱 7. RESPONSIVIDADE E UX
+A. Grid Responsivo:
+B. Estados de Loading:
+⚡ 8. OTIMIZAÇÕES E PERFORMANCE
+A. Lazy Loading de Widgets:
+B. Cache Inteligente:
+🎨 9. TEMAS E PERSONALIZAÇÃO
+A. Cores semânticas:
+B. Animações sutis:
+🚀 10. IMPLEMENTAÇÃO FASEADA
+Fase 1: Core Dashboard (2 semanas)
+[ ] Layout base com sidebar
+[ ] Sistema de filtros
+[ ] Widgets básicos para corretor
+[ ] Métricas essenciais
+Fase 2: Funcionalidades Avançadas (2 semanas)
+[ ] Dashboard de gestores
+[ ] Widgets de equipe
+[ ] Real-time updates
+[ ] Otimizações de performance
+Fase 3: Refinamentos (1 semana)
+[ ] Animações e polimento UX
+[ ] Testes e ajustes finais
+[ ] Documentação
+🎯 MELHORIAS da sua ideia original:
+✅ Mantive sua estrutura principal - Layout fixo, filtro inteligente, widgets contextuais
+🚀 Adicionei Real-time - Updates instantâneos via Supabase channels
+📊 Métricas mais ricas - Views materializadas, funções SQL otimizadas
+🎨 UX aprimorada - Skeletons, animações, estados de loading
+⚡ Performance - Lazy loading, cache inteligente, queries otimizadas
+📱 Mobile-first - Responsividade completa
+🔧 Extensibilidade - Sistema de widgets modulares
+O resultado será um dashboard profissional, rápido e intuitivo que cresce com o negócio!

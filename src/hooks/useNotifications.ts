@@ -35,11 +35,11 @@ export const useNotifications = (): UseNotificationsReturn => {
   // Notificações que foram dispensadas localmente
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  const logPrefix = '[useNotifications]';
+
 
   const fetchNotifications = useCallback(async () => {
     try {
-      console.log(`${logPrefix} Buscando notificações`);
+      // console.log(`${logPrefix} Buscando notificações`);
 
       // Buscar notificações dos últimos 30 dias
       const thirtyDaysAgo = new Date();
@@ -53,15 +53,15 @@ export const useNotifications = (): UseNotificationsReturn => {
         .limit(50);
 
       if (error) {
-        console.error(`${logPrefix} Erro ao buscar notificações:`, error);
+        // console.error(`${logPrefix} Erro ao buscar notificações:`, error);
         throw error;
       }
 
-      console.log(`${logPrefix} Notificações encontradas:`, data?.length || 0);
+      // console.log(`${logPrefix} Notificações encontradas:`, data?.length || 0);
       setNotifications(data || []);
 
     } catch (error) {
-      console.error(`${logPrefix} Erro na busca:`, error);
+      // console.error(`${logPrefix} Erro na busca:`, error);
       
       // Criar notificações locais baseadas no status da assinatura
       const localNotifications = await generateLocalNotifications();
@@ -180,14 +180,14 @@ export const useNotifications = (): UseNotificationsReturn => {
       return notifications;
 
     } catch (error) {
-      console.error(`${logPrefix} Erro ao gerar notificações locais:`, error);
+      // console.error(`${logPrefix} Erro ao gerar notificações locais:`, error);
       return [];
     }
   };
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      console.log(`${logPrefix} Marcando como lida:`, notificationId);
+      // console.log(`${logPrefix} Marcando como lida:`, notificationId);
 
       // Tentar marcar no banco (se existir tabela)
       const { error } = await supabase
@@ -196,7 +196,7 @@ export const useNotifications = (): UseNotificationsReturn => {
         .eq('id', notificationId);
 
       if (error) {
-        console.warn(`${logPrefix} Falha ao marcar no banco (tabela pode não existir):`, error);
+        // console.warn(`${logPrefix} Falha ao marcar no banco (tabela pode não existir):`, error);
       }
 
       // Marcar localmente
@@ -209,13 +209,13 @@ export const useNotifications = (): UseNotificationsReturn => {
       );
 
     } catch (error) {
-      console.error(`${logPrefix} Erro ao marcar como lida:`, error);
+      // console.error(`${logPrefix} Erro ao marcar como lida:`, error);
     }
   }, []);
 
   const markAllAsRead = useCallback(async () => {
     try {
-      console.log(`${logPrefix} Marcando todas como lidas`);
+      // console.log(`${logPrefix} Marcando todas como lidas`);
 
       // Tentar marcar no banco
       const { error } = await supabase
@@ -224,7 +224,7 @@ export const useNotifications = (): UseNotificationsReturn => {
         .eq('lida', false);
 
       if (error) {
-        console.warn(`${logPrefix} Falha ao marcar todas no banco:`, error);
+        // console.warn(`${logPrefix} Falha ao marcar todas no banco:`, error);
       }
 
       // Marcar localmente
@@ -233,12 +233,12 @@ export const useNotifications = (): UseNotificationsReturn => {
       );
 
     } catch (error) {
-      console.error(`${logPrefix} Erro ao marcar todas como lidas:`, error);
+      // console.error(`${logPrefix} Erro ao marcar todas como lidas:`, error);
     }
   }, []);
 
   const dismissNotification = useCallback((notificationId: string) => {
-    console.log(`${logPrefix} Dispensando notificação:`, notificationId);
+    // console.log(`${logPrefix} Dispensando notificação:`, notificationId);
     
     setDismissedIds(prev => new Set([...prev, notificationId]));
     setNotifications(prev => 

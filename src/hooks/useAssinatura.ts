@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { log } from '@/utils/logger';
 
 // Temporary user interface until proper auth is implemented
 interface User {
@@ -26,7 +27,7 @@ export interface Plano {
   preco_anual?: number;
   limite_corretores: number;
   tipo_plano: 'INDIVIDUAL' | 'IMOBILIARIA';
-  recursos: Record<string, any>;
+  recursos: Record<string, boolean | number | string>;
   is_ativo: boolean;
 }
 
@@ -108,9 +109,9 @@ export const useAssinatura = (): UseAssinaturaReturn => {
     };
   };
 
-  const fetchAssinatura = async (): Promise<void> => {
+  const fetchAssinatura = useCallback(async (): Promise<void> => {
     if (!user?.conta_id) {
-      console.log('[useAssinatura] User não encontrado ou conta_id ausente');
+      log.debug('[useAssinatura] User não encontrado ou conta_id ausente');
       setAssinatura(null);
       setStatus(calcularStatus(null));
       setIsLoading(false);
@@ -118,7 +119,7 @@ export const useAssinatura = (): UseAssinaturaReturn => {
     }
 
     try {
-      console.log('[useAssinatura] Buscando assinatura para conta:', user.conta_id);
+      log.debug('[useAssinatura] Buscando assinatura para conta:', user.conta_id);
       
       const { data, error } = await supabase
         .from('assinaturas')
@@ -132,27 +133,27 @@ export const useAssinatura = (): UseAssinaturaReturn => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('[useAssinatura] Erro ao buscar assinatura:', error);
+        log.error('Erro ao buscar assinatura', 'useAssinatura', { error });
         throw error;
       }
 
-      console.log('[useAssinatura] Assinatura encontrada:', data?.status || 'Nenhuma');
+      log.debug('[useAssinatura] Assinatura encontrada:', data?.status || 'Nenhuma');
       
       setAssinatura(data);
       setStatus(calcularStatus(data));
       setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('[useAssinatura] Erro na busca:', errorMessage);
+      log.error('[useAssinatura] Erro na busca:', errorMessage);
       setError(errorMessage);
       setAssinatura(null);
       setStatus(calcularStatus(null));
     }
-  };
+  }, [user?.conta_id]);
 
   const fetchPlanos = async (): Promise<void> => {
     try {
-      console.log('[useAssinatura] Buscando planos disponíveis');
+      log.debug('[useAssinatura] Buscando planos disponíveis');
       
       const { data, error } = await supabase
         .from('planos')
@@ -161,24 +162,24 @@ export const useAssinatura = (): UseAssinaturaReturn => {
         .order('preco_mensal', { ascending: true });
 
       if (error) {
-        console.error('[useAssinatura] Erro ao buscar planos:', error);
+        log.error('Erro ao buscar planos', 'useAssinatura', { error });
         throw error;
       }
 
-      console.log('[useAssinatura] Planos encontrados:', data?.length || 0);
+      log.debug('Planos encontrados', 'useAssinatura', { count: data?.length || 0 });
       setPlanos(data || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar planos';
-      console.error('[useAssinatura] Erro ao buscar planos:', errorMessage);
+      log.error('[useAssinatura] Erro ao buscar planos:', errorMessage);
       setError(errorMessage);
     }
   };
 
-  const refetchAssinatura = async (): Promise<void> => {
+  const refetchAssinatura = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     await fetchAssinatura();
     setIsLoading(false);
-  };
+  }, [fetchAssinatura]);
 
   const refetchPlanos = async (): Promise<void> => {
     await fetchPlanos();
@@ -199,22 +200,22 @@ export const useAssinatura = (): UseAssinaturaReturn => {
     };
 
     loadData();
-  }, [user?.conta_id]);
+  }, [user?.conta_id, fetchAssinatura]);
 
   // Revalidação automática quando status muda para expired
   useEffect(() => {
     if (status?.isTrialExpirado && assinatura?.status === 'TRIAL') {
-      console.log('[useAssinatura] Trial expirado detectado, revalidando...');
+      log.debug('[useAssinatura] Trial expirado detectado, revalidando...');
       setTimeout(() => {
         refetchAssinatura();
       }, 1000);
     }
-  }, [status?.isTrialExpirado, assinatura?.status]);
+  }, [status?.isTrialExpirado, assinatura?.status, refetchAssinatura]);
 
   // Log de mudanças importantes para debug
   useEffect(() => {
     if (assinatura) {
-      console.log('[useAssinatura] Status da assinatura atualizado:', {
+      log.debug('Status da assinatura atualizado', 'useAssinatura', {
         id: assinatura.id,
         status: assinatura.status,
         diasRestantes: status?.diasRestantes,
@@ -222,7 +223,7 @@ export const useAssinatura = (): UseAssinaturaReturn => {
         precisaUpgrade: status?.precisaUpgrade
       });
     }
-  }, [assinatura?.id, assinatura?.status, status]);
+  }, [assinatura, status]);
 
   return {
     assinatura,

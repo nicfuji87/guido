@@ -6,5 +6,8 @@ export * from './Badge'
 export * from './Separator'
 export * from './Textarea'
 export * from './Skeleton'
+export * from './Avatar'
+export * from './DropdownMenu'
+export * from './Sidebar'
 
 

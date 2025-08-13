@@ -52,20 +52,20 @@ class EmailService {
     this.fromEmail = process.env.FROM_EMAIL || 'noreply@guido.com.br';
     
     if (!this.apiKey) {
-      console.warn('[EmailService] RESEND_API_KEY não configurada');
+      // console.warn('[EmailService] RESEND_API_KEY não configurada');
     }
   }
 
   private async sendEmail(data: EmailData): Promise<boolean> {
-    const logPrefix = '[EmailService]';
+    // const logPrefix = '[EmailService]';
     
     if (!this.apiKey) {
-      console.error(`${logPrefix} API key não configurada`);
+      // console.error(`${logPrefix} API key não configurada`);
       return false;
     }
 
     try {
-      console.log(`${logPrefix} Enviando email para:`, data.to);
+      // console.log(`${logPrefix} Enviando email para:`, data.to);
 
       const response = await fetch(`${this.baseUrl}/emails`, {
         method: 'POST',
@@ -82,18 +82,18 @@ class EmailService {
         }),
       });
 
-      const result = await response.json();
+      await response.json();
 
       if (!response.ok) {
-        console.error(`${logPrefix} Erro ao enviar email:`, result);
+        // console.error(`${logPrefix} Erro ao enviar email:`);
         return false;
       }
 
-      console.log(`${logPrefix} ✅ Email enviado com sucesso:`, result.id);
+      // console.log(`${logPrefix} ✅ Email enviado com sucesso`);
       return true;
 
     } catch (error) {
-      console.error(`${logPrefix} Erro na requisição:`, error);
+      // console.error(`${logPrefix} Erro na requisição:`, error);
       return false;
     }
   }

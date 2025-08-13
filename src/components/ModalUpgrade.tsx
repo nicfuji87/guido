@@ -11,8 +11,7 @@ import {
   AlertCircle,
   Building,
   UserCheck,
-  Calendar,
-  Calculator
+
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -30,7 +29,7 @@ import { useAsaasPayments, PaymentIntent } from '@/hooks/useAsaasPayments';
 interface ModalUpgradeProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (result: any) => void;
+  onSuccess?: (result: unknown) => void;
   planoSugerido?: Plano | null; // Plano sugerido baseado no contexto
 }
 
@@ -79,10 +78,10 @@ export const ModalUpgrade: React.FC<ModalUpgradeProps> = ({
     addressComplement: '',
     phone: ''
   });
-  const [paymentResult, setPaymentResult] = useState<any>(null);
+  const [paymentResult, setPaymentResult] = useState<unknown>(null);
 
   const { planos, assinatura, status } = useAssinatura();
-  const { processUpgrade, isProcessing, error, clearError } = useAsaasPayments();
+  const { processUpgrade, error, clearError } = useAsaasPayments();
 
   // Reset state when modal opens
   useEffect(() => {
@@ -224,7 +223,7 @@ export const ModalUpgrade: React.FC<ModalUpgradeProps> = ({
       }
 
     } catch (err) {
-      console.error('[ModalUpgrade] Erro ao processar pagamento:', err);
+      // Erro ao processar pagamento - mostrado no UI
       setStep('erro');
     }
   };
@@ -283,7 +282,7 @@ export const ModalUpgrade: React.FC<ModalUpgradeProps> = ({
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {/* Seleção de Planos */}
             {step === 'planos' && (
               <motion.div
@@ -766,7 +765,7 @@ export const ModalUpgrade: React.FC<ModalUpgradeProps> = ({
                   Sua assinatura foi ativada e você já pode usar todos os recursos.
                 </p>
                 
-                {paymentResult.requires_action && (
+                {paymentResult && typeof paymentResult === 'object' && 'requires_action' in paymentResult && paymentResult.requires_action && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <p className="text-sm text-blue-800">
                       {paymentMethod === 'BOLETO' && 'Você receberá o boleto por email. Após o pagamento, sua assinatura será ativada automaticamente.'}

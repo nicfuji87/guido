@@ -235,7 +235,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
   };
 
   const handlePlanSelect = (plano: Plano) => {
-    console.log('[SignupModal] Plano selecionado:', plano.nome_plano);
+    // Plano selecionado para upgrade
     setSelectedPlan(plano);
     setFormData(prev => ({ 
       ...prev, 

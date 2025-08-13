@@ -7,10 +7,7 @@ import {
   AlertCircle,
   Info,
   AlertTriangle,
-  Clock,
-  CreditCard,
-  Crown,
-  PartyPopper
+
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
@@ -74,10 +71,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
   return (
     <div className={cn(
-      'p-4 border rounded-lg transition-all duration-200',
+      'border rounded-lg transition-all duration-200',
       getBgColor(),
       !notification.lida && 'shadow-sm',
-      notification.lida && 'opacity-60'
+      notification.lida && 'opacity-60',
+      compact ? 'p-2' : 'p-4'
     )}>
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">

@@ -2,6 +2,8 @@
 // Implementa todas as APIs necessárias: clientes, assinaturas, webhooks
 // Inclui logs estratégicos e tratamento de erros robusto
 
+import type { AsaasSplit } from '@/types/api';
+
 export interface AsaasCustomer {
   name: string;
   email: string;
@@ -57,7 +59,7 @@ export interface AsaasSubscription {
   endDate?: string; // YYYY-MM-DD
   maxPayments?: number;
   externalReference?: string; // ID da assinatura na nossa base
-  split?: any[];
+  split?: AsaasSplit[];
   creditCard?: {
     holderName: string;
     number: string;
@@ -134,8 +136,8 @@ export interface AsaasWebhookEvent {
     originalValue?: number;
     interestValue?: number;
     fineValue?: number;
-    pixTransaction?: any;
-    creditCardTransaction?: any;
+    pixTransaction?: Record<string, unknown>;
+    creditCardTransaction?: Record<string, unknown>;
   };
 }
 
@@ -160,11 +162,11 @@ export class AsaasClient {
   private async makeRequest<T>(
     endpoint: string,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
-    data?: any
+    data?: unknown
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    console.log(`[AsaasClient] ${method} ${endpoint}`, data ? { data } : '');
+    // console.log(`[AsaasClient] ${method} ${endpoint}`, data ? { data } : '');
     
     const headers: Record<string, string> = {
       'accept': 'application/json',
@@ -183,7 +185,7 @@ export class AsaasClient {
       const responseData = await response.json();
 
       if (!response.ok) {
-        console.error(`[AsaasClient] Error ${response.status}:`, responseData);
+        // console.error(`[AsaasClient] Error ${response.status}:`, responseData);
         throw new AsaasApiError(
           `Erro Asaas: ${response.status}`,
           response.status,
@@ -191,10 +193,10 @@ export class AsaasClient {
         );
       }
 
-      console.log(`[AsaasClient] Success ${method} ${endpoint}:`, responseData);
+      // console.log(`[AsaasClient] Success ${method} ${endpoint}:`, responseData);
       return responseData;
     } catch (error) {
-      console.error(`[AsaasClient] Request failed:`, error);
+      // console.error(`[AsaasClient] Request failed:`, error);
       if (error instanceof AsaasApiError) {
         throw error;
       }
@@ -205,7 +207,7 @@ export class AsaasClient {
   // === CUSTOMERS ===
   
   async createCustomer(customerData: AsaasCustomer): Promise<AsaasCustomerResponse> {
-    console.log('[AsaasClient] Criando cliente:', customerData.name);
+    // console.log('[AsaasClient] Criando cliente:', customerData.name);
     return this.makeRequest<AsaasCustomerResponse>('/customers', 'POST', customerData);
   }
 
@@ -214,19 +216,19 @@ export class AsaasClient {
   }
 
   async updateCustomer(customerId: string, customerData: Partial<AsaasCustomer>): Promise<AsaasCustomerResponse> {
-    console.log('[AsaasClient] Atualizando cliente:', customerId);
+    // console.log('[AsaasClient] Atualizando cliente:', customerId);
     return this.makeRequest<AsaasCustomerResponse>(`/customers/${customerId}`, 'PUT', customerData);
   }
 
   async deleteCustomer(customerId: string): Promise<{ deleted: boolean; id: string }> {
-    console.log('[AsaasClient] Deletando cliente:', customerId);
+    // console.log('[AsaasClient] Deletando cliente:', customerId);
     return this.makeRequest(`/customers/${customerId}`, 'DELETE');
   }
 
   // === SUBSCRIPTIONS ===
   
   async createSubscription(subscriptionData: AsaasSubscription): Promise<AsaasSubscriptionResponse> {
-    console.log('[AsaasClient] Criando assinatura para cliente:', subscriptionData.customer);
+    // console.log('[AsaasClient] Criando assinatura para cliente:', subscriptionData.customer);
     return this.makeRequest<AsaasSubscriptionResponse>('/subscriptions', 'POST', subscriptionData);
   }
 
@@ -235,19 +237,19 @@ export class AsaasClient {
   }
 
   async updateSubscription(subscriptionId: string, subscriptionData: Partial<AsaasSubscription>): Promise<AsaasSubscriptionResponse> {
-    console.log('[AsaasClient] Atualizando assinatura:', subscriptionId);
+    // console.log('[AsaasClient] Atualizando assinatura:', subscriptionId);
     return this.makeRequest<AsaasSubscriptionResponse>(`/subscriptions/${subscriptionId}`, 'PUT', subscriptionData);
   }
 
   async deleteSubscription(subscriptionId: string): Promise<{ deleted: boolean; id: string }> {
-    console.log('[AsaasClient] Cancelando assinatura:', subscriptionId);
+    // console.log('[AsaasClient] Cancelando assinatura:', subscriptionId);
     return this.makeRequest(`/subscriptions/${subscriptionId}`, 'DELETE');
   }
 
   // === WEBHOOKS ===
   
-  async createWebhook(url: string, events: string[]): Promise<any> {
-    console.log('[AsaasClient] Criando webhook:', url);
+  async createWebhook(url: string, events: string[]): Promise<Record<string, unknown>> {
+    // console.log('[AsaasClient] Criando webhook:', url);
     return this.makeRequest('/webhooks', 'POST', {
       url,
       events,
@@ -259,7 +261,7 @@ export class AsaasClient {
 
   // === UTILITIES ===
   
-  async validateWebhookSignature(payload: string, signature: string): Promise<boolean> {
+  async validateWebhookSignature(_payload: string, _signature: string): Promise<boolean> {
     // Implementar validação de assinatura do webhook quando necessário
     // Por enquanto retorna true para desenvolvimento
     return true;
@@ -303,7 +305,7 @@ export class AsaasApiError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public response: any
+    public response: Record<string, unknown>
   ) {
     super(message);
     this.name = 'AsaasApiError';
@@ -311,7 +313,7 @@ export class AsaasApiError extends Error {
 
   getErrorDetails(): string[] {
     if (this.response?.errors && Array.isArray(this.response.errors)) {
-      return this.response.errors.map((err: any) => err.description || err.code || 'Erro desconhecido');
+      return this.response.errors.map((err: Record<string, unknown>) => String(err.description || err.code || 'Erro desconhecido'));
     }
     return [this.message];
   }
@@ -330,7 +332,7 @@ export const getAsaasClient = (): AsaasClient => {
     }
     
     asaasClientInstance = new AsaasClient(apiKey, sandbox);
-    console.log('[AsaasClient] Instância criada -', sandbox ? 'SANDBOX' : 'PRODUCTION');
+    // console.log('[AsaasClient] Instância criada -', sandbox ? 'SANDBOX' : 'PRODUCTION');
   }
   
   return asaasClientInstance;

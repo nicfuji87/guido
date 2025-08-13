@@ -76,13 +76,13 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
   if (!config) return null;
 
   const handleUpgrade = () => {
-    console.log('[TrialBanner] Clique em upgrade:', config.variant);
+    // Iniciando processo de upgrade
     setIsUpgradeModalOpen(true);
     onUpgrade?.();
   };
 
-  const handleUpgradeSuccess = (result: any) => {
-    console.log('[TrialBanner] Upgrade realizado com sucesso:', result);
+  const handleUpgradeSuccess = (result: unknown) => {
+    void result; // Upgrade realizado com sucesso
     onClose?.(); // Fechar banner após upgrade
   };
 

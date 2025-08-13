@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Mail, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
@@ -16,31 +16,7 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Escutar mudanças de autenticação (usuário retornando do magic link)
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        // Usuário logou com sucesso via magic link
-        setMessage({ 
-          type: 'success', 
-          text: 'Login realizado com sucesso! Redirecionando...' 
-        });
-        
-        // Redirecionar para dashboard após pequeno delay
-        setTimeout(() => {
-          window.location.href = '/app';
-        }, 1500);
-      }
-      
-      if (event === 'SIGNED_OUT') {
-        setMessage(null);
-      }
-    });
-
-    return () => {
-      authListener?.unsubscribe?.();
-    };
-  }, []);
+  // Redirecionamento será gerenciado pelo AuthProvider
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

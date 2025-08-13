@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { getAsaasClient, AsaasCustomer, AsaasSubscription, AsaasApiError } from '../lib/asaasClient';
 import { useAssinatura, Plano } from './useAssinatura';
+import { log } from '@/utils/logger';
 
 // AI dev note: Hook para gerenciar pagamentos e assinaturas via Asaas
 // Implementa fluxo completo: criar cliente → criar assinatura → webhook → atualizar status
@@ -44,7 +45,7 @@ interface UseAsaasPaymentsReturn {
   error: string | null;
   processUpgrade: (paymentIntent: PaymentIntent) => Promise<PaymentResult>;
   createAsaasCustomer: (usuarioId: string) => Promise<string | null>;
-  updateAssinaturaStatus: (assinaturaId: string, status: string, asaasData?: any) => Promise<void>;
+  updateAssinaturaStatus: (assinaturaId: string, status: string, asaasData?: Record<string, unknown>) => Promise<void>;
   clearError: () => void;
 }
 
@@ -58,7 +59,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
   // Função para criar cliente no Asaas baseado nos dados do usuário
   const createAsaasCustomer = useCallback(async (usuarioId: string): Promise<string | null> => {
     const logPrefix = '[useAsaasPayments:createCustomer]';
-    console.log(`${logPrefix} Criando cliente Asaas para usuário:`, usuarioId);
+    log.debug('Criando cliente Asaas para usuário', 'useAsaasPayments', { usuarioId });
 
     try {
       // 1. Buscar dados do usuário
@@ -69,13 +70,13 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
         .single();
 
       if (usuarioError || !usuario) {
-        console.error(`${logPrefix} Usuário não encontrado:`, usuarioError);
+        log.error('Usuário não encontrado', 'useAsaasPayments', usuarioError);
         throw new Error('Usuário não encontrado');
       }
 
       // 2. Verificar se já tem cliente Asaas
       if (usuario.id_cliente_asaas) {
-        console.log(`${logPrefix} Cliente Asaas já existe:`, usuario.id_cliente_asaas);
+        log.info('Cliente Asaas já existe', 'useAsaasPayments', { clienteId: usuario.id_cliente_asaas });
         return usuario.id_cliente_asaas;
       }
 
@@ -102,7 +103,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
       const asaasClient = getAsaasClient();
       const asaasCustomer = await asaasClient.createCustomer(customerData);
 
-      console.log(`${logPrefix} ✅ Cliente criado no Asaas:`, asaasCustomer.id);
+      log.info('Cliente criado no Asaas', 'useAsaasPayments', { clienteId: asaasCustomer.id });
 
       // 5. Salvar ID do cliente na nossa base
       const { error: updateError } = await supabase
@@ -114,7 +115,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
         .eq('id', usuarioId);
 
       if (updateError) {
-        console.error(`${logPrefix} Erro ao salvar ID do cliente:`, updateError);
+        log.error('Erro ao salvar ID do cliente', 'useAsaasPayments', { error: updateError });
         // Não falha aqui, cliente foi criado no Asaas
       }
 
@@ -127,7 +128,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
           ? error.message 
           : 'Erro ao criar cliente';
       
-      console.error(`${logPrefix} ❌ Erro:`, errorMessage);
+      log.error(`${logPrefix} ❌ Erro:`, errorMessage);
       throw new Error(errorMessage);
     }
   }, []);
@@ -136,13 +137,13 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
   const updateAssinaturaStatus = useCallback(async (
     assinaturaId: string, 
     novoStatus: string, 
-    asaasData?: any
+    asaasData?: Record<string, unknown>
   ): Promise<void> => {
     const logPrefix = '[useAsaasPayments:updateStatus]';
-    console.log(`${logPrefix} Atualizando assinatura ${assinaturaId} para ${novoStatus}`);
+    log.debug(`${logPrefix} Atualizando assinatura ${assinaturaId} para ${novoStatus}`);
 
     try {
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         status: novoStatus,
         data_atualizacao: new Date().toISOString()
       };
@@ -169,18 +170,18 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
         .eq('id', assinaturaId);
 
       if (error) {
-        console.error(`${logPrefix} Erro ao atualizar assinatura:`, error);
+        log.error('Erro ao atualizar assinatura', 'useAsaasPayments', { error });
         throw error;
       }
 
-      console.log(`${logPrefix} ✅ Assinatura atualizada com sucesso`);
+      log.debug(`${logPrefix} ✅ Assinatura atualizada com sucesso`);
       
       // Recarregar dados da assinatura
       await refetchAssinatura();
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro ao atualizar assinatura';
-      console.error(`${logPrefix} ❌ Erro:`, errorMessage);
+      log.error(`${logPrefix} ❌ Erro:`, errorMessage);
       throw new Error(errorMessage);
     }
   }, [refetchAssinatura]);
@@ -188,7 +189,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
   // Função principal para processar upgrade/pagamento
   const processUpgrade = useCallback(async (paymentIntent: PaymentIntent): Promise<PaymentResult> => {
     const logPrefix = '[useAsaasPayments:processUpgrade]';
-    console.log(`${logPrefix} Processando upgrade para plano:`, paymentIntent.plano.nome_plano);
+    log.debug(`${logPrefix} Processando upgrade para plano:`, paymentIntent.plano.nome_plano);
 
     setIsProcessing(true);
     setError(null);
@@ -208,7 +209,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
         .single();
 
       if (assinaturaError || !assinaturaAtual) {
-        console.error(`${logPrefix} Assinatura não encontrada:`, assinaturaError);
+        log.error('Assinatura não encontrada', 'useAsaasPayments', { error: assinaturaError });
         throw new Error('Assinatura ativa não encontrada');
       }
 
@@ -259,7 +260,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
       const asaasClient = getAsaasClient();
       const asaasSubscription = await asaasClient.createSubscription(subscriptionData);
 
-      console.log(`${logPrefix} ✅ Assinatura criada no Asaas:`, asaasSubscription.id);
+      log.debug(`${logPrefix} ✅ Assinatura criada no Asaas:`, asaasSubscription.id);
 
       // 7. Atualizar assinatura local
       await updateAssinaturaStatus(assinaturaAtual.id, 'ATIVO', {
@@ -282,7 +283,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
         result.requires_action = true;
       }
 
-      console.log(`${logPrefix} 🎉 Upgrade processado com sucesso!`, result);
+      log.debug('Upgrade processado com sucesso', 'useAsaasPayments', { result });
       return result;
 
     } catch (error) {
@@ -292,7 +293,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
           ? error.message 
           : 'Erro ao processar pagamento';
       
-      console.error(`${logPrefix} ❌ Erro no upgrade:`, errorMessage);
+      log.error(`${logPrefix} ❌ Erro no upgrade:`, errorMessage);
       setError(errorMessage);
       
       return {
@@ -303,7 +304,7 @@ export const useAsaasPayments = (): UseAsaasPaymentsReturn => {
     } finally {
       setIsProcessing(false);
     }
-  }, [createAsaasCustomer, updateAssinaturaStatus, refetchAssinatura]);
+  }, [createAsaasCustomer, updateAssinaturaStatus]);
 
   return {
     isProcessing,
