@@ -26,12 +26,12 @@ export const FloatingCard: React.FC<FloatingCardProps> = ({
         'group relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4 sm:p-6 lg:p-8',
         'transition-all duration-500 ease-out',
         glowStyles[glowIntensity],
-        hoverEffect && [
+        ...(hoverEffect ? [
           'hover:border-[#00F6FF]/30',
           'hover:shadow-[0_0_80px_rgba(0,246,255,0.3)]',
           'hover:-translate-y-2',
           'hover:scale-[1.02]'
-        ],
+        ] : []),
         className
       )}
       {...props}

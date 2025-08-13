@@ -112,7 +112,7 @@ export const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
       window.removeEventListener('resize', resizeCanvas)
       cancelAnimationFrame(animationId)
     }
-  }, [particleCount])
+  }, [adjustedParticleCount])
 
   return (
     <canvas

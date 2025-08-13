@@ -6,7 +6,7 @@ export interface NavItem {
   name: string
   href: string
   // Relax icon typing to support lucide-react forwardRef types in React 16
-  icon?: React.ComponentType<any>
+  icon?: React.ComponentType<{ className?: string }>
 }
 
 export interface NavBarProps {

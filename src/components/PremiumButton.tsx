@@ -54,7 +54,7 @@ export const PremiumButton: React.FC<PremiumButtonProps> = ({
     <button
       className={cn(
         baseStyles,
-        variants[variant],
+        ...variants[variant],
         sizes[size],
         className
       )}

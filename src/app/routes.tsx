@@ -14,7 +14,7 @@ function PrivateRoute({ children, ...rest }: { children: React.ReactNode; [k: st
   return (
     <Route
       {...rest}
-      render={({ location }) =>
+      render={({ location }: { location: { pathname: string } }) =>
         isAuthenticated ? (
           children
         ) : (
