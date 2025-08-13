@@ -5,8 +5,9 @@ import { cn } from '@/lib/utils'
 export interface NavItem {
   name: string
   href: string
-  // Relax icon typing to support lucide-react forwardRef types in React 16
-  icon?: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
+  // Relax icon typing to support lucide-react forwardRef types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon?: React.ComponentType<any> | React.ForwardRefExoticComponent<any>
   external?: boolean // Para links externos (não scroll interno)
 }
 
