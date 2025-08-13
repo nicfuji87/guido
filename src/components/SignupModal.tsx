@@ -1,0 +1,697 @@
+import React, { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Mail, User, Phone, Loader2, CheckCircle, Building, UserCheck, AlertCircle, CreditCard, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { cn } from '@/lib/utils';
+import { useSignup } from '@/hooks/useSignup';
+import { useWhatsAppValidation } from '@/hooks/useWhatsAppValidation';
+import { formatCPF, validateCPF, isCPFFormatComplete } from '@/utils/cpfUtils';
+
+interface SignupModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  skipPlanSelection?: boolean;
+  defaultPlan?: AccountType;
+}
+
+type AccountType = 'INDIVIDUAL' | 'IMOBILIARIA';
+
+interface FormData {
+  nome: string;
+  email: string;
+  whatsapp: string;
+  cpf: string;
+  tipo_conta: AccountType;
+  nome_empresa?: string;
+}
+
+interface FormErrors {
+  nome?: string;
+  email?: string;
+  whatsapp?: string;
+  cpf?: string;
+  nome_empresa?: string;
+}
+
+interface ValidationStates {
+  whatsapp: 'idle' | 'validating' | 'valid' | 'invalid';
+  cpf: 'idle' | 'valid' | 'invalid';
+}
+
+const PLANS = {
+  INDIVIDUAL: {
+    id: 1,
+    nome: 'Guido Individual',
+    preco: 'R$ 59,90/mês',
+    limite: '1 corretor',
+    features: ['IA para atendimento', 'CRM básico', 'WhatsApp integrado']
+  },
+  IMOBILIARIA: {
+    id: 2,
+    nome: 'Guido Imobiliária', 
+    preco: 'R$ 199,90/mês',
+    limite: 'Até 10 corretores',
+    features: ['Múltiplos corretores', 'CRM avançado', 'Relatórios completos']
+  }
+};
+
+export const SignupModal: React.FC<SignupModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  skipPlanSelection = false, 
+  defaultPlan = 'INDIVIDUAL' 
+}) => {
+  const [step, setStep] = useState<'plan' | 'form' | 'loading' | 'success' | 'error'>('plan');
+  const [selectedPlan, setSelectedPlan] = useState<AccountType>('INDIVIDUAL');
+  const [formData, setFormData] = useState<FormData>({
+    nome: '',
+    email: '',
+    whatsapp: '',
+    cpf: '',
+    tipo_conta: 'INDIVIDUAL'
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [validationStates, setValidationStates] = useState<ValidationStates>({
+    whatsapp: 'idle',
+    cpf: 'idle'
+  });
+  
+  const { signup, isLoading, error: signupError, clearError } = useSignup();
+  const { validateWhatsApp } = useWhatsAppValidation();
+
+  // Reset form when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      const initialStep = skipPlanSelection ? 'form' : 'plan';
+      setStep(initialStep);
+      setSelectedPlan(defaultPlan);
+      setFormData({
+        nome: '',
+        email: '',
+        whatsapp: '',
+        cpf: '',
+        tipo_conta: defaultPlan
+      });
+      setErrors({});
+      setValidationStates({
+        whatsapp: 'idle',
+        cpf: 'idle'
+      });
+      clearError();
+    }
+  }, [isOpen, skipPlanSelection, defaultPlan, clearError]);
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.nome.trim()) {
+      newErrors.nome = 'Nome é obrigatório';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+
+    if (!formData.whatsapp.trim()) {
+      newErrors.whatsapp = 'WhatsApp é obrigatório';
+    } else if (!/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(formData.whatsapp)) {
+      newErrors.whatsapp = 'Formato: (11) 99999-9999';
+    } else if (validationStates.whatsapp === 'invalid') {
+      newErrors.whatsapp = 'Número do WhatsApp inválido';
+    } else if (validationStates.whatsapp === 'validating') {
+      newErrors.whatsapp = 'Aguarde a validação do WhatsApp';
+    }
+
+    if (!formData.cpf.trim()) {
+      newErrors.cpf = 'CPF é obrigatório';
+    } else if (!isCPFFormatComplete(formData.cpf)) {
+      newErrors.cpf = 'CPF incompleto';
+    } else if (!validateCPF(formData.cpf)) {
+      newErrors.cpf = 'CPF inválido';
+    }
+
+    if (formData.tipo_conta === 'IMOBILIARIA' && !formData.nome_empresa?.trim()) {
+      newErrors.nome_empresa = 'Nome da empresa é obrigatório';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const formatWhatsApp = (value: string) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/\D/g, '');
+    
+    // Aplica a máscara (11) 99999-9999
+    if (numbers.length <= 2) return `(${numbers}`;
+    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
+
+  // Debounced WhatsApp validation
+  const validateWhatsAppDebounced = useCallback(
+    async (phone: string) => {
+      if (!/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(phone)) {
+        setValidationStates(prev => ({ ...prev, whatsapp: 'idle' }));
+        return;
+      }
+
+      setValidationStates(prev => ({ ...prev, whatsapp: 'validating' }));
+      
+      try {
+        const result = await validateWhatsApp(phone);
+        setValidationStates(prev => ({ 
+          ...prev, 
+          whatsapp: result.isValid ? 'valid' : 'invalid' 
+        }));
+        
+        if (!result.isValid && result.error) {
+          setErrors(prev => ({ ...prev, whatsapp: result.error }));
+        }
+      } catch (error) {
+        setValidationStates(prev => ({ ...prev, whatsapp: 'invalid' }));
+      }
+    },
+    [validateWhatsApp]
+  );
+
+  // Debounce timer for WhatsApp validation
+  React.useEffect(() => {
+    if (formData.whatsapp && /^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(formData.whatsapp)) {
+      const timer = setTimeout(() => {
+        validateWhatsAppDebounced(formData.whatsapp);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [formData.whatsapp, validateWhatsAppDebounced]);
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    if (field === 'whatsapp') {
+      value = formatWhatsApp(value);
+      // Reset WhatsApp validation state when typing
+      setValidationStates(prev => ({ ...prev, whatsapp: 'idle' }));
+    }
+    
+    if (field === 'cpf') {
+      value = formatCPF(value);
+      // Validate CPF in real-time
+      if (isCPFFormatComplete(value)) {
+        setValidationStates(prev => ({ 
+          ...prev, 
+          cpf: validateCPF(value) ? 'valid' : 'invalid' 
+        }));
+      } else {
+        setValidationStates(prev => ({ ...prev, cpf: 'idle' }));
+      }
+    }
+
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error when user starts typing
+    if (field in errors) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handlePlanSelect = (plan: AccountType) => {
+    setSelectedPlan(plan);
+    setFormData(prev => ({ ...prev, tipo_conta: plan }));
+    setStep('form');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setStep('loading');
+
+    try {
+      const result = await signup(formData);
+      
+      if (result.success) {
+        setStep('success');
+        
+        // Auto-close after success and redirect to dashboard
+        setTimeout(() => {
+          onClose();
+          onSuccess?.();
+          // TODO: Redirect to dashboard with conta_id and corretor_id
+          // Conta criada com sucesso - dados em result.data
+        }, 2500);
+      } else {
+        setStep('error');
+      }
+      
+    } catch (error) {
+      // Erro no cadastro - error contém detalhes
+      setStep('error');
+    }
+  };
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.8, y: 50 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      transition: { type: 'spring', damping: 25, stiffness: 300 }
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0.8, 
+      y: 50,
+      transition: { duration: 0.2 }
+    }
+  };
+
+  const stepVariants = {
+    hidden: { opacity: 0, x: 30 },
+    visible: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -30 }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <motion.div
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="relative w-full max-w-md mx-auto"
+        >
+          <Card className="bg-background/95 backdrop-blur-xl border border-border/50 shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border/50">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">
+                  {step === 'plan' && 'Escolha seu Plano'}
+                  {step === 'form' && 'Criar Conta'}
+                  {step === 'loading' && 'Criando sua conta...'}
+                  {step === 'success' && 'Bem-vindo!'}
+                  {step === 'error' && 'Ops! Algo deu errado'}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {step === 'plan' && 'Teste grátis por 7 dias, sem cartão'}
+                  {step === 'form' && '7 dias grátis + acesso imediato'}
+                  {step === 'loading' && 'Preparando sua experiência...'}
+                  {step === 'success' && 'Conta criada com sucesso!'}
+                  {step === 'error' && 'Vamos tentar novamente'}
+                </p>
+              </div>
+              
+              {step !== 'loading' && step !== 'success' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <AnimatePresence>
+                {/* Plan Selection */}
+                {step === 'plan' && (
+                  <motion.div
+                    key="plan"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-4"
+                  >
+                    {/* Individual Plan */}
+                    <div
+                      onClick={() => handlePlanSelect('INDIVIDUAL')}
+                      className={cn(
+                        "p-4 rounded-xl border-2 cursor-pointer transition-all",
+                        "hover:border-primary/50 hover:bg-primary/5",
+                        selectedPlan === 'INDIVIDUAL' && "border-primary bg-primary/10"
+                      )}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <UserCheck className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">{PLANS.INDIVIDUAL.nome}</h3>
+                            <p className="text-sm text-muted-foreground">{PLANS.INDIVIDUAL.limite}</p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary">{PLANS.INDIVIDUAL.preco}</Badge>
+                      </div>
+                      <ul className="mt-3 space-y-1">
+                        {PLANS.INDIVIDUAL.features.map((feature, idx) => (
+                          <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                            <CheckCircle className="w-3 h-3 text-primary" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Imobiliária Plan */}
+                    <div
+                      onClick={() => handlePlanSelect('IMOBILIARIA')}
+                      className={cn(
+                        "p-4 rounded-xl border-2 cursor-pointer transition-all",
+                        "hover:border-primary/50 hover:bg-primary/5",
+                        selectedPlan === 'IMOBILIARIA' && "border-primary bg-primary/10"
+                      )}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <Building className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground">{PLANS.IMOBILIARIA.nome}</h3>
+                            <p className="text-sm text-muted-foreground">{PLANS.IMOBILIARIA.limite}</p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary">{PLANS.IMOBILIARIA.preco}</Badge>
+                      </div>
+                      <ul className="mt-3 space-y-1">
+                        {PLANS.IMOBILIARIA.features.map((feature, idx) => (
+                          <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                            <CheckCircle className="w-3 h-3 text-primary" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Form */}
+                {step === 'form' && (
+                  <motion.form
+                    key="form"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    onSubmit={handleSubmit}
+                    className="space-y-4"
+                  >
+                    {/* Selected Plan Badge */}
+                    <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg">
+                      {formData.tipo_conta === 'INDIVIDUAL' ? (
+                        <UserCheck className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Building className="w-4 h-4 text-primary" />
+                      )}
+                      <span className="text-sm font-medium text-primary">
+                        {PLANS[formData.tipo_conta].nome} - 7 dias grátis
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setStep('plan')}
+                        className="ml-auto text-xs text-primary hover:underline"
+                      >
+                        Alterar
+                      </button>
+                    </div>
+
+                    {/* Nome */}
+                    <div className="space-y-2">
+                      <Label htmlFor="nome">Nome completo</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="nome"
+                          placeholder="Seu nome completo"
+                          value={formData.nome}
+                          onChange={(e) => handleInputChange('nome', e.target.value)}
+                          className={cn("pl-10", errors.nome && "border-red-500")}
+                        />
+                      </div>
+                      {errors.nome && <p className="text-xs text-red-500">{errors.nome}</p>}
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="seu@email.com"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          className={cn("pl-10", errors.email && "border-red-500")}
+                        />
+                      </div>
+                      {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+                    </div>
+
+                    {/* WhatsApp */}
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp">WhatsApp</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="whatsapp"
+                          placeholder="(11) 99999-9999"
+                          value={formData.whatsapp}
+                          onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+                          className={cn(
+                            "pl-10 pr-10", 
+                            errors.whatsapp && "border-red-500",
+                            validationStates.whatsapp === 'valid' && "border-green-500",
+                            validationStates.whatsapp === 'invalid' && "border-red-500"
+                          )}
+                          maxLength={15}
+                        />
+                        {/* Validation indicator */}
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validationStates.whatsapp === 'validating' && (
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                          )}
+                          {validationStates.whatsapp === 'valid' && (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          )}
+                          {validationStates.whatsapp === 'invalid' && (
+                            <AlertCircle className="w-4 h-4 text-red-500" />
+                          )}
+                        </div>
+                      </div>
+                      {errors.whatsapp && <p className="text-xs text-red-500">{errors.whatsapp}</p>}
+                      {validationStates.whatsapp === 'valid' && !errors.whatsapp && (
+                        <p className="text-xs text-green-600 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          WhatsApp verificado
+                        </p>
+                      )}
+                    </div>
+
+                    {/* CPF */}
+                    <div className="space-y-2">
+                      <Label htmlFor="cpf">CPF</Label>
+                      <div className="relative">
+                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="cpf"
+                          placeholder="123.456.789-00"
+                          value={formData.cpf}
+                          onChange={(e) => handleInputChange('cpf', e.target.value)}
+                          className={cn(
+                            "pl-10 pr-10", 
+                            errors.cpf && "border-red-500",
+                            validationStates.cpf === 'valid' && "border-green-500",
+                            validationStates.cpf === 'invalid' && "border-red-500"
+                          )}
+                          maxLength={14}
+                        />
+                        {/* Validation indicator */}
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validationStates.cpf === 'valid' && (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          )}
+                          {validationStates.cpf === 'invalid' && (
+                            <AlertCircle className="w-4 h-4 text-red-500" />
+                          )}
+                        </div>
+                      </div>
+                      {errors.cpf && <p className="text-xs text-red-500">{errors.cpf}</p>}
+                      {validationStates.cpf === 'valid' && !errors.cpf && (
+                        <p className="text-xs text-green-600 flex items-center gap-1">
+                          <Shield className="w-3 h-3" />
+                          CPF válido
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Nome da Empresa (apenas para Imobiliária) */}
+                    {formData.tipo_conta === 'IMOBILIARIA' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="nome_empresa">Nome da Imobiliária</Label>
+                        <div className="relative">
+                          <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="nome_empresa"
+                            placeholder="Nome da sua imobiliária"
+                            value={formData.nome_empresa || ''}
+                            onChange={(e) => handleInputChange('nome_empresa', e.target.value)}
+                            className={cn("pl-10", errors.nome_empresa && "border-red-500")}
+                          />
+                        </div>
+                        {errors.nome_empresa && <p className="text-xs text-red-500">{errors.nome_empresa}</p>}
+                      </div>
+                    )}
+
+                    {/* Submit Button */}
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Criando conta...
+                        </>
+                      ) : (
+                        'Começar teste grátis'
+                      )}
+                    </Button>
+
+                                         {/* Login Link */}
+                     <div className="text-center text-sm text-muted-foreground">
+                       Já tem uma conta?{" "}
+                       <a href="/login" className="text-primary hover:underline">
+                         Entrar
+                       </a>
+                     </div>
+
+                    {/* Terms */}
+                    <p className="text-xs text-muted-foreground text-center">
+                      Ao continuar, você concorda com nossos{' '}
+                      <a href="#" className="text-primary hover:underline">Termos de Uso</a>
+                      {' '}e{' '}
+                      <a href="#" className="text-primary hover:underline">Política de Privacidade</a>
+                    </p>
+                  </motion.form>
+                )}
+
+                {/* Loading */}
+                {step === 'loading' && (
+                  <motion.div
+                    key="loading"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="text-center py-8"
+                  >
+                    <div className="flex justify-center mb-4">
+                      <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                    </div>
+                    <p className="text-muted-foreground">
+                      Configurando sua conta e período de teste...
+                    </p>
+                  </motion.div>
+                )}
+
+                {/* Success */}
+                {step === 'success' && (
+                  <motion.div
+                    key="success"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="text-center py-8"
+                  >
+                    <div className="flex justify-center mb-4">
+                      <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-8 h-8 text-green-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Conta criada com sucesso!
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Seu teste grátis de 7 dias começou agora.
+                    </p>
+                    <Badge variant="secondary" className="bg-green-500/10 text-green-500">
+                      Redirecionando para o dashboard...
+                    </Badge>
+                  </motion.div>
+                )}
+
+                {/* Error */}
+                {step === 'error' && (
+                  <motion.div
+                    key="error"
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="text-center py-8"
+                  >
+                    <div className="flex justify-center mb-4">
+                      <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
+                        <AlertCircle className="w-8 h-8 text-red-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Não foi possível criar sua conta
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      {signupError || 'Tente novamente em alguns instantes'}
+                    </p>
+                    <div className="space-y-3">
+                      <Button
+                        onClick={() => setStep('form')}
+                        className="w-full"
+                      >
+                        Tentar novamente
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={onClose}
+                        className="w-full"
+                      >
+                        Fechar
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </Card>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+};

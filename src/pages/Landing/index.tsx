@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Play, ArrowRight, Zap, Target, Users, Home, Clock, AlertTriangle, MessageSquare, MessageCircle, Settings, CheckCircle, Brain, Star } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { NavBar } from '@/components/NavBar'
 import { VideoPlayer } from '@/components/VideoPlayer'
 import { AnimatedSection } from '@/components/AnimatedSection'
 import { BeamsBackground } from '@/components/BeamsBackground'
+import { SignupModal } from '@/components/SignupModal'
 
 import { AnimatedText } from '@/components/AnimatedText'
 import { GradientText } from '@/components/GradientText'
@@ -13,12 +14,33 @@ import { PremiumButton } from '@/components/PremiumButton'
 import { ParticleBackground } from '@/components/ParticleBackground'
 
 export default function Landing() {
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
+  const [skipPlanSelection, setSkipPlanSelection] = useState(false)
+  const [defaultPlan, setDefaultPlan] = useState<'INDIVIDUAL' | 'IMOBILIARIA'>('INDIVIDUAL')
+
+  const handleSignupSuccess = () => {
+    // TODO: Redirect to dashboard or onboarding
+    // Signup success - redirect to dashboard
+  }
+
+  const openSignupModal = (skipSelection = false, plan: 'INDIVIDUAL' | 'IMOBILIARIA' = 'INDIVIDUAL') => {
+    setSkipPlanSelection(skipSelection)
+    setDefaultPlan(plan)
+    setIsSignupModalOpen(true)
+  }
+
+  const closeSignupModal = () => {
+    setIsSignupModalOpen(false)
+    setSkipPlanSelection(false)
+    setDefaultPlan('INDIVIDUAL')
+  }
+
   return (
     <div className="min-h-screen bg-[#0D1117] text-white overflow-x-hidden">
       {/* Navigation */}
       <NavBar
         className="w-fit"
-        logoSrc="/images/guido/guido logo dark - sem fundo.png"
+        logoSrc="/images/guido/guido%20logo%20dark%20-%20sem%20fundo.png"
         items={[
           { name: 'Início', href: '#hero', icon: Home },
           { name: 'Recursos', href: '#features', icon: Zap },
@@ -86,7 +108,15 @@ export default function Landing() {
               {/* CTA Buttons */}
               <AnimatedSection delay={1000}>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-                  <PremiumButton size="lg" shimmer className="group">
+                  <PremiumButton 
+                    size="lg" 
+                    shimmer 
+                    className="group"
+                    onClick={() => {
+                      const pricingSection = document.getElementById('pricing');
+                      pricingSection?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
                     Começar Agora - GRÁTIS
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </PremiumButton>
@@ -230,7 +260,14 @@ export default function Landing() {
                     <span className="text-[#25D366] font-semibold">WhatsApp</span>.
                   </p>
                 </div>
-                <PremiumButton size="lg" className="group">
+                <PremiumButton 
+                  size="lg" 
+                  className="group"
+                  onClick={() => {
+                    const pricingSection = document.getElementById('pricing');
+                    pricingSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
                   Experimentar Grátis
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </PremiumButton>
@@ -241,13 +278,9 @@ export default function Landing() {
               <div className="relative">
                 <div className="absolute -inset-6 bg-gradient-to-r from-[#00F6FF]/20 via-transparent to-[#00F6FF]/20 rounded-3xl blur-3xl" />
                 <img
-                  src="/images/partners/whatsapp-hand-animation.png"
+                  src="/images/partners/whatsapp-hand-animation.jpg"
                   alt="WhatsApp Hand Animation"
                   className="relative z-10 w-full max-w-md mx-auto rounded-2xl shadow-2xl float"
-                  onError={(e) => {
-                    const img = e.target as HTMLImageElement;
-                    img.src = '/images/partners/whatsapp-hand-animation.jpg';
-                  }}
                 />
               </div>
             </AnimatedSection>
@@ -461,7 +494,11 @@ export default function Landing() {
                     ))}
                   </ul>
 
-                  <PremiumButton size="lg" className="w-full group">
+                  <PremiumButton 
+                    size="lg" 
+                    className="w-full group"
+                    onClick={() => openSignupModal(true, 'INDIVIDUAL')}
+                  >
                     Começar Agora
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </PremiumButton>
@@ -545,6 +582,15 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* Signup Modal */}
+      <SignupModal
+        isOpen={isSignupModalOpen}
+        onClose={closeSignupModal}
+        onSuccess={handleSignupSuccess}
+        skipPlanSelection={skipPlanSelection}
+        defaultPlan={defaultPlan}
+      />
     </div>
   )
 }
