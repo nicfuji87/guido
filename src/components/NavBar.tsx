@@ -6,7 +6,7 @@ export interface NavItem {
   name: string
   href: string
   // Relax icon typing to support lucide-react forwardRef types in React 16
-  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  icon?: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
   external?: boolean // Para links externos (não scroll interno)
 }
 
