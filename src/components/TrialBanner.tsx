@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertTriangle, Clock, Crown, X } from 'lucide-react';
 import { useAssinatura } from '../hooks/useAssinatura';
+import { ModalUpgrade } from './ModalUpgrade';
 
 // AI dev note: Componente crítico para conversão de trials
 // Mostra status e urgência da assinatura com CTAs estratégicos
+// Integrado com ModalUpgrade para fluxo completo de upgrade
 
 interface TrialBannerProps {
   onUpgrade?: () => void;
@@ -17,6 +19,7 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
   compact = false 
 }) => {
   const { assinatura, status, isLoading } = useAssinatura();
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   // Não mostrar se carregando ou se tem acesso ativo sem precisar upgrade
   if (isLoading || !status || (status.temAcesso && !status.precisaUpgrade)) {
@@ -74,41 +77,58 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
 
   const handleUpgrade = () => {
     console.log('[TrialBanner] Clique em upgrade:', config.variant);
+    setIsUpgradeModalOpen(true);
     onUpgrade?.();
+  };
+
+  const handleUpgradeSuccess = (result: any) => {
+    console.log('[TrialBanner] Upgrade realizado com sucesso:', result);
+    onClose?.(); // Fechar banner após upgrade
   };
 
   if (compact) {
     return (
-      <div className={`${config.bgColor} border-l-4 border-l-current px-3 py-2 flex items-center justify-between text-sm`}>
-        <div className="flex items-center gap-2">
-          <config.icon className={`h-4 w-4 ${config.iconColor}`} />
-          <span className={`font-medium ${config.textColor}`}>
-            {config.title}: {status.diasRestantes > 0 ? `${status.diasRestantes} dias` : 'Expirado'}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleUpgrade}
-            className={`px-3 py-1 rounded text-xs font-medium ${config.buttonColor} transition-colors`}
-          >
-            {config.buttonText}
-          </button>
-          {onClose && (
+      <>
+        <div className={`${config.bgColor} border-l-4 border-l-current px-3 py-2 flex items-center justify-between text-sm`}>
+          <div className="flex items-center gap-2">
+            <config.icon className={`h-4 w-4 ${config.iconColor}`} />
+            <span className={`font-medium ${config.textColor}`}>
+              {config.title}: {status.diasRestantes > 0 ? `${status.diasRestantes} dias` : 'Expirado'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
             <button
-              onClick={onClose}
-              className={`p-1 rounded hover:bg-white/20 ${config.textColor}`}
-              aria-label="Fechar"
+              onClick={handleUpgrade}
+              className={`px-3 py-1 rounded text-xs font-medium ${config.buttonColor} transition-colors`}
             >
-              <X className="h-3 w-3" />
+              {config.buttonText}
             </button>
-          )}
+            {onClose && (
+              <button
+                onClick={onClose}
+                className={`p-1 rounded hover:bg-white/20 ${config.textColor}`}
+                aria-label="Fechar"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+
+        {/* Modal de Upgrade */}
+        <ModalUpgrade
+          isOpen={isUpgradeModalOpen}
+          onClose={() => setIsUpgradeModalOpen(false)}
+          onSuccess={handleUpgradeSuccess}
+          planoSugerido={null}
+        />
+      </>
     );
   }
 
   return (
-    <div className={`${config.bgColor} border rounded-lg p-4 mb-4`}>
+    <>
+      <div className={`${config.bgColor} border rounded-lg p-4 mb-4`}>
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
           <config.icon className={`h-5 w-5 ${config.iconColor} mt-0.5 flex-shrink-0`} />
@@ -153,5 +173,14 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
         )}
       </div>
     </div>
+
+      {/* Modal de Upgrade */}
+      <ModalUpgrade
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        onSuccess={handleUpgradeSuccess}
+        planoSugerido={null} // Deixar o usuário escolher livremente
+      />
+    </>
   );
 };

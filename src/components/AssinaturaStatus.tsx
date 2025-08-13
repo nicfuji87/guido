@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Check, 
   Clock, 
@@ -10,9 +10,11 @@ import {
   Users
 } from 'lucide-react';
 import { useAssinatura } from '../hooks/useAssinatura';
+import { ModalUpgrade } from './ModalUpgrade';
 
 // AI dev note: Componente para dashboard - mostra status detalhado da assinatura
 // Inclui métricas importantes e próximas ações
+// Integrado com ModalUpgrade para fluxo completo de upgrade
 
 interface AssinaturaStatusProps {
   showDetails?: boolean;
@@ -26,6 +28,7 @@ export const AssinaturaStatus: React.FC<AssinaturaStatusProps> = ({
   onManageSubscription
 }) => {
   const { assinatura, status, isLoading } = useAssinatura();
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -150,7 +153,8 @@ export const AssinaturaStatus: React.FC<AssinaturaStatusProps> = ({
   };
 
   return (
-    <div className={`${statusConfig.bgColor} ${statusConfig.borderColor} border rounded-lg p-6`}>
+    <>
+      <div className={`${statusConfig.bgColor} ${statusConfig.borderColor} border rounded-lg p-6`}>
       {/* Header com Status */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -241,9 +245,12 @@ export const AssinaturaStatus: React.FC<AssinaturaStatusProps> = ({
 
       {/* Ações */}
       <div className="flex gap-3">
-        {status.precisaUpgrade && onUpgrade && (
+        {status.precisaUpgrade && (
           <button
-            onClick={onUpgrade}
+            onClick={() => {
+              setIsUpgradeModalOpen(true);
+              onUpgrade?.();
+            }}
             className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               statusConfig.color === 'red' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' :
               statusConfig.color === 'amber' ? 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500' :
@@ -265,6 +272,18 @@ export const AssinaturaStatus: React.FC<AssinaturaStatusProps> = ({
           </button>
         )}
       </div>
-    </div>
+      </div>
+
+      {/* Modal de Upgrade */}
+      <ModalUpgrade
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        onSuccess={(result) => {
+          console.log('[AssinaturaStatus] Upgrade realizado com sucesso:', result);
+          // Refresh da página ou callback específico se necessário
+        }}
+        planoSugerido={null} // Deixar o usuário escolher
+      />
+    </>
   );
 };
