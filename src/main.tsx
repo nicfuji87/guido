@@ -1,11 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import '@/styles/index.css'
+import Routes from '@/app/routes'
 
-function Root() {
-  return <div>Guido app base</div>
-}
-
-ReactDOM.render(<Root />, document.getElementById('root'))
+ReactDOM.render(<Routes />, document.getElementById('root'))
 
 
