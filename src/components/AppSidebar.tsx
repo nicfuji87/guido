@@ -50,7 +50,7 @@ export const AppSidebar = () => {
     {
       title: "Dashboard",
       icon: Home,
-      href: "/dashboard"
+      href: "/app"
     },
     {
       title: "Conversas", 
@@ -97,10 +97,10 @@ export const AppSidebar = () => {
   const visibleItems = sidebarItems.filter(item => item.visible !== false);
 
   return (
-    <Sidebar className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 border-r border-gray-700/50 shadow-2xl">
-      <SidebarHeader className="p-6 border-b border-gray-700/30">
+    <Sidebar className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 border-r border-gray-700/50 shadow-2xl relative">
+      <SidebarHeader className="p-6 border-b border-gray-700/30 relative">
         <div className="flex items-center justify-between">
-          {expanded ? (
+          {expanded && (
             <div className="flex-1 flex justify-center">
               <img 
                 src="/images/guido/guido logo dark - sem fundo.png" 
@@ -108,24 +108,25 @@ export const AppSidebar = () => {
                 className="w-16 h-16 object-contain filter brightness-0 invert"
               />
             </div>
-          ) : (
-            <div className="mx-auto">
-              <img 
-                src="/images/guido/guido logo dark - sem fundo.png" 
-                alt="Guido Logo" 
-                className="w-12 h-12 object-contain filter brightness-0 invert"
-              />
-            </div>
           )}
-          <Button
-            variant="ghost" 
-            size="sm"
-            onClick={toggle}
-            className={`h-9 w-9 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200 rounded-lg ${!expanded ? 'absolute top-2 right-2' : ''}`}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
         </div>
+        
+        {/* Botão de toggle sempre visível */}
+        <Button
+          variant="ghost" 
+          size="sm"
+          onClick={toggle}
+          className={cn(
+            "h-10 w-10 p-0 text-gray-300 hover:text-white hover:bg-cyan-600/20 transition-all duration-200 rounded-lg z-20",
+            "absolute top-3 right-3",
+            "shadow-lg border border-gray-600/50 hover:border-cyan-400/70",
+            "backdrop-blur-sm bg-gray-800/80",
+            !expanded && "ring-2 ring-cyan-500/30 animate-pulse"
+          )}
+          title={expanded ? "Recolher menu" : "Expandir menu"}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       </SidebarHeader>
 
       <SidebarContent className="px-4 py-6">

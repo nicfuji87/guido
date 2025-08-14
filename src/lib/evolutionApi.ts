@@ -13,19 +13,11 @@ class EvolutionApiClient {
     this.baseUrl = EVOLUTION_BASE_URL;
   }
 
-  private async makeRequest(endpoint: string, options: any = {}, userApiKey?: string) {
+  private async makeRequest(endpoint: string, options: any = {}, userApiKey?: string) { // eslint-disable-line @typescript-eslint/no-explicit-any
     const url = `${this.baseUrl}${endpoint}`;
     const apiKey = userApiKey || GLOBAL_API_KEY;
     
-    console.log('🔍 [DEBUG] Evolution API Request:', {
-      url,
-      method: options.method || 'GET',
-      apiKey: apiKey ? `${apiKey.substring(0, 8)}...` : 'undefined',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': apiKey ? `${apiKey.substring(0, 8)}...` : 'undefined'
-      }
-    });
+
     
     const response = await fetch(url, {
       ...options,
@@ -36,20 +28,16 @@ class EvolutionApiClient {
       },
     });
 
-    console.log('🔍 [DEBUG] Evolution API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
+
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('🔍 [DEBUG] Evolution API Error Response:', errorText);
+
       throw new Error(`Evolution API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('🔍 [DEBUG] Evolution API Response Data:', data);
+
     
     return data;
   }
@@ -82,7 +70,7 @@ class EvolutionApiClient {
   // Reiniciar instância
   async restartInstance(instanceName: string, userApiKey?: string): Promise<void> {
     return this.makeRequest(`/instance/restart/${instanceName}`, {
-      method: 'PUT',
+      method: 'POST',
     }, userApiKey);
   }
 

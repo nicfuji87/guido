@@ -17,46 +17,33 @@ export const EvolutionWhatsAppWidget = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastStatusCheck, setLastStatusCheck] = useState<Date | null>(null);
   
-  const pollIntervalRef = useRef<any>();
+  const pollIntervalRef = useRef<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   // Usar dados da Evolution do usuário atual ou fallback para dados antigos
   const instanceName = currentCorretor?.evolution_instance || (currentCorretor ? `guido_${currentCorretor.id}` : 'guido_default');
   const userApiKey = currentCorretor?.evolution_apikey;
 
-  console.log('🔍 [DEBUG] EvolutionWhatsAppWidget montado', {
-    currentCorretor: currentCorretor ? {
-      id: currentCorretor.id,
-      nome: currentCorretor.nome,
-      evolution_instance: currentCorretor.evolution_instance,
-      evolution_apikey: currentCorretor.evolution_apikey ? 'definido' : 'undefined'
-    } : 'undefined',
-    instanceName,
-    userApiKey: userApiKey ? 'definido' : 'undefined'
-  });
+
 
   const loadInstanceStatus = useCallback(async (showLoading = true) => {
     if (!instanceName) {
-      console.log('🔍 [DEBUG] loadInstanceStatus: instanceName vazio', { instanceName });
+
       return;
     }
     
-    console.log('🔍 [DEBUG] loadInstanceStatus iniciado', { 
-      instanceName, 
-      userApiKey: userApiKey ? 'definido' : 'undefined',
-      showLoading 
-    });
+
     
     try {
       if (showLoading) setIsLoading(true);
       setError(null);
       
       const status = await evolutionApi.getInstanceStatus(instanceName, userApiKey);
-      console.log('🔍 [DEBUG] Status retornado da API:', status);
+
       
       setInstance(status);
       setLastStatusCheck(new Date());
     } catch (err) {
-      console.error('🔍 [DEBUG] Erro ao carregar status da instância:', err);
+
       setError('Erro ao verificar status da conexão');
     } finally {
       if (showLoading) setIsLoading(false);
@@ -161,10 +148,7 @@ export const EvolutionWhatsAppWidget = () => {
   }, [instanceName, loadInstanceStatus]);
 
   const getStatusIcon = () => {
-    console.log('🔍 [DEBUG] getStatusIcon chamado', { 
-      instance: instance,
-      state: instance?.state 
-    });
+
     
     if (!instance) return <AlertCircle className="w-5 h-5 text-gray-400" />;
     
@@ -179,10 +163,7 @@ export const EvolutionWhatsAppWidget = () => {
   };
 
   const getStatusText = () => {
-    console.log('🔍 [DEBUG] getStatusText chamado', { 
-      instance: instance,
-      state: instance?.state 
-    });
+
     
     if (!instance) return 'Não configurado';
     
@@ -350,9 +331,6 @@ export const EvolutionWhatsAppWidget = () => {
             </div>
             <div className="space-y-2">
               <p className="text-white font-medium">WhatsApp Conectado</p>
-              <p className="text-gray-400 text-sm">
-                Seu WhatsApp está conectado e pronto para receber mensagens no Guido.
-              </p>
               {instanceName && (
                 <p className="text-xs text-green-400 font-mono bg-gray-900 px-2 py-1 rounded">
                   Instância: {instanceName}

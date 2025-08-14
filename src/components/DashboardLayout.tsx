@@ -9,9 +9,10 @@ import { ViewContextProvider } from '@/hooks/useViewContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  title?: string;
 }
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
   return (
     <ViewContextProvider>
       <SidebarProvider defaultExpanded={true}>
@@ -22,7 +23,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {/* Área principal */}
           <SidebarInset className="flex flex-col">
             {/* Header */}
-            <DashboardHeader />
+            <DashboardHeader title={title} />
             
             {/* Conteúdo */}
             <main className="flex-1 overflow-auto">

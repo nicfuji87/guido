@@ -6,6 +6,7 @@ import Landing from '@/pages/Landing'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Integrations from '@/pages/Integrations'
+import Conversas from '@/pages/Conversas'
 
 // Auth
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
@@ -49,6 +50,9 @@ function AppRoutes() {
         </PrivateRoute>
         <PrivateRoute path="/integrations">
           <Integrations />
+        </PrivateRoute>
+        <PrivateRoute path="/conversations">
+          <Conversas />
         </PrivateRoute>
         <Redirect to="/" />
       </Switch>

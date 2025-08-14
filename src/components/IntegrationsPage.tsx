@@ -9,35 +9,15 @@ import { Separator } from '@/components/ui';
 
 export const IntegrationsPage = () => {
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Integrações">
       <div className="flex-1 bg-gradient-to-br from-gray-900 to-black">
         <div className="p-6 space-y-8 max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
-                  Integrações
-                </h1>
-                <p className="text-gray-300">
-                  Conecte seu WhatsApp e integre com seus CRMs favoritos
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-green-400">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                Atualizado em tempo real
-              </div>
-            </div>
-          </div>
-
-          <Separator className="bg-gray-700" />
-
           {/* WhatsApp Integration */}
           <section className="space-y-4">
             <div className="space-y-2">
               <h2 className="text-xl font-semibold text-white">WhatsApp Business</h2>
               <p className="text-gray-400 text-sm">
-                Conecte seu WhatsApp para receber e enviar mensagens diretamente no Guido
+                Conecte o Guido no seu WhatsApp
               </p>
             </div>
             <EvolutionWhatsAppWidget />
