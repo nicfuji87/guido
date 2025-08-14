@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui';
 import { KanbanClient } from '@/types/kanban';
 import { URGENCIA_CONFIG } from '@/lib/kanbanConfig';
 import { cn } from '@/lib/utils';
+import { useHistory } from 'react-router-dom';
 
 // AI dev note: Card individual de cliente no Kanban
 // Mostra informações essenciais e status de urgência
@@ -17,9 +18,14 @@ interface ClientCardProps {
 export const ClientCard: React.FC<ClientCardProps> = ({
   client,
   isDragging = false,
-  onClick
+  onClick: _onClick
 }) => {
+  const history = useHistory();
   const urgenciaConfig = URGENCIA_CONFIG[client.urgencia || 'baixa'];
+  
+  const handleCardClick = () => {
+    history.push(`/clientes/${client.id}`);
+  };
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -40,7 +46,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
         isDragging && "opacity-50 rotate-2 shadow-2xl",
         urgenciaConfig.color === 'bg-red-500' && "ring-1 ring-red-500/30"
       )}
-      onClick={onClick}
+      onClick={handleCardClick}
     >
       <CardContent className="p-4 space-y-3">
         {/* Header com nome e urgência */}

@@ -87,13 +87,7 @@ export const AppSidebar = () => {
     {
       title: "Clientes",
       icon: Users,
-      href: "/clients",
-      children: [
-        { title: "Todos os Clientes", href: "/clients" },
-        { title: "Leads Novos", href: "/clients?status=new" },
-        { title: "Em Negociação", href: "/clients?status=negotiating" },
-        { title: "Fechados", href: "/clients?status=closed" }
-      ]
+      href: "/clientes"
     },
     {
       title: "Lembretes",
