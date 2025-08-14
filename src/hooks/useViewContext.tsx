@@ -23,6 +23,8 @@ export interface ViewContext {
     email: string;
     funcao: UserRole;
     conta_id: string;
+    evolution_instance?: string;
+    evolution_apikey?: string;
   };
   corretores: Array<{
     id: string;
@@ -76,7 +78,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
           setUserId('mock-user-001');
           setContaId('mock-conta-001');
           setUserRole('AGENTE'); // AI dev note: Definindo como AGENTE para desenvolvimento do corretor
-          setCurrentCorretor({ id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE', conta_id: 'mock-conta-001' });
+          setCurrentCorretor({ id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE', conta_id: 'mock-conta-001', evolution_instance: 'arnelBea', evolution_apikey: 'arnelBea' });
           setCorretores([
             { id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE' },
             { id: 'mock-user-002', nome: 'Ana Silva', email: 'ana.silva@empresa.com', funcao: 'AGENTE' },
@@ -87,7 +89,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
 
         log.debug('Buscando dados do corretor', 'useViewContext', { email: user.email });
 
-        // Buscar corretor atual com melhor tratamento de erro
+        // Buscar corretor atual
         const { data: corretor, error } = await supabase
           .from('corretores')
           .select('id, nome, email, funcao, conta_id')
@@ -111,10 +113,22 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
             
             if (corretorList && corretorList.length > 0) {
               const corretor = corretorList[0];
+              
+              // Buscar dados Evolution do usuário
+              const { data: userData } = await supabase
+                .from('usuarios')
+                .select('evolution_instance, evolution_apikey')
+                .eq('email', user.email)
+                .single();
+
               setUserId(corretor.id);
               setContaId(corretor.conta_id);
               setUserRole(corretor.funcao as UserRole);
-              setCurrentCorretor(corretor);
+              setCurrentCorretor({
+                ...corretor,
+                evolution_instance: userData?.evolution_instance,
+                evolution_apikey: userData?.evolution_apikey
+              });
 
               if (!['DONO', 'ADMIN'].includes(corretor.funcao)) {
                 setViewMode('self');
@@ -126,10 +140,22 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
 
         if (corretor) {
           log.info('Corretor encontrado', 'useViewContext', { nome: corretor.nome, funcao: corretor.funcao });
+          
+          // Buscar dados Evolution do usuário
+          const { data: userData } = await supabase
+            .from('usuarios')
+            .select('evolution_instance, evolution_apikey')
+            .eq('email', user.email)
+            .single();
+
           setUserId(corretor.id);
           setContaId(corretor.conta_id);
           setUserRole(corretor.funcao as UserRole);
-          setCurrentCorretor(corretor);
+          setCurrentCorretor({
+            ...corretor,
+            evolution_instance: userData?.evolution_instance,
+            evolution_apikey: userData?.evolution_apikey
+          });
 
           // Se não pode gerenciar equipe, forçar modo 'self'
           if (!['DONO', 'ADMIN'].includes(corretor.funcao)) {

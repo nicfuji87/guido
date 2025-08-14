@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Smartphone, QrCode, CheckCircle, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Smartphone, QrCode, CheckCircle, AlertCircle, Wifi, WifiOff, RotateCcw } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from '@/components/ui';
 import { evolutionApi } from '@/lib/evolutionApi';
 import { EvolutionInstance, EvolutionQRCode } from '@/types/evolution';
@@ -15,24 +15,53 @@ export const EvolutionWhatsAppWidget = () => {
   const [qrCode, setQrCode] = useState<EvolutionQRCode | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastStatusCheck, setLastStatusCheck] = useState<Date | null>(null);
+  
+  const pollIntervalRef = useRef<any>();
 
-  // Nome da instância baseado no ID do corretor
-  const instanceName = currentCorretor ? `guido_${currentCorretor.id}` : 'guido_default';
+  // Usar dados da Evolution do usuário atual ou fallback para dados antigos
+  const instanceName = currentCorretor?.evolution_instance || (currentCorretor ? `guido_${currentCorretor.id}` : 'guido_default');
+  const userApiKey = currentCorretor?.evolution_apikey;
 
-  const loadInstanceStatus = async () => {
+  console.log('🔍 [DEBUG] EvolutionWhatsAppWidget montado', {
+    currentCorretor: currentCorretor ? {
+      id: currentCorretor.id,
+      nome: currentCorretor.nome,
+      evolution_instance: currentCorretor.evolution_instance,
+      evolution_apikey: currentCorretor.evolution_apikey ? 'definido' : 'undefined'
+    } : 'undefined',
+    instanceName,
+    userApiKey: userApiKey ? 'definido' : 'undefined'
+  });
+
+  const loadInstanceStatus = useCallback(async (showLoading = true) => {
+    if (!instanceName) {
+      console.log('🔍 [DEBUG] loadInstanceStatus: instanceName vazio', { instanceName });
+      return;
+    }
+    
+    console.log('🔍 [DEBUG] loadInstanceStatus iniciado', { 
+      instanceName, 
+      userApiKey: userApiKey ? 'definido' : 'undefined',
+      showLoading 
+    });
+    
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       setError(null);
       
-      const status = await evolutionApi.getInstanceStatus(instanceName);
+      const status = await evolutionApi.getInstanceStatus(instanceName, userApiKey);
+      console.log('🔍 [DEBUG] Status retornado da API:', status);
+      
       setInstance(status);
+      setLastStatusCheck(new Date());
     } catch (err) {
-      // console.error('Erro ao carregar status da instância:', err);
+      console.error('🔍 [DEBUG] Erro ao carregar status da instância:', err);
       setError('Erro ao verificar status da conexão');
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
-  };
+  }, [instanceName, userApiKey]);
 
   const createInstance = async () => {
     try {
@@ -54,15 +83,17 @@ export const EvolutionWhatsAppWidget = () => {
   };
 
   const generateQRCode = async () => {
+    if (!instanceName) return;
+    
     try {
       setIsLoading(true);
       setError(null);
       
-      const qr = await evolutionApi.connectInstance(instanceName);
+      const qr = await evolutionApi.connectInstance(instanceName, userApiKey);
       setQrCode(qr);
       
       // Atualizar status
-      await loadInstanceStatus();
+      await loadInstanceStatus(false);
     } catch (err) {
       // console.error('Erro ao gerar QR code:', err);
       setError('Erro ao gerar QR code');
@@ -71,12 +102,34 @@ export const EvolutionWhatsAppWidget = () => {
     }
   };
 
-  const disconnectWhatsApp = async () => {
+  const restartInstance = async () => {
+    if (!instanceName) return;
+    
     try {
       setIsLoading(true);
       setError(null);
       
-      await evolutionApi.logoutInstance(instanceName);
+      await evolutionApi.restartInstance(instanceName, userApiKey);
+      setQrCode(null);
+      
+      // Aguardar um pouco e verificar status
+      setTimeout(() => loadInstanceStatus(false), 2000);
+    } catch (err) {
+      // console.error('Erro ao reiniciar instância:', err);
+      setError('Erro ao reiniciar instância');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const disconnectWhatsApp = async () => {
+    if (!instanceName) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      await evolutionApi.logoutInstance(instanceName, userApiKey);
       setInstance(null);
       setQrCode(null);
     } catch (err) {
@@ -87,11 +140,32 @@ export const EvolutionWhatsAppWidget = () => {
     }
   };
 
+  // Polling de status a cada minuto
   useEffect(() => {
+    if (!instanceName) return;
+    
+    // Carregar status inicial
     loadInstanceStatus();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    
+    // Configurar polling a cada 60 segundos
+    pollIntervalRef.current = setInterval(() => {
+      loadInstanceStatus(false); // Não mostrar loading no polling
+    }, 60000);
+    
+    // Cleanup
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [instanceName, loadInstanceStatus]);
 
   const getStatusIcon = () => {
+    console.log('🔍 [DEBUG] getStatusIcon chamado', { 
+      instance: instance,
+      connectionStatus: instance?.connectionStatus 
+    });
+    
     if (!instance) return <AlertCircle className="w-5 h-5 text-gray-400" />;
     
     switch (instance.connectionStatus) {
@@ -105,6 +179,11 @@ export const EvolutionWhatsAppWidget = () => {
   };
 
   const getStatusText = () => {
+    console.log('🔍 [DEBUG] getStatusText chamado', { 
+      instance: instance,
+      connectionStatus: instance?.connectionStatus 
+    });
+    
     if (!instance) return 'Não configurado';
     
     switch (instance.connectionStatus) {
@@ -145,21 +224,44 @@ export const EvolutionWhatsAppWidget = () => {
                 <span className={cn('text-sm font-medium', getStatusColor())}>
                   {getStatusText()}
                 </span>
+                {lastStatusCheck && (
+                  <span className="text-xs text-gray-500 ml-2">
+                    • {lastStatusCheck.toLocaleTimeString('pt-BR', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                )}
               </div>
             </div>
           </div>
           
-          {instance?.connectionStatus === 'connected' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={disconnectWhatsApp}
-              disabled={isLoading}
-              className="border-red-600 text-red-400 hover:bg-red-900/20"
-            >
-              Desconectar
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {instance && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={restartInstance}
+                disabled={isLoading}
+                className="border-yellow-600 text-yellow-400 hover:bg-yellow-900/20"
+                title="Reiniciar instância"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {instance?.connectionStatus === 'connected' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={disconnectWhatsApp}
+                disabled={isLoading}
+                className="border-red-600 text-red-400 hover:bg-red-900/20"
+              >
+                Desconectar
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -190,6 +292,11 @@ export const EvolutionWhatsAppWidget = () => {
                   <p className="text-gray-400 text-sm">
                     Abra o WhatsApp no seu celular, vá em <strong>Dispositivos conectados</strong> e escaneie este código.
                   </p>
+                  {instanceName && (
+                    <p className="text-xs text-cyan-400 font-mono bg-gray-900 px-2 py-1 rounded">
+                      Instância: {instanceName}
+                    </p>
+                  )}
                 </div>
                 <Button
                   onClick={generateQRCode}
@@ -245,6 +352,14 @@ export const EvolutionWhatsAppWidget = () => {
               <p className="text-white font-medium">WhatsApp Conectado</p>
               <p className="text-gray-400 text-sm">
                 Seu WhatsApp está conectado e pronto para receber mensagens no Guido.
+              </p>
+              {instanceName && (
+                <p className="text-xs text-green-400 font-mono bg-gray-900 px-2 py-1 rounded">
+                  Instância: {instanceName}
+                </p>
+              )}
+              <p className="text-xs text-gray-500">
+                Status verificado automaticamente a cada minuto
               </p>
             </div>
           </div>

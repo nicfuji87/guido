@@ -8,30 +8,50 @@ const GLOBAL_API_KEY = '9b6cd7db-bf58-4b18-8226-f202d9baaf67';
 
 class EvolutionApiClient {
   private baseUrl: string;
-  private apiKey: string;
 
   constructor() {
     this.baseUrl = EVOLUTION_BASE_URL;
-    this.apiKey = GLOBAL_API_KEY;
   }
 
-  private async makeRequest(endpoint: string, options: any = {}) {
+  private async makeRequest(endpoint: string, options: any = {}, userApiKey?: string) {
     const url = `${this.baseUrl}${endpoint}`;
+    const apiKey = userApiKey || GLOBAL_API_KEY;
+    
+    console.log('🔍 [DEBUG] Evolution API Request:', {
+      url,
+      method: options.method || 'GET',
+      apiKey: apiKey ? `${apiKey.substring(0, 8)}...` : 'undefined',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': apiKey ? `${apiKey.substring(0, 8)}...` : 'undefined'
+      }
+    });
     
     const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        'apikey': this.apiKey,
+        'apikey': apiKey,
         ...options.headers,
       },
     });
 
+    console.log('🔍 [DEBUG] Evolution API Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+
     if (!response.ok) {
-      throw new Error(`Evolution API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('🔍 [DEBUG] Evolution API Error Response:', errorText);
+      throw new Error(`Evolution API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log('🔍 [DEBUG] Evolution API Response Data:', data);
+    
+    return data;
   }
 
   // Criar uma nova instância para o corretor
@@ -43,17 +63,24 @@ class EvolutionApiClient {
   }
 
   // Conectar instância (gerar QR code)
-  async connectInstance(instanceName: string): Promise<EvolutionQRCode> {
+  async connectInstance(instanceName: string, userApiKey?: string): Promise<EvolutionQRCode> {
     return this.makeRequest(`/instance/connect/${instanceName}`, {
       method: 'GET',
-    });
+    }, userApiKey);
   }
 
   // Verificar status da instância
-  async getInstanceStatus(instanceName: string): Promise<EvolutionInstance> {
+  async getInstanceStatus(instanceName: string, userApiKey?: string): Promise<EvolutionInstance> {
     return this.makeRequest(`/instance/connectionState/${instanceName}`, {
       method: 'GET',
-    });
+    }, userApiKey);
+  }
+
+  // Reiniciar instância
+  async restartInstance(instanceName: string, userApiKey?: string): Promise<void> {
+    return this.makeRequest(`/instance/restart/${instanceName}`, {
+      method: 'PUT',
+    }, userApiKey);
   }
 
   // Listar todas as instâncias
@@ -71,10 +98,10 @@ class EvolutionApiClient {
   }
 
   // Logout da instância (desconectar WhatsApp)
-  async logoutInstance(instanceName: string): Promise<void> {
+  async logoutInstance(instanceName: string, userApiKey?: string): Promise<void> {
     return this.makeRequest(`/instance/logout/${instanceName}`, {
       method: 'DELETE',
-    });
+    }, userApiKey);
   }
 }
 
