@@ -17,8 +17,6 @@ class EvolutionApiClient {
     const url = `${this.baseUrl}${endpoint}`;
     const apiKey = userApiKey || GLOBAL_API_KEY;
     
-
-    
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -28,11 +26,8 @@ class EvolutionApiClient {
       },
     });
 
-
-
     if (!response.ok) {
       const errorText = await response.text();
-
       throw new Error(`Evolution API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 

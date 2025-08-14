@@ -27,23 +27,18 @@ export const EvolutionWhatsAppWidget = () => {
 
   const loadInstanceStatus = useCallback(async (showLoading = true) => {
     if (!instanceName) {
-
       return;
     }
-    
-
     
     try {
       if (showLoading) setIsLoading(true);
       setError(null);
       
       const status = await evolutionApi.getInstanceStatus(instanceName, userApiKey);
-
       
       setInstance(status);
       setLastStatusCheck(new Date());
     } catch (err) {
-
       setError('Erro ao verificar status da conexão');
     } finally {
       if (showLoading) setIsLoading(false);
@@ -129,7 +124,10 @@ export const EvolutionWhatsAppWidget = () => {
 
   // Polling de status a cada minuto
   useEffect(() => {
-    if (!instanceName) return;
+    // Só executar se temos dados reais do usuário (evita fallback guido_default)
+    if (!currentCorretor?.evolution_instance) {
+      return;
+    }
     
     // Carregar status inicial
     loadInstanceStatus();
@@ -145,7 +143,7 @@ export const EvolutionWhatsAppWidget = () => {
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [instanceName, loadInstanceStatus]);
+  }, [currentCorretor?.evolution_instance, loadInstanceStatus]);
 
   const getStatusIcon = () => {
 

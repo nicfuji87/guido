@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
   Home, 
   MessageCircle, 
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui';
 import { Button, Avatar, AvatarFallback, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui';
 import { useViewContext } from '@/hooks/useViewContext';
+import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus';
 import { cn } from '@/lib/utils';
 
 // AI dev note: Sidebar principal do dashboard
@@ -41,6 +43,30 @@ interface SidebarItem {
 export const AppSidebar = () => {
   const { expanded, toggle } = useSidebar();
   const { userRole, canManageTeam } = useViewContext();
+  const { systemStatus } = useWhatsAppStatus();
+  const location = useLocation();
+
+  // AI dev note: Função para determinar se um item está ativo baseado na rota atual
+  const isItemActive = (item: SidebarItem): boolean => {
+    const currentPath = location.pathname;
+    
+    // Verificar se a rota exata corresponde
+    if (currentPath === item.href) {
+      return true;
+    }
+    
+    // Verificar se algum submenu está ativo
+    if (item.children) {
+      return item.children.some(child => currentPath === child.href || currentPath.startsWith(child.href + '/'));
+    }
+    
+    // Para rotas que não são exatas, verificar se inicia com o href (mas não para dashboard)
+    if (item.href !== '/app') {
+      return currentPath.startsWith(item.href + '/');
+    }
+    
+    return false;
+  };
 
   // Dados mock para badges - serão substituídos por dados reais
   const pendingConversations = 5;
@@ -131,25 +157,28 @@ export const AppSidebar = () => {
 
       <SidebarContent className="px-4 py-6">
         <SidebarMenu className="space-y-2">
-          {visibleItems.map((item, index) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton 
-                href={item.href}
-                className={cn(
-                  "relative group transition-all duration-200 rounded-xl",
-                  "text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-purple-600/20",
-                  "border border-transparent hover:border-blue-500/30",
-                  "shadow-lg hover:shadow-blue-500/10",
-                  "p-3",
-                  index === 0 && "bg-gradient-to-r from-blue-600/10 to-purple-600/10 border-blue-500/20 text-white" // Destaque para item ativo
-                )}
-              >
-                <item.icon className={cn(
-                  "h-5 w-5 shrink-0 transition-all duration-200",
-                  "group-hover:scale-110 group-hover:text-blue-400",
-                  !expanded && "mx-auto",
-                  index === 0 && "text-blue-400" // Cor especial para item ativo
-                )} />
+          {visibleItems.map((item, _index) => {
+            const isActive = isItemActive(item);
+            
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  href={item.href}
+                  className={cn(
+                    "relative group transition-all duration-200 rounded-xl",
+                    "text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-purple-600/20",
+                    "border border-transparent hover:border-blue-500/30",
+                    "shadow-lg hover:shadow-blue-500/10",
+                    "p-3",
+                    isActive && "bg-gradient-to-r from-blue-600/10 to-purple-600/10 border-blue-500/20 text-white" // Destaque para item ativo
+                  )}
+                >
+                  <item.icon className={cn(
+                    "h-5 w-5 shrink-0 transition-all duration-200",
+                    "group-hover:scale-110 group-hover:text-blue-400",
+                    !expanded && "mx-auto",
+                    isActive && "text-blue-400" // Cor especial para item ativo
+                  )} />
                 {expanded && (
                   <>
                     <span className="truncate font-medium text-sm">{item.title}</span>
@@ -170,20 +199,32 @@ export const AppSidebar = () => {
               {/* Submenu items - apenas quando expandido */}
               {expanded && item.children && (
                 <div className="ml-8 mt-2 space-y-1 border-l border-gray-700/50 pl-4">
-                  {item.children.map((child) => (
-                    <SidebarMenuButton 
-                      key={child.title}
-                      href={child.href}
-                      className="text-sm text-gray-400 hover:text-gray-200 hover:bg-gray-700/30 transition-all duration-200 rounded-lg py-2 px-3"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-gray-600 mr-3"></div>
-                      <span>{child.title}</span>
-                    </SidebarMenuButton>
-                  ))}
+                  {item.children.map((child) => {
+                    const isChildActive = location.pathname === child.href || location.pathname.startsWith(child.href + '/');
+                    return (
+                      <SidebarMenuButton 
+                        key={child.title}
+                        href={child.href}
+                        className={cn(
+                          "text-sm transition-all duration-200 rounded-lg py-2 px-3",
+                          isChildActive 
+                            ? "text-blue-400 bg-blue-600/10 border border-blue-500/20" 
+                            : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/30"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-2 h-2 rounded-full mr-3",
+                          isChildActive ? "bg-blue-400" : "bg-gray-600"
+                        )}></div>
+                        <span>{child.title}</span>
+                      </SidebarMenuButton>
+                    );
+                  })}
                 </div>
               )}
             </SidebarMenuItem>
-          ))}
+          );
+          })}
         </SidebarMenu>
         
         {/* Separador visual */}
@@ -191,12 +232,35 @@ export const AppSidebar = () => {
         
         {/* Seção de status */}
         {expanded && (
-          <div className="px-4 py-3 mx-2 bg-gradient-to-r from-green-900/20 to-emerald-900/20 border border-green-700/30 rounded-xl">
+          <div className={cn(
+            "px-4 py-3 mx-2 border rounded-xl transition-colors",
+            systemStatus.isOnline 
+              ? "bg-gradient-to-r from-green-900/20 to-emerald-900/20 border-green-700/30"
+              : systemStatus.status === 'connecting'
+              ? "bg-gradient-to-r from-yellow-900/20 to-amber-900/20 border-yellow-700/30"
+              : "bg-gradient-to-r from-red-900/20 to-rose-900/20 border-red-700/30"
+          )}>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <div className={cn(
+                "w-2 h-2 rounded-full",
+                systemStatus.isOnline 
+                  ? "bg-green-400 animate-pulse"
+                  : systemStatus.status === 'connecting'
+                  ? "bg-yellow-400 animate-pulse"
+                  : "bg-red-400"
+              )}></div>
               <div className="flex flex-col">
-                <span className="text-xs font-medium text-green-400">Sistema Online</span>
-                <span className="text-xs text-gray-400">Tudo funcionando</span>
+                <span className={cn(
+                  "text-xs font-medium",
+                  systemStatus.isOnline 
+                    ? "text-green-400"
+                    : systemStatus.status === 'connecting'
+                    ? "text-yellow-400"
+                    : "text-red-400"
+                )}>
+                  {systemStatus.isOnline ? 'WhatsApp Online' : systemStatus.status === 'connecting' ? 'WhatsApp Conectando' : 'WhatsApp Offline'}
+                </span>
+                <span className="text-xs text-gray-400">{systemStatus.statusText}</span>
               </div>
             </div>
           </div>
