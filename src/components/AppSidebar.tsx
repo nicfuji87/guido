@@ -85,10 +85,11 @@ export const AppSidebar = () => {
       title: "Configurações",
       icon: Settings,
       href: "/account",
-      visible: canManageTeam,
-      children: [
+      children: canManageTeam ? [
         { title: "Gerenciar Equipe", href: "/team" },
         { title: "Planos & Cobrança", href: "/billing" },
+        { title: "Preferências", href: "/settings" }
+      ] : [
         { title: "Preferências", href: "/settings" }
       ]
     }
@@ -100,39 +101,28 @@ export const AppSidebar = () => {
     <Sidebar className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 border-r border-gray-700/50 shadow-2xl">
       <SidebarHeader className="p-6 border-b border-gray-700/30">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {expanded && (
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <img 
-                    src="/images/guido/guido logo dark - sem fundo.png" 
-                    alt="Guido Logo" 
-                    className="w-10 h-10 object-contain filter brightness-0 invert"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg opacity-20 blur-sm"></div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-xl tracking-tight text-white">Guido</span>
-                  <span className="text-xs text-gray-400 font-medium">CRM Inteligente</span>
-                </div>
-              </div>
-            )}
-            {!expanded && (
-              <div className="relative mx-auto">
-                <img 
-                  src="/images/guido/guido logo dark - sem fundo.png" 
-                  alt="Guido Logo" 
-                  className="w-10 h-10 object-contain filter brightness-0 invert"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg opacity-20 blur-sm"></div>
-              </div>
-            )}
-          </div>
+          {expanded ? (
+            <div className="flex-1 flex justify-center">
+              <img 
+                src="/images/guido/guido logo dark - sem fundo.png" 
+                alt="Guido Logo" 
+                className="w-16 h-16 object-contain filter brightness-0 invert"
+              />
+            </div>
+          ) : (
+            <div className="mx-auto">
+              <img 
+                src="/images/guido/guido logo dark - sem fundo.png" 
+                alt="Guido Logo" 
+                className="w-12 h-12 object-contain filter brightness-0 invert"
+              />
+            </div>
+          )}
           <Button
             variant="ghost" 
             size="sm"
             onClick={toggle}
-            className="h-9 w-9 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200 rounded-lg"
+            className={`h-9 w-9 p-0 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all duration-200 rounded-lg ${!expanded ? 'absolute top-2 right-2' : ''}`}
           >
             <Menu className="h-5 w-5" />
           </Button>

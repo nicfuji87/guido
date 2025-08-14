@@ -17,6 +17,12 @@ export interface ViewContext {
   canManageTeam: boolean;
   userId: string;
   contaId: string;
+  currentCorretor?: {
+    id: string;
+    nome: string;
+    email: string;
+    funcao: UserRole;
+  };
   corretores: Array<{
     id: string;
     nome: string;
@@ -53,6 +59,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
   const [userRole, setUserRole] = useState<UserRole>('AGENTE');
   const [userId, setUserId] = useState<string>('');
   const [contaId, setContaId] = useState<string>('');
+  const [currentCorretor, setCurrentCorretor] = useState<ViewContext['currentCorretor']>();
   const [corretores, setCorretores] = useState<ViewContext['corretores']>([]);
 
   const canManageTeam = ['DONO', 'ADMIN'].includes(userRole);
@@ -67,9 +74,10 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
           // Usar dados mock para demonstração quando não autenticado
           setUserId('mock-user-001');
           setContaId('mock-conta-001');
-          setUserRole('DONO');
+          setUserRole('AGENTE'); // AI dev note: Definindo como AGENTE para desenvolvimento do corretor
+          setCurrentCorretor({ id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE' });
           setCorretores([
-            { id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'DONO' },
+            { id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE' },
             { id: 'mock-user-002', nome: 'Ana Silva', email: 'ana.silva@empresa.com', funcao: 'AGENTE' },
             { id: 'mock-user-003', nome: 'Roberto Santos', email: 'roberto.santos@empresa.com', funcao: 'AGENTE' }
           ]);
@@ -105,6 +113,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
               setUserId(corretor.id);
               setContaId(corretor.conta_id);
               setUserRole(corretor.funcao as UserRole);
+              setCurrentCorretor(corretor);
 
               if (!['DONO', 'ADMIN'].includes(corretor.funcao)) {
                 setViewMode('self');
@@ -119,6 +128,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
           setUserId(corretor.id);
           setContaId(corretor.conta_id);
           setUserRole(corretor.funcao as UserRole);
+          setCurrentCorretor(corretor);
 
           // Se não pode gerenciar equipe, forçar modo 'self'
           if (!['DONO', 'ADMIN'].includes(corretor.funcao)) {
@@ -183,6 +193,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
     canManageTeam,
     userId,
     contaId,
+    currentCorretor,
     corretores,
     setViewMode: (mode: ViewMode) => {
       setViewMode(mode);
