@@ -18,11 +18,17 @@ export const useWhatsAppValidation = () => {
   const validationCache = useRef<Record<string, ValidationResult>>({});
 
   // Obter configurações da Evolution API das variáveis de ambiente
-  const evolutionApiUrl = import.meta.env.VITE_EVOLUTION_API_URL;
+  const evolutionBaseUrl = import.meta.env.VITE_EVOLUTION_API_URL;
   const evolutionApiKey = import.meta.env.VITE_EVOLUTION_API_KEY;
+  const evolutionInstanceName = import.meta.env.VITE_EVOLUTION_INSTANCE_NAME;
+
+  // Construir URL de validação dinamicamente
+  const validationUrl = evolutionBaseUrl && evolutionInstanceName 
+    ? `${evolutionBaseUrl}chat/whatsappNumbers/${evolutionInstanceName}`
+    : null;
 
   // Validar se as variáveis estão definidas
-  if (!evolutionApiUrl || !evolutionApiKey) {
+  if (!validationUrl || !evolutionApiKey) {
     // Evolution API não configurada - variáveis de ambiente necessárias
   }
 
@@ -52,7 +58,7 @@ export const useWhatsAppValidation = () => {
     const formattedPhone = formatPhoneForAPI(phone);
     
     // Verificar se a API está configurada
-    if (!evolutionApiUrl || !evolutionApiKey) {
+    if (!validationUrl || !evolutionApiKey) {
       const result: ValidationResult = {
         isValid: false,
         error: 'Validação de WhatsApp não disponível'
@@ -79,7 +85,7 @@ export const useWhatsAppValidation = () => {
     setIsValidating(true);
 
     try {
-      const response = await fetch(evolutionApiUrl, {
+      const response = await fetch(validationUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +136,7 @@ export const useWhatsAppValidation = () => {
     } finally {
       setIsValidating(false);
     }
-  }, [evolutionApiUrl, evolutionApiKey]);
+  }, [validationUrl, evolutionApiKey]);
 
   const clearCache = useCallback(() => {
     validationCache.current = {};

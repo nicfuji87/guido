@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { unformatCPF, formatCPF } from '@/utils/cpfUtils';
+import { createEvolutionInstance } from '@/services/evolutionAPI';
 
 // AI dev note: Hook crítico para onboarding - implementa fluxo completo de 8 passos
 // Inclui logs estratégicos e validações de segurança para debug de problemas
@@ -164,19 +165,31 @@ export const useSignup = () => {
 
       // console.log(`${logPrefix} ✅ Conta criada:`, novaConta.id);
 
-      // === PASSO 5: CRIAR USUÁRIO LOCAL ===
-      // console.log(`${logPrefix} Passo 5: Criando usuário local`);
+      // === PASSO 5: CRIAR USUÁRIO LOCAL E INSTÂNCIA EVOLUTION ===
+      // console.log(`${logPrefix} Passo 5: Criando usuário local e instância Evolution`);
       
+      // 5.1 Criar instância Evolution primeiro
+      // console.log(`${logPrefix} Passo 5.1: Criando instância Evolution`);
+      const evolutionResult = await createEvolutionInstance(data.nome, data.whatsapp);
+      
+      if (!evolutionResult.success) {
+        // console.warn(`${logPrefix} Falha ao criar instância Evolution:`, evolutionResult.error);
+        // Não bloqueia o cadastro, apenas registra o erro
+      }
+
+      // 5.2 Criar usuário com dados da Evolution (se criada com sucesso)
       const { data: novoUsuario, error: erroNovoUsuario } = await supabase
         .from('usuarios')
         .insert({
-          conta_id: novaConta.id,
-          nome: data.nome,
+          name: data.nome, // Campo correto é 'name', não 'nome'
           email: data.email.trim().toLowerCase(),
-          documento: formattedCPF,
           whatsapp: data.whatsapp,
           fonte_cadastro: 'SITE',
-          dados_asaas: dadosAsaas // Salva para uso posterior
+          dados_asaas: dadosAsaas, // Salva para uso posterior
+          // Dados da Evolution (se disponíveis)
+          evolution_instance: evolutionResult.success ? evolutionResult.data?.instanceName : null,
+          evolution_apikey: evolutionResult.success ? evolutionResult.data?.apiKey : null,
+          evolution_url: evolutionResult.success ? evolutionResult.data?.evolutionUrl : null
         })
         .select()
         .single();
@@ -187,6 +200,12 @@ export const useSignup = () => {
       }
 
       // console.log(`${logPrefix} ✅ Usuário criado:`, novoUsuario.id);
+      
+      if (evolutionResult.success) {
+        // console.log(`${logPrefix} ✅ Instância Evolution criada:`, evolutionResult.data?.instanceName);
+      } else {
+        // console.warn(`${logPrefix} ⚠️ Instância Evolution não criada:`, evolutionResult.error);
+      }
 
       // === PASSO 6: CRIAR CORRETOR (DONO DA CONTA) ===
       // console.log(`${logPrefix} Passo 6: Criando corretor principal`);

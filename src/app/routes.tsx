@@ -15,6 +15,9 @@ import { Configuracoes } from '@/pages/Configuracoes'
 // Auth
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
 
+// Toast
+import { ToastProvider } from '@/contexts/ToastContext'
+
 function PrivateRoute({ children, ...rest }: { children: React.ReactNode; [k: string]: unknown }) {
   const { isAuthenticated, isLoading } = useAuth()
   
@@ -79,7 +82,9 @@ function AppRoutes() {
 export default function Routes() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <ToastProvider>
+        <AppRoutes />
+      </ToastProvider>
     </AuthProvider>
   )
 }
