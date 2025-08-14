@@ -5,6 +5,7 @@ import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import Landing from '@/pages/Landing'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
+import Integrations from '@/pages/Integrations'
 
 // Auth
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
@@ -43,8 +44,11 @@ function AppRoutes() {
       <Switch>
         <Route exact path="/" component={Landing} />
         <Route path="/login" component={Login} />
-        <PrivateRoute path="/app">
+        <PrivateRoute exact path="/app">
           <Dashboard />
+        </PrivateRoute>
+        <PrivateRoute path="/integrations">
+          <Integrations />
         </PrivateRoute>
         <Redirect to="/" />
       </Switch>

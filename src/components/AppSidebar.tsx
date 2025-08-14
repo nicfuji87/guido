@@ -78,8 +78,7 @@ export const AppSidebar = () => {
     {
       title: "Integrações",
       icon: Link2,
-      href: "/integrations",
-      visible: canManageTeam
+      href: "/integrations"
     },
     {
       title: "Configurações",

@@ -22,6 +22,7 @@ export interface ViewContext {
     nome: string;
     email: string;
     funcao: UserRole;
+    conta_id: string;
   };
   corretores: Array<{
     id: string;
@@ -75,7 +76,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
           setUserId('mock-user-001');
           setContaId('mock-conta-001');
           setUserRole('AGENTE'); // AI dev note: Definindo como AGENTE para desenvolvimento do corretor
-          setCurrentCorretor({ id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE' });
+          setCurrentCorretor({ id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE', conta_id: 'mock-conta-001' });
           setCorretores([
             { id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE' },
             { id: 'mock-user-002', nome: 'Ana Silva', email: 'ana.silva@empresa.com', funcao: 'AGENTE' },
