@@ -71,9 +71,12 @@ class EvolutionApiClient {
 
   // Verificar status da instância
   async getInstanceStatus(instanceName: string, userApiKey?: string): Promise<EvolutionInstance> {
-    return this.makeRequest(`/instance/connectionState/${instanceName}`, {
+    const response = await this.makeRequest(`/instance/connectionState/${instanceName}`, {
       method: 'GET',
     }, userApiKey);
+    
+    // A API retorna { instance: { instanceName, state } }
+    return response.instance;
   }
 
   // Reiniciar instância

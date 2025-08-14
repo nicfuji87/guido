@@ -163,13 +163,13 @@ export const EvolutionWhatsAppWidget = () => {
   const getStatusIcon = () => {
     console.log('🔍 [DEBUG] getStatusIcon chamado', { 
       instance: instance,
-      connectionStatus: instance?.connectionStatus 
+      state: instance?.state 
     });
     
     if (!instance) return <AlertCircle className="w-5 h-5 text-gray-400" />;
     
-    switch (instance.connectionStatus) {
-      case 'connected':
+    switch (instance.state) {
+      case 'open':
         return <CheckCircle className="w-5 h-5 text-green-400" />;
       case 'connecting':
         return <Wifi className="w-5 h-5 text-yellow-400 animate-pulse" />;
@@ -181,13 +181,13 @@ export const EvolutionWhatsAppWidget = () => {
   const getStatusText = () => {
     console.log('🔍 [DEBUG] getStatusText chamado', { 
       instance: instance,
-      connectionStatus: instance?.connectionStatus 
+      state: instance?.state 
     });
     
     if (!instance) return 'Não configurado';
     
-    switch (instance.connectionStatus) {
-      case 'connected':
+    switch (instance.state) {
+      case 'open':
         return 'Conectado';
       case 'connecting':
         return 'Conectando...';
@@ -199,8 +199,8 @@ export const EvolutionWhatsAppWidget = () => {
   const getStatusColor = () => {
     if (!instance) return 'text-gray-400';
     
-    switch (instance.connectionStatus) {
-      case 'connected':
+    switch (instance.state) {
+      case 'open':
         return 'text-green-400';
       case 'connecting':
         return 'text-yellow-400';
@@ -250,7 +250,7 @@ export const EvolutionWhatsAppWidget = () => {
               </Button>
             )}
             
-            {instance?.connectionStatus === 'connected' && (
+            {instance?.state === 'open' && (
               <Button
                 variant="outline"
                 size="sm"
@@ -276,7 +276,7 @@ export const EvolutionWhatsAppWidget = () => {
         )}
 
         {/* QR Code Section */}
-        {(!instance || instance.connectionStatus !== 'connected') && (
+        {(!instance || instance.state !== 'open') && (
           <div className="space-y-4">
             {qrCode ? (
               <div className="text-center space-y-4">
@@ -343,7 +343,7 @@ export const EvolutionWhatsAppWidget = () => {
         )}
 
         {/* Connected Status */}
-        {instance?.connectionStatus === 'connected' && (
+        {instance?.state === 'open' && (
           <div className="text-center space-y-4">
             <div className="w-24 h-24 bg-green-900 rounded-lg flex items-center justify-center mx-auto">
               <CheckCircle className="w-12 h-12 text-green-400" />

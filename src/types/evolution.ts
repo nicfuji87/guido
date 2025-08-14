@@ -3,9 +3,8 @@
 
 export interface EvolutionInstance {
   instanceName: string;
-  status: 'open' | 'close' | 'connecting';
+  state: 'open' | 'close' | 'connecting';
   qrcode?: string;
-  connectionStatus: 'connected' | 'disconnected' | 'connecting';
 }
 
 export interface EvolutionInstanceCreate {
