@@ -9,5 +9,7 @@ export * from './Skeleton'
 export * from './Avatar'
 export * from './DropdownMenu'
 export * from './Sidebar'
+export * from './Select'
+export * from './Dialog'
 
 

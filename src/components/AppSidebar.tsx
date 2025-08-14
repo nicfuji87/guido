@@ -23,6 +23,8 @@ import {
 import { Button, Avatar, AvatarFallback, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui';
 import { useViewContext } from '@/hooks/useViewContext';
 import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus';
+import { useConversasBadge } from '@/hooks/useConversasBadge';
+import { useLembretesBadge } from '@/hooks/useLembretesBadge';
 import { cn } from '@/lib/utils';
 
 // AI dev note: Sidebar principal do dashboard
@@ -42,9 +44,11 @@ interface SidebarItem {
 
 export const AppSidebar = () => {
   const { expanded, toggle } = useSidebar();
-  const { userRole, canManageTeam } = useViewContext();
+  const { userRole } = useViewContext();
   const { systemStatus } = useWhatsAppStatus();
   const location = useLocation();
+  const pendingConversations = useConversasBadge();
+  const urgentReminders = useLembretesBadge();
 
   // AI dev note: Função para determinar se um item está ativo baseado na rota atual
   const isItemActive = (item: SidebarItem): boolean => {
@@ -68,10 +72,6 @@ export const AppSidebar = () => {
     return false;
   };
 
-  // Dados mock para badges - serão substituídos por dados reais
-  const pendingConversations = 5;
-  const todayReminders = 3;
-
   const sidebarItems: SidebarItem[] = [
     {
       title: "Dashboard",
@@ -82,7 +82,7 @@ export const AppSidebar = () => {
       title: "Conversas", 
       icon: MessageCircle,
       href: "/conversations",
-      badge: pendingConversations
+      badge: pendingConversations > 0 ? pendingConversations : undefined
     },
     {
       title: "Clientes",
@@ -92,8 +92,8 @@ export const AppSidebar = () => {
     {
       title: "Lembretes",
       icon: Calendar,
-      href: "/reminders",
-      badge: todayReminders
+      href: "/lembretes",
+      badge: urgentReminders > 0 ? urgentReminders : undefined
     },
     {
       title: "Integrações",
@@ -103,14 +103,7 @@ export const AppSidebar = () => {
     {
       title: "Configurações",
       icon: Settings,
-      href: "/account",
-      children: canManageTeam ? [
-        { title: "Gerenciar Equipe", href: "/team" },
-        { title: "Planos & Cobrança", href: "/billing" },
-        { title: "Preferências", href: "/settings" }
-      ] : [
-        { title: "Preferências", href: "/settings" }
-      ]
+      href: "/configuracoes"
     }
   ];
 

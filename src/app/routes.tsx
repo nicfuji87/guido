@@ -9,6 +9,8 @@ import Integrations from '@/pages/Integrations'
 import Conversas from '@/pages/Conversas'
 import Clientes from '@/pages/Clientes'
 import ClienteDetail from '@/pages/ClienteDetail'
+import { Lembretes } from '@/pages/Lembretes'
+import { Configuracoes } from '@/pages/Configuracoes'
 
 // Auth
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
@@ -56,11 +58,17 @@ function AppRoutes() {
         <PrivateRoute path="/conversations">
           <Conversas />
         </PrivateRoute>
+        <PrivateRoute path="/lembretes">
+          <Lembretes />
+        </PrivateRoute>
         <PrivateRoute exact path="/clientes">
           <Clientes />
         </PrivateRoute>
         <PrivateRoute path="/clientes/:clienteId">
           <ClienteDetail />
+        </PrivateRoute>
+        <PrivateRoute path="/configuracoes">
+          <Configuracoes />
         </PrivateRoute>
         <Redirect to="/" />
       </Switch>
