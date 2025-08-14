@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, User, Phone, Mail, MessageCircle, Clock, DollarSign, 
   TrendingUp, Calendar, AlertCircle, CheckCircle, XCircle, 
@@ -55,12 +55,24 @@ const formatDate = (dateString?: string) => {
 
 export const ClienteDetailPage: React.FC = () => {
   const history = useHistory();
+  const location = useLocation();
   const { clienteId } = useParams<ClienteDetailParams>();
   const { getClienteById } = useClientesData();
+  
+  // Detectar se veio do Kanban através do parâmetro query
+  const isFromKanban = new URLSearchParams(location.search).get('from') === 'kanban';
   
   const [cliente, setCliente] = useState<ClienteWithConversa | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const handleBack = () => {
+    if (isFromKanban) {
+      history.push('/conversations');
+    } else {
+      history.push('/clientes');
+    }
+  };
 
   useEffect(() => {
     const fetchCliente = async () => {
@@ -84,9 +96,7 @@ export const ClienteDetailPage: React.FC = () => {
     fetchCliente();
   }, [clienteId, getClienteById]);
 
-  const handleBack = () => {
-    history.push('/clientes');
-  };
+
 
   if (isLoading) {
     return (
@@ -111,7 +121,7 @@ export const ClienteDetailPage: React.FC = () => {
   if (error || !cliente) {
     return (
       <DashboardLayout title="Erro">
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-64 p-6">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">Cliente não encontrado</h3>
@@ -120,7 +130,7 @@ export const ClienteDetailPage: React.FC = () => {
               onClick={handleBack}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
-              Voltar para lista
+              {isFromKanban ? 'Voltar para Conversas' : 'Voltar para lista'}
             </button>
           </div>
         </div>
@@ -132,7 +142,7 @@ export const ClienteDetailPage: React.FC = () => {
 
   return (
     <DashboardLayout title={cliente.nome}>
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         {/* Header com navegação */}
         <div className="flex items-center gap-4">
           <button 

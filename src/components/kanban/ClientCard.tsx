@@ -24,7 +24,8 @@ export const ClientCard: React.FC<ClientCardProps> = ({
   const urgenciaConfig = URGENCIA_CONFIG[client.urgencia || 'baixa'];
   
   const handleCardClick = () => {
-    history.push(`/clientes/${client.id}`);
+    // Adicionar parâmetro para indicar que veio do Kanban
+    history.push(`/clientes/${client.id}?from=kanban`);
   };
   
   const formatDate = (dateString: string) => {

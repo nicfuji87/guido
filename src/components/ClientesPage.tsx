@@ -36,7 +36,7 @@ export const ClientesPage: React.FC = () => {
 
   return (
     <DashboardLayout title="Clientes">
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         {/* Header com busca */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex items-center gap-3">
