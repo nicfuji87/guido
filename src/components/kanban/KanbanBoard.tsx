@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 // Gerencia o funil de vendas com drag & drop entre colunas
 
 export const KanbanBoard = () => {
-  const { columns, stats, isLoading, error, moveClient } = useKanbanData();
+  const { columns, stats, isLoading, error, moveClient, refreshData } = useKanbanData();
   const [searchTerm, setSearchTerm] = React.useState('');
 
   // Função para remover acentos e normalizar texto
@@ -173,6 +173,7 @@ export const KanbanBoard = () => {
                     originalColumn={originalColumn}
                     isFiltered={searchTerm.length >= 3}
                     onMoveClient={moveClient}
+                    onClientUpdate={refreshData}
                   />
                 );
               })
@@ -190,13 +191,15 @@ interface KanbanColumnComponentProps {
   originalColumn?: KanbanColumn;
   isFiltered?: boolean;
   onMoveClient: (clienteId: string, newStage: FunilStage) => Promise<void>;
+  onClientUpdate?: () => void;
 }
 
 const KanbanColumnComponent: React.FC<KanbanColumnComponentProps> = ({ 
   column, 
   originalColumn, 
   isFiltered = false, 
-  onMoveClient 
+  onMoveClient,
+  onClientUpdate 
 }) => {
   const [isDragOver, setIsDragOver] = React.useState(false);
 
@@ -309,6 +312,7 @@ const KanbanColumnComponent: React.FC<KanbanColumnComponentProps> = ({
                   onClick={() => {
                     // TODO: Abrir modal com detalhes do cliente
                   }}
+                  onClientUpdate={onClientUpdate}
                 />
               </div>
             ))

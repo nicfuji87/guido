@@ -72,18 +72,15 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
     const fetchUserData = async () => {
       try {
         const user = supabase.auth.user();
+        
         if (!user) {
-          log.debug('Usuário não autenticado - usando dados mock para demonstração', 'useViewContext');
-          // Usar dados mock para demonstração quando não autenticado
-          setUserId('mock-user-001');
-          setContaId('mock-conta-001');
-          setUserRole('AGENTE'); // AI dev note: Definindo como AGENTE para desenvolvimento do corretor
-          setCurrentCorretor({ id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE', conta_id: 'mock-conta-001', evolution_instance: 'arnelBea', evolution_apikey: 'arnelBea' });
-          setCorretores([
-            { id: 'mock-user-001', nome: 'Nicolas Fujimoto', email: 'fujimoto.nicolas@gmail.com', funcao: 'AGENTE' },
-            { id: 'mock-user-002', nome: 'Ana Silva', email: 'ana.silva@empresa.com', funcao: 'AGENTE' },
-            { id: 'mock-user-003', nome: 'Roberto Santos', email: 'roberto.santos@empresa.com', funcao: 'AGENTE' }
-          ]);
+          log.debug('Usuário não autenticado', 'useViewContext');
+          // Limpar dados quando não autenticado
+          setUserId('');
+          setContaId('');
+          setUserRole('AGENTE');
+          setCurrentCorretor(undefined);
+          setCorretores([]);
           return;
         }
 

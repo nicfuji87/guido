@@ -1,7 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { User, Phone, MessageCircle, Clock, DollarSign, TrendingUp } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui';
+import { Phone, MessageCircle, Clock, DollarSign, TrendingUp } from 'lucide-react';
+import { Card, CardContent, Avatar, AvatarImage, AvatarFallback } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { ClienteWithConversa } from '@/hooks/useClientesData';
 
@@ -26,6 +26,8 @@ const getStatusColor = (status: string) => {
       return 'bg-pink-500/10 text-pink-400 border-pink-500/20';
     case 'FECHAMENTO':
       return 'bg-green-500/10 text-green-400 border-green-500/20';
+    case 'PERDIDO':
+      return 'bg-red-500/10 text-red-400 border-red-500/20';
     default:
       return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
   }
@@ -55,7 +57,8 @@ const formatStatusText = (status: string) => {
     'INTERESSE_GERADO': 'Interesse Gerado',
     'VISITA_AGENDADA': 'Visita Agendada',
     'PROPOSTA_ENVIADA': 'Proposta Enviada',
-    'FECHAMENTO': 'Fechamento'
+    'FECHAMENTO': 'Fechamento',
+    'PERDIDO': 'Lead Perdido'
   };
   return statusMap[status] || status;
 };
@@ -92,9 +95,18 @@ export const ClienteCard: React.FC<ClienteCardProps> = ({ cliente }) => {
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
-            </div>
+            <Avatar className="w-12 h-12 ring-2 ring-gray-600/50">
+              {cliente.profilePicUrl && (
+                <AvatarImage 
+                  src={cliente.profilePicUrl} 
+                  alt={cliente.nome}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white font-semibold">
+                {cliente.nome.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <div>
               <h3 className="text-lg font-semibold text-white">{cliente.nome}</h3>
               <div className="flex items-center gap-2 text-sm text-gray-400">

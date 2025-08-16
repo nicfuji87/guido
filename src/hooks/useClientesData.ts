@@ -12,6 +12,7 @@ export interface ClienteWithConversa {
   status_funil: string;
   created_at: string;
   updated_at: string;
+  profilePicUrl?: string;
   
   // Dados da conversa associada
   conversa: {
@@ -80,6 +81,7 @@ export const useClientesData = () => {
           status_funil,
           created_at,
           updated_at,
+          profilePicUrl,
           conversas (
             id,
             plataforma,
@@ -175,6 +177,7 @@ export const useClientesData = () => {
           status_funil,
           created_at,
           updated_at,
+          profilePicUrl,
           conversas (*)
         `)
         .eq('id', clienteId)

@@ -45,9 +45,7 @@ export interface EvolutionInstanceResponse {
     instanceId: string;
     status: string;
   };
-  hash: {
-    apikey: string;
-  };
+  hash: string; // A API key é o próprio hash (string)
   webhook?: {
     webhook: string;
   };
@@ -68,7 +66,7 @@ export interface CreateEvolutionInstanceResult {
   error?: string;
 }
 
-// Função para gerar nome da instância baseado no nome e WhatsApp
+// Função para gerar nome da instância personalizado
 export const generateInstanceName = (nome: string, whatsapp: string): string => {
   // Remove espaços e caracteres especiais do nome, mantém apenas letras
   const nomeClean = nome.toLowerCase()
@@ -76,13 +74,42 @@ export const generateInstanceName = (nome: string, whatsapp: string): string => 
     .replace(/[\u0300-\u036f]/g, '') // Remove acentos
     .replace(/[^a-z]/g, ''); // Remove tudo que não é letra
   
+  // Pega os 10 primeiros caracteres do nome (ou todos se menos de 10)
+  const nomeParte = nomeClean.substring(0, 10);
+  
   // Remove tudo que não é número do WhatsApp
   const whatsappNumbers = whatsapp.replace(/\D/g, '');
   
-  // Combina nome + números do WhatsApp (limitado a 20 caracteres)
-  const instanceName = `${nomeClean}${whatsappNumbers}`.substring(0, 20);
+  // Pega os 9 últimos dígitos do WhatsApp
+  const telefoneParte = whatsappNumbers.slice(-9);
+  
+  // Combina: 10 chars nome + 9 últimos dígitos telefone
+  const instanceName = `${nomeParte}${telefoneParte}`;
   
   return instanceName;
+};
+
+// Função para gerar API key personalizada (inverso do nome da instância)
+export const generateInstanceApiKey = (nome: string, whatsapp: string): string => {
+  // Remove espaços e caracteres especiais do nome, mantém apenas letras
+  const nomeClean = nome.toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^a-z]/g, ''); // Remove tudo que não é letra
+  
+  // Pega os 10 primeiros caracteres do nome (ou todos se menos de 10)
+  const nomeParte = nomeClean.substring(0, 10);
+  
+  // Remove tudo que não é número do WhatsApp
+  const whatsappNumbers = whatsapp.replace(/\D/g, '');
+  
+  // Pega os 9 últimos dígitos do WhatsApp
+  const telefoneParte = whatsappNumbers.slice(-9);
+  
+  // Combina INVERSO: 9 últimos dígitos + 10 chars nome
+  const instanceApiKey = `${telefoneParte}${nomeParte}`;
+  
+  return instanceApiKey;
 };
 
 // Função para criar instância na Evolution API
@@ -95,15 +122,15 @@ export const createEvolutionInstance = async (
   try {
     // Usar URLs e API keys padrão ou das variáveis de ambiente
     const baseUrl = evolutionUrl || import.meta.env.VITE_EVOLUTION_API_URL;
-    const apiKey = evolutionApiKey || import.meta.env.VITE_EVOLUTION_API_KEY;
+    const apiKey = evolutionApiKey || import.meta.env.VITE_EVOLUTION_API_GLOBAL_KEY;
     
     if (!apiKey) {
-      throw new Error('Evolution API key não configurada');
+      throw new Error('Evolution Global API key não configurada');
     }
 
-    // Gerar nome da instância
+    // Gerar nome da instância e token personalizado
     const instanceName = generateInstanceName(nome, whatsapp);
-    const token = instanceName; // Token igual ao nome da instância
+    const token = generateInstanceApiKey(nome, whatsapp);
     
     // Preparar dados da instância
     const instanceData: EvolutionInstanceData = {
@@ -151,54 +178,41 @@ export const createEvolutionInstance = async (
       }
     };
 
-    // Construir URL de criação dinamicamente
-    const createInstanceUrl = `${baseUrl}instance/create`;
-
-    // console.log('[Evolution API] Criando instância:', {
-    //   instanceName,
-    //   createInstanceUrl
-    // });
+    // Construir URL de criação dinamicamente  
+    const createInstanceUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}instance/create`;
 
     // Fazer requisição para criar instância
     const response = await fetch(createInstanceUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': apiKey
+        'apikey': apiKey,
+        'Authorization': `Bearer ${apiKey}`, // Tentar Bearer também
+        'x-api-key': apiKey // Tentar x-api-key também
       },
       body: JSON.stringify(instanceData)
     });
 
     if (!response.ok) {
-      // const errorText = await response.text();
-      // console.error('[Evolution API] Erro na resposta:', {
-      //   status: response.status,
-      //   statusText: response.statusText,
-      //   body: errorText
-      // });
-      
-      throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Erro ${response.status}: ${response.statusText} - ${errorText}`);
     }
 
     const result: EvolutionInstanceResponse = await response.json();
     
-    // console.log('[Evolution API] Instância criada com sucesso:', {
-    //   instanceName: result.instance?.instanceName,
-    //   status: result.instance?.status
-    // });
-
+    // Usar nosso token personalizado como API key
+    const instanceApiKey = token;
+    
     return {
       success: true,
       data: {
         instanceName: result.instance.instanceName,
-        apiKey: result.hash.apikey,
+        apiKey: instanceApiKey,
         evolutionUrl: baseUrl
       }
     };
 
   } catch (error) {
-    // console.error('[Evolution API] Erro ao criar instância:', error);
-    
     const errorMessage = error instanceof Error 
       ? error.message 
       : 'Erro desconhecido ao criar instância WhatsApp';

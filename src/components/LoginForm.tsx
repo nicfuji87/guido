@@ -30,28 +30,9 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
     setMessage(null);
 
     try {
-      // Primeiro, verificar se o usuário existe na tabela usuarios
-      const { data: existingUser, error: checkError } = await supabase
-        .from('usuarios')
-        .select('email')
-        .eq('email', email.trim())
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        // Erro diferente de "não encontrado"
-        throw new Error('Erro ao verificar usuário');
-      }
-
-      if (!existingUser) {
-        // Usuário não existe - não enviar magic link
-        setMessage({ 
-          type: 'error', 
-          text: 'Email não encontrado. Você precisa criar uma conta primeiro.' 
-        });
-        return;
-      }
-
-      // Usuário existe - enviar magic link
+      // AI dev note: Enviar magic link diretamente - o Supabase gerencia a verificação
+      // Se o usuário não existir em auth.users, o Supabase retornará erro apropriado
+      
       // Na v1.x, usar signIn para magic link
       const { error } = await supabase.auth.signIn({
         email: email.trim()
@@ -60,6 +41,14 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
       });
 
       if (error) {
+        // Tratar erros específicos do Supabase
+        if (error.message.includes('Invalid login credentials') || error.message.includes('User not found')) {
+          setMessage({ 
+            type: 'error', 
+            text: 'Email não encontrado. Você precisa criar uma conta primeiro.' 
+          });
+          return;
+        }
         throw error;
       }
 

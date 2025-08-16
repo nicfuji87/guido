@@ -258,12 +258,12 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       if (result.success) {
         setStep('success');
         
-        // Auto-close after success and redirect to dashboard
+        // Auto-close after success and redirect to login
         setTimeout(() => {
           onClose();
           onSuccess?.();
-          // TODO: Redirect to dashboard with conta_id and corretor_id
-          // Conta criada com sucesso - dados em result.data
+          // Redirecionar para tela de login após cadastro bem-sucedido
+          window.location.href = '/login';
         }, 2500);
       } else {
         setStep('error');
@@ -735,10 +735,10 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                       Conta criada com sucesso!
                     </h3>
                     <p className="text-muted-foreground mb-4">
-                      Seu teste grátis de 7 dias começou agora.
+                      Seu teste grátis de 7 dias começou agora. Faça login para acessar sua conta.
                     </p>
                     <Badge variant="secondary" className="bg-green-500/10 text-green-500">
-                      Redirecionando para o dashboard...
+                      Redirecionando para o login...
                     </Badge>
                   </motion.div>
                 )}

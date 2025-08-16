@@ -49,3 +49,37 @@ export interface CRMIntegration {
   created_at: string;
   updated_at: string;
 }
+
+// AI dev note: Tipos para dados de corretor do Supabase
+export interface CorretorData {
+  id: string;
+  crm: string;
+  crm_loft_key?: string;
+  crm_loft_token?: string;
+  crm_loft_url?: string;
+  crm_loft_id?: string;
+  crm_loft_email?: string;
+  crm_rd_key?: string;
+  crm_imobzi_token?: string;
+  crm_imoview_usuario?: string;
+  crm_imoview_email?: string;
+  crm_imoview_senha?: string;
+  crm_imoview_chave?: string;
+}
+
+// AI dev note: Dados de atualização para corretor com configurações CRM
+export interface CorretorUpdateData {
+  crm?: string;
+  updated_at?: string;
+  crm_loft_key?: string;
+  crm_loft_token?: string;
+  crm_loft_url?: string;
+  crm_loft_id?: string;
+  crm_loft_email?: string;
+  crm_rd_key?: string;
+  crm_imobzi_token?: string;
+  crm_imoview_usuario?: string;
+  crm_imoview_email?: string;
+  crm_imoview_senha?: string;
+  crm_imoview_chave?: string;
+}

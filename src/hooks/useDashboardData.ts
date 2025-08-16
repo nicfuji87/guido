@@ -11,11 +11,16 @@ export interface ConversaPrioritaria {
   cliente: {
     id: string;
     nome: string;
+    profilePicUrl?: string;
   };
   plataforma: string;
   lastMessage: string;
   waitingTime: number; // horas
   timestamp_ultima_mensagem: string;
+  prioridade?: string;
+  sentimento_geral?: string;
+  status_contorno_objecao?: string;
+  inteligencia_tendencia_sentimento_cliente?: string;
 }
 
 export interface LembreteHoje {
@@ -67,91 +72,24 @@ export const useDashboardData = (viewContext: ViewContext) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // AI dev note: Dados mock para demonstração quando não há dados reais
-  const getMockData = useCallback((): DashboardData => ({
-    conversasPrioritarias: [
-      {
-        id: 'conv-1',
-        cliente: { id: 'cli-1', nome: 'João Silva' },
-        plataforma: 'WHATSAPP',
-        lastMessage: 'Olá, gostaria de mais informações sobre o imóvel',
-        waitingTime: 2,
-        timestamp_ultima_mensagem: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'conv-2',
-        cliente: { id: 'cli-2', nome: 'Maria Santos' },
-        plataforma: 'INSTAGRAM',
-        lastMessage: 'Qual o valor do apartamento de 2 quartos?',
-        waitingTime: 4,
-        timestamp_ultima_mensagem: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'conv-3',
-        cliente: { id: 'cli-3', nome: 'Pedro Oliveira' },
-        plataforma: 'WHATSAPP',
-        lastMessage: 'Quando posso visitar o imóvel?',
-        waitingTime: 1,
-        timestamp_ultima_mensagem: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
-      }
-    ],
-    lembretesHoje: [
-      {
-        id: 'lem-1',
-        descricao: 'Ligar para João Silva sobre proposta',
-        cliente: { id: 'cli-1', nome: 'João Silva' },
-        data_lembrete: new Date().toISOString(),
-        status: 'PENDENTE'
-      },
-      {
-        id: 'lem-2',
-        descricao: 'Enviar documentos para Maria Santos',
-        cliente: { id: 'cli-2', nome: 'Maria Santos' },
-        data_lembrete: new Date().toISOString(),
-        status: 'PENDENTE'
-      },
-      {
-        id: 'lem-3',
-        descricao: 'Reunião de planejamento semanal',
-        data_lembrete: new Date().toISOString(),
-        status: 'CONCLUIDO'
-      }
-    ],
+  // Dados vazios quando não há dados reais
+  const getEmptyData = useCallback((): DashboardData => ({
+    conversasPrioritarias: [],
+    lembretesHoje: [],
     metricasPessoais: {
-      novosClientes: 8,
-      respostasEnviadas: 45,
-      taxaConversao: 32.5,
-      tempoMedioResposta: 1.2
+      novosClientes: 0,
+      respostasEnviadas: 0,
+      taxaConversao: 0,
+      tempoMedioResposta: 0
     },
     metricasEquipe: {
-      totalNovosClientes: 24,
-      tempoMedioResposta: 2.1,
-      negociosFechados: 12,
-      taxaSucesso: 58.3
+      totalNovosClientes: 0,
+      tempoMedioResposta: 0,
+      negociosFechados: 0,
+      taxaSucesso: 0
     },
-    conversasRisco: [
-      {
-        id: 'risk-1',
-        cliente: { id: 'cli-4', nome: 'Ana Costa' },
-        plataforma: 'WHATSAPP',
-        lastMessage: 'Aguardando retorno há 2 dias...',
-        waitingTime: 48,
-        timestamp_ultima_mensagem: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'risk-2',
-        cliente: { id: 'cli-5', nome: 'Carlos Rodrigues' },
-        plataforma: 'INSTAGRAM',
-        lastMessage: 'Cliente demonstrou interesse mas não respondeu',
-        waitingTime: 26,
-        timestamp_ultima_mensagem: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString()
-      }
-    ],
-    rankingEquipe: [
-      { corretor: { id: 'cor-1', nome: 'Nicolas Fujimoto' }, pontuacao: 95, metrica: 'conversões' },
-      { corretor: { id: 'cor-2', nome: 'Ana Silva' }, pontuacao: 87, metrica: 'conversões' },
-      { corretor: { id: 'cor-3', nome: 'Roberto Santos' }, pontuacao: 82, metrica: 'conversões' }
-    ]
+    conversasRisco: [],
+    rankingEquipe: []
   }), []);
 
   const fetchPersonalMetrics = useCallback(async (userId: string, timeRange: string) => {
@@ -166,7 +104,12 @@ export const useDashboardData = (viewContext: ViewContext) => {
         id,
         plataforma,
         timestamp_ultima_mensagem,
-        cliente:clientes(id, nome)
+        ultima_interacao_content,
+        prioridade,
+        sentimento_geral,
+        status_contorno_objecao,
+        inteligencia_tendencia_sentimento_cliente,
+        cliente:clientes(id, nome, profilePicUrl)
       `)
       .eq('status_conversa', 'AGUARDANDO_CORRETOR')
       .order('timestamp_ultima_mensagem', { ascending: true })
@@ -199,11 +142,15 @@ export const useDashboardData = (viewContext: ViewContext) => {
         id: conv.id,
         cliente: conv.cliente,
         plataforma: conv.plataforma,
-        lastMessage: 'Última mensagem...', // TODO: buscar última mensagem
+        lastMessage: conv.ultima_interacao_content || 'Sem mensagem',
         waitingTime: conv.timestamp_ultima_mensagem 
           ? Math.floor((Date.now() - new Date(conv.timestamp_ultima_mensagem).getTime()) / (1000 * 60 * 60))
           : 0,
-        timestamp_ultima_mensagem: conv.timestamp_ultima_mensagem
+        timestamp_ultima_mensagem: conv.timestamp_ultima_mensagem,
+        prioridade: conv.prioridade,
+        sentimento_geral: conv.sentimento_geral,
+        status_contorno_objecao: conv.status_contorno_objecao,
+        inteligencia_tendencia_sentimento_cliente: conv.inteligencia_tendencia_sentimento_cliente
       })) || [],
       lembretesHoje: lembretes || [],
       metricasPessoais: metricas?.[0] || {
@@ -225,7 +172,12 @@ export const useDashboardData = (viewContext: ViewContext) => {
         id,
         plataforma,
         timestamp_ultima_mensagem,
-        cliente:clientes!inner(id, nome, conta_id)
+        ultima_interacao_content,
+        prioridade,
+        sentimento_geral,
+        status_contorno_objecao,
+        inteligencia_tendencia_sentimento_cliente,
+        cliente:clientes!inner(id, nome, conta_id, profilePicUrl)
       `)
       .eq('clientes.conta_id', contaId)
       .eq('status_conversa', 'AGUARDANDO_CORRETOR')
@@ -250,11 +202,15 @@ export const useDashboardData = (viewContext: ViewContext) => {
         id: conv.id,
         cliente: conv.cliente,
         plataforma: conv.plataforma,
-        lastMessage: 'Última mensagem...',
+        lastMessage: conv.ultima_interacao_content || 'Sem mensagem',
         waitingTime: conv.timestamp_ultima_mensagem 
           ? Math.floor((Date.now() - new Date(conv.timestamp_ultima_mensagem).getTime()) / (1000 * 60 * 60))
           : 0,
-        timestamp_ultima_mensagem: conv.timestamp_ultima_mensagem
+        timestamp_ultima_mensagem: conv.timestamp_ultima_mensagem,
+        prioridade: conv.prioridade,
+        sentimento_geral: conv.sentimento_geral,
+        status_contorno_objecao: conv.status_contorno_objecao,
+        inteligencia_tendencia_sentimento_cliente: conv.inteligencia_tendencia_sentimento_cliente
       })) || [],
       metricasEquipe: metricas?.[0] || {
         totalNovosClientes: 0,
@@ -267,16 +223,11 @@ export const useDashboardData = (viewContext: ViewContext) => {
   }, []);
 
   const fetchDashboardData = useCallback(async () => {
-    // Se não temos userId ou contaId, usar dados mock para demonstração
+    // Se não temos userId ou contaId, aguardar dados ou mostrar vazio
     if (!viewContext.userId || !viewContext.contaId) {
-      log.debug('Usando dados mock para demonstração (sem userId/contaId)', 'useDashboardData');
-      setIsLoading(true);
-      
-      // Simular delay de loading para UX realística
-      setTimeout(() => {
-        setData(getMockData());
-        setIsLoading(false);
-      }, 1000);
+      log.debug('Aguardando dados de usuário/conta', 'useDashboardData');
+      setData(getEmptyData());
+      setIsLoading(false);
       return;
     }
 
@@ -308,15 +259,15 @@ export const useDashboardData = (viewContext: ViewContext) => {
       setData(dashboardData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados do dashboard';
-      log.warn('Falha ao carregar dados reais, usando dados mock', 'useDashboardData', { error: errorMessage });
+      log.error('Falha ao carregar dados do dashboard', 'useDashboardData', { error: errorMessage });
       
-      // Em caso de erro, usar dados mock como fallback
-      setData(getMockData());
-      setError(null); // Não mostrar erro para o usuário, apenas usar mock
+      // Em caso de erro, mostrar dados vazios
+      setData(getEmptyData());
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [viewContext, fetchPersonalMetrics, fetchTeamMetrics, getMockData]);
+  }, [viewContext, fetchPersonalMetrics, fetchTeamMetrics, getEmptyData]);
 
   // Fetch inicial e quando contexto muda
   useEffect(() => {

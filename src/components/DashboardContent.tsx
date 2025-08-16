@@ -1,4 +1,5 @@
 import React from 'react';
+import { useHistory } from 'react-router-dom';
 import { WidgetGrid } from './WidgetGrid';
 import { LoadingDashboard } from './LoadingDashboard';
 import { ConversasPrioritariasWidget } from './widgets/ConversasPrioritariasWidget';
@@ -13,6 +14,7 @@ import { AlertCircle, TrendingUp, Users, Clock } from 'lucide-react';
 // Organiza widgets baseado no tipo de usuário e dados carregados
 
 export const DashboardContent = () => {
+  const history = useHistory();
   const viewContext = useViewContext();
   const { data, isLoading, error } = useDashboardData(viewContext);
 
@@ -23,8 +25,17 @@ export const DashboardContent = () => {
 
   // Handlers para ações dos widgets
   const handleOpenConversation = (conversaId: string) => {
-    // TODO: Implementar navegação para conversa
-    void conversaId;
+    // Encontrar a conversa nos dados para obter o cliente_id
+    const conversa = data?.conversasPrioritarias?.find(c => c.id === conversaId) ||
+                     data?.conversasRisco?.find(c => c.id === conversaId);
+    
+    if (conversa?.cliente?.id) {
+      // Navegar para a página de detalhes do cliente
+      history.push(`/clientes/${conversa.cliente.id}`);
+    } else {
+      // Fallback: navegar para a página de conversas
+      history.push('/conversations');
+    }
   };
 
   const handleToggleReminder = (lembreteId: string, completed: boolean) => {

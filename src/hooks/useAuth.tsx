@@ -43,6 +43,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const authUser = supabase.auth.user();
         
         if (authUser) {
+          // VERIFICAR SE EMAIL FOI CONFIRMADO
+          if (!authUser.email_confirmed_at) {
+            // Usuário não deveria estar logado sem confirmar email
+            supabase.auth.signOut();
+            return;
+          }
+          
           setUser({
             id: authUser.id,
             email: authUser.email!,
@@ -70,9 +77,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             name: session.user.user_metadata?.name
           });
           
-          // Se o usuário acabou de fazer login, redirecionar para dashboard
-          if (event === 'SIGNED_IN' && window.location.pathname === '/login') {
-            window.location.href = '/app';
+          // Verificar se é login válido (email confirmado)
+          if (event === 'SIGNED_IN') {
+            // Só permitir login se email foi confirmado
+            if (!session.user.email_confirmed_at) {
+              await supabase.auth.signOut();
+              return;
+            }
+            
+            // Redirecionar para dashboard apenas se estiver na tela de login
+            if (window.location.pathname === '/login') {
+              window.location.href = '/app';
+            }
           }
         } else {
           setUser(null);

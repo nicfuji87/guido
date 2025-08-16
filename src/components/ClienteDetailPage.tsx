@@ -6,7 +6,7 @@ import {
   Target, Brain, Lightbulb
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { Card, CardHeader, CardTitle, CardContent, Badge, Skeleton } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, Badge, Skeleton, Avatar, AvatarImage, AvatarFallback } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { ClienteWithConversa, useClientesData } from '@/hooks/useClientesData';
 
@@ -31,6 +31,8 @@ const getStatusColor = (status: string) => {
       return 'bg-pink-500/10 text-pink-400 border-pink-500/20';
     case 'FECHAMENTO':
       return 'bg-green-500/10 text-green-400 border-green-500/20';
+    case 'PERDIDO':
+      return 'bg-red-500/10 text-red-400 border-red-500/20';
     default:
       return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
   }
@@ -43,7 +45,8 @@ const formatStatusText = (status: string) => {
     'INTERESSE_GERADO': 'Interesse Gerado',
     'VISITA_AGENDADA': 'Visita Agendada',
     'PROPOSTA_ENVIADA': 'Proposta Enviada',
-    'FECHAMENTO': 'Fechamento'
+    'FECHAMENTO': 'Fechamento',
+    'PERDIDO': 'Lead Perdido'
   };
   return statusMap[status] || status;
 };
@@ -152,9 +155,18 @@ export const ClienteDetailPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
-            </div>
+            <Avatar className="w-16 h-16 ring-2 ring-gray-600/50">
+              {cliente.profilePicUrl && (
+                <AvatarImage 
+                  src={cliente.profilePicUrl} 
+                  alt={cliente.nome}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white font-bold text-lg">
+                {cliente.nome.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <div>
               <h1 className="text-2xl font-bold text-white">{cliente.nome}</h1>
               <div className={cn(

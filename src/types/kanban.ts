@@ -32,6 +32,7 @@ export interface KanbanClient {
   updated_at: string;
   corretor_id: string;
   conta_id: string;
+  profilePicUrl?: string;
   // Campos calculados para o Kanban
   tempoNaEtapa?: number; // em dias
   proximaAcao?: string;
