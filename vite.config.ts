@@ -10,6 +10,7 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  // AI dev note: Proxy removido - agora usa webhook n8n direto
   build: {
     rollupOptions: {
       output: {

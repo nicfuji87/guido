@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Check, 
   Clock, 
@@ -10,7 +10,7 @@ import {
   Users
 } from 'lucide-react';
 import { useAssinatura } from '../hooks/useAssinatura';
-import { ModalUpgrade } from './ModalUpgrade';
+// AI dev note: ModalUpgrade removido - funcionalidade simplificada
 
 // AI dev note: Componente para dashboard - mostra status detalhado da assinatura
 // Inclui métricas importantes e próximas ações
@@ -28,7 +28,8 @@ export const AssinaturaStatus: React.FC<AssinaturaStatusProps> = ({
   onManageSubscription
 }) => {
   const { assinatura, status, isLoading } = useAssinatura();
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  // AI dev note: isUpgradeModalOpen removido - modal não usado mais
+  // const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -248,7 +249,7 @@ export const AssinaturaStatus: React.FC<AssinaturaStatusProps> = ({
         {status.precisaUpgrade && (
           <button
             onClick={() => {
-              setIsUpgradeModalOpen(true);
+              // AI dev note: modal removido - apenas callback
               onUpgrade?.();
             }}
             className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
@@ -274,16 +275,7 @@ export const AssinaturaStatus: React.FC<AssinaturaStatusProps> = ({
       </div>
       </div>
 
-      {/* Modal de Upgrade */}
-      <ModalUpgrade
-        isOpen={isUpgradeModalOpen}
-        onClose={() => setIsUpgradeModalOpen(false)}
-        onSuccess={(_result) => {
-          // Upgrade realizado com sucesso
-          // Refresh da página ou callback específico se necessário
-        }}
-        planoSugerido={null} // Deixar o usuário escolher
-      />
+      {/* AI dev note: ModalUpgrade removido - funcionalidade simplificada via webhook n8n */}
     </>
   );
 };

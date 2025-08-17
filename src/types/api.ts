@@ -1,102 +1,11 @@
 // AI dev note: Interfaces para APIs externas e integrações
 // Substitui tipos 'any' por tipos específicos
 
-// === ASAAS API TYPES ===
-export interface AsaasCustomer {
-  id?: string;
-  name: string;
-  email: string;
-  phone?: string;
-  mobilePhone?: string;
-  cpfCnpj: string;
-  postalCode?: string;
-  address?: string;
-  addressNumber?: string;
-  complement?: string;
-  province?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  externalReference?: string;
-  notificationDisabled?: boolean;
-  additionalEmails?: string;
-  municipalInscription?: string;
-  stateInscription?: string;
-  observations?: string;
-}
+// AI dev note: TIPOS ASAAS REMOVIDOS - agora processamento via webhook n8n
+// As definições antigas foram removidas para simplificar a codebase
 
-export interface AsaasSubscription {
-  id?: string;
-  dateCreated?: string;
-  customer: string;
-  billingType: 'BOLETO' | 'CREDIT_CARD' | 'PIX' | 'UNDEFINED';
-  value: number;
-  nextDueDate: string;
-  description?: string;
-  cycle: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'YEARLY';
-  endDate?: string;
-  maxPayments?: number;
-  externalReference?: string;
-  split?: AsaasSplit[];
-  callback?: AsaasCallback;
-  creditCard?: AsaasCreditCard;
-}
-
-export interface AsaasPayment {
-  id?: string;
-  dateCreated?: string;
-  customer: string;
-  subscription?: string;
-  installment?: string;
-  paymentLink?: string;
-  value: number;
-  netValue?: number;
-  originalValue?: number;
-  interestValue?: number;
-  description?: string;
-  billingType: 'BOLETO' | 'CREDIT_CARD' | 'PIX' | 'UNDEFINED';
-  confirmedDate?: string;
-  pixTransaction?: string;
-  status: 'PENDING' | 'RECEIVED' | 'CONFIRMED' | 'OVERDUE' | 'REFUNDED' | 'RECEIVED_IN_CASH' | 'REFUND_REQUESTED' | 'REFUND_IN_PROGRESS' | 'CHARGEBACK_REQUESTED' | 'CHARGEBACK_DISPUTE' | 'AWAITING_CHARGEBACK_REVERSAL' | 'DUNNING_REQUESTED' | 'DUNNING_RECEIVED' | 'AWAITING_RISK_ANALYSIS';
-  dueDate: string;
-  originalDueDate?: string;
-  paymentDate?: string;
-  clientPaymentDate?: string;
-  installmentNumber?: number;
-  invoiceUrl?: string;
-  invoiceNumber?: string;
-  externalReference?: string;
-  deleted?: boolean;
-  anticipated?: boolean;
-  anticipable?: boolean;
-}
-
-export interface AsaasCreditCard {
-  holderName: string;
-  number: string;
-  expiryMonth: string;
-  expiryYear: string;
-  ccv: string;
-}
-
-export interface AsaasSplit {
-  walletId: string;
-  fixedValue?: number;
-  percentualValue?: number;
-  totalFixedValue?: number;
-}
-
-export interface AsaasCallback {
-  successUrl?: string;
-  autoRedirect?: boolean;
-}
-
-export interface AsaasWebhookPayload {
-  event: string;
-  payment?: AsaasPayment;
-  subscription?: AsaasSubscription;
-  customer?: AsaasCustomer;
-}
+// AI dev note: Todas as interfaces antigas do Asaas foram removidas
+// Agora o processamento é via webhook n8n
 
 // === EVOLUTION API TYPES ===
 export interface EvolutionApiContact {

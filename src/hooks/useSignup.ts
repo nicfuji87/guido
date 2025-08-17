@@ -44,13 +44,8 @@ interface SignupResult {
   error?: string;
 }
 
-interface DadosAsaas {
-  name: string;
-  email: string;
-  cpfCnpj: string;
-  phone: string;
-  mobilePhone: string;
-}
+// AI dev note: DadosAsaas removido - agora processamento via webhook n8n
+// interface DadosAsaas { ... }
 
 export const useSignup = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -157,18 +152,8 @@ export const useSignup = () => {
 
       log.info('Plano encontrado', 'SIGNUP', { nome_plano: planoSelecionado.nome_plano });
 
-      // === PASSO 3: PREPARAR DADOS PARA ASAAS (NÃO CRIAR AINDA) ===
-      // console.log(`${logPrefix} Passo 3: Preparando dados para Asaas`);
-      
-      const dadosAsaas: DadosAsaas = {
-        name: data.nome,
-        email: data.email.trim().toLowerCase(),
-        cpfCnpj: cleanCPF,
-        phone: data.whatsapp,
-        mobilePhone: data.whatsapp,
-      };
-
-      // console.log(`${logPrefix} ✅ Dados Asaas preparados (cliente será criado apenas quando pagar)`);
+      // AI dev note: PASSO 3 REMOVIDO - dados Asaas não são mais preparados no signup
+      // Agora o cadastro Asaas é feito via webhook n8n quando necessário
 
       // === PASSO 4: CRIAR CONTA ===
       log.info('PASSO 4: Criando conta', 'SIGNUP');
@@ -262,7 +247,7 @@ export const useSignup = () => {
         whatsapp: data.whatsapp,
         fonte_cadastro: 'SITE',
         auth_user_id: authUserId, // 🔗 Link crítico para auth.users
-        dados_asaas: dadosAsaas, // Salva para uso posterior
+        // AI dev note: dados_asaas removido - não mais necessário com webhook n8n
         // Dados da Evolution (se disponíveis)
         evolution_instance: evolutionResult.success ? evolutionResult.data?.instanceName : null,
         evolution_apikey: evolutionResult.success ? evolutionResult.data?.apiKey : null,

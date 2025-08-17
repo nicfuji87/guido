@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AlertTriangle, Clock, Crown, X } from 'lucide-react';
 import { useAssinatura } from '../hooks/useAssinatura';
-import { ModalUpgrade } from './ModalUpgrade';
+// AI dev note: ModalUpgrade removido - funcionalidade simplificada
 
 // AI dev note: Componente crítico para conversão de trials
 // Mostra status e urgência da assinatura com CTAs estratégicos
@@ -19,7 +19,8 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
   compact = false 
 }) => {
   const { assinatura, status, isLoading } = useAssinatura();
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  // AI dev note: isUpgradeModalOpen removido - modal não usado mais
+  // const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   // Não mostrar se carregando ou se tem acesso ativo sem precisar upgrade
   if (isLoading || !status || (status.temAcesso && !status.precisaUpgrade)) {
@@ -76,15 +77,15 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
   if (!config) return null;
 
   const handleUpgrade = () => {
-    // Iniciando processo de upgrade
-    setIsUpgradeModalOpen(true);
+    // AI dev note: Função simplificada - modal removido
     onUpgrade?.();
   };
 
-  const handleUpgradeSuccess = (result: unknown) => {
-    void result; // Upgrade realizado com sucesso
-    onClose?.(); // Fechar banner após upgrade
-  };
+  // AI dev note: handleUpgradeSuccess removido - modal não usado mais
+  // const handleUpgradeSuccess = (result: unknown) => {
+  //   void result; // Upgrade realizado com sucesso
+  //   onClose?.(); // Fechar banner após upgrade
+  // };
 
   if (compact) {
     return (
@@ -115,13 +116,7 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
           </div>
         </div>
 
-        {/* Modal de Upgrade */}
-        <ModalUpgrade
-          isOpen={isUpgradeModalOpen}
-          onClose={() => setIsUpgradeModalOpen(false)}
-          onSuccess={handleUpgradeSuccess}
-          planoSugerido={null}
-        />
+        {/* AI dev note: ModalUpgrade removido - funcionalidade simplificada via webhook n8n */}
       </>
     );
   }
@@ -174,13 +169,7 @@ export const TrialBanner: React.FC<TrialBannerProps> = ({
       </div>
     </div>
 
-      {/* Modal de Upgrade */}
-      <ModalUpgrade
-        isOpen={isUpgradeModalOpen}
-        onClose={() => setIsUpgradeModalOpen(false)}
-        onSuccess={handleUpgradeSuccess}
-        planoSugerido={null} // Deixar o usuário escolher livremente
-      />
+      {/* AI dev note: ModalUpgrade removido - funcionalidade simplificada via webhook n8n */}
     </>
   );
 };
