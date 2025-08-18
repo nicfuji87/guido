@@ -11,6 +11,8 @@ import Clientes from '@/pages/Clientes'
 import ClienteDetail from '@/pages/ClienteDetail'
 import { Lembretes } from '@/pages/Lembretes'
 import { Configuracoes } from '@/pages/Configuracoes'
+import PaymentSuccess from '@/pages/PaymentSuccess'
+
 
 // Auth
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
@@ -52,6 +54,7 @@ function AppRoutes() {
       <Switch>
         <Route exact path="/" component={Landing} />
         <Route path="/login" component={Login} />
+        <Route path="/payment-success" component={PaymentSuccess} />
         <PrivateRoute exact path="/app">
           <Dashboard />
         </PrivateRoute>
@@ -73,6 +76,7 @@ function AppRoutes() {
         <PrivateRoute path="/configuracoes">
           <Configuracoes />
         </PrivateRoute>
+
         <Redirect to="/" />
       </Switch>
     </BrowserRouter>

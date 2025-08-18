@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useCustomerProvisioning } from '@/hooks/useCustomerProvisioning';
-import { CustomerData } from '@/services/webhookService';
+import { prepareWebhookData } from '@/utils/webhookDataHelper';
 
 interface CustomerRegistrationModalProps {
   isOpen: boolean;
@@ -73,16 +73,17 @@ export const CustomerRegistrationModal: React.FC<CustomerRegistrationModalProps>
     
     // console.log('🔥 DEBUG - [CustomerRegistrationModal] Enviando dados para provisão');
     
-    const customerData: CustomerData = {
-      nome: formData.nome.trim(),
-      email: formData.email.trim(),
-      documento: formData.documento.replace(/\D/g, ''), // Só números
-      telefone: formData.telefone.trim(),
-      userId,
-      assinaturaId
-    };
-    
     try {
+      // Preparar dados completos incluindo conta e assinatura
+      const customerData = await prepareWebhookData({
+        nome: formData.nome.trim(),
+        email: formData.email.trim(),
+        documento: formData.documento.replace(/\D/g, ''), // Só números
+        telefone: formData.telefone.trim(),
+        userId,
+        assinaturaId
+      });
+      
       const result = await provisionCustomer(customerData);
       
       if (result.success && result.customerId) {
@@ -95,7 +96,8 @@ export const CustomerRegistrationModal: React.FC<CustomerRegistrationModalProps>
       }
     } catch (error) {
       // console.error('🔥 DEBUG - [CustomerRegistrationModal] ❌ Erro crítico:', error);
-      setErrors({ submit: 'Erro inesperado no cadastro' });
+      const errorMessage = error instanceof Error ? error.message : 'Erro inesperado no cadastro';
+      setErrors({ submit: errorMessage });
     }
   };
 

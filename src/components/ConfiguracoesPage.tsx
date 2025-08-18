@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Shield, Loader2 } from 'lucide-react';
+import { Shield, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -102,30 +102,7 @@ const ConfiguracoesContent: React.FC = () => {
           </Card>
         );
       
-      case 'integracao':
-        return (
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center">
-                  <Settings className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Integrações</h3>
-                  <p className="text-sm text-gray-400">APIs e webhooks personalizados</p>
-                </div>
-              </div>
-              
-              <div className="text-center py-12">
-                <Settings className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <h4 className="text-white font-medium mb-2">Em Desenvolvimento</h4>
-                <p className="text-gray-400">
-                  Integrações serão implementadas em breve
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        );
+
       
       default:
         return <div className="text-white">Seção não encontrada</div>;

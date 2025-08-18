@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, User, Phone, Loader2, CheckCircle, Building, UserCheck, AlertCircle, CreditCard, Shield } from 'lucide-react';
+import { X, Mail, User, Phone, Loader2, CheckCircle, Building, UserCheck, AlertCircle, CreditCard, Shield, MapPin, Home, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -11,6 +11,7 @@ import { useSignup } from '@/hooks/useSignup';
 import { useWhatsAppValidation } from '@/hooks/useWhatsAppValidation';
 import { useAssinatura, Plano } from '@/hooks/useAssinatura';
 import { formatCPF, validateCPF, isCPFFormatComplete } from '@/utils/cpfUtils';
+import { formatCEP, validateCEP, isCEPFormatComplete, buscarEnderecoPorCEP } from '@/utils/cepUtils';
 
 // AI dev note: Modal de cadastro integrado com sistema de assinaturas
 // Mostra planos dinâmicos do banco e cria trial de 7 dias automaticamente
@@ -33,6 +34,14 @@ interface FormData {
   tipo_conta: AccountType;
   nome_empresa?: string;
   plano_codigo?: string;
+  // Campos de endereço
+  cep: string;
+  logradouro: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  numero_residencia: string;
+  complemento_endereco: string;
 }
 
 interface FormErrors {
@@ -41,11 +50,14 @@ interface FormErrors {
   whatsapp?: string;
   cpf?: string;
   nome_empresa?: string;
+  cep?: string;
+  numero_residencia?: string;
 }
 
 interface ValidationStates {
   whatsapp: 'idle' | 'validating' | 'valid' | 'invalid';
   cpf: 'idle' | 'valid' | 'invalid';
+  cep: 'idle' | 'validating' | 'valid' | 'invalid';
 }
 
 // Planos são carregados dinamicamente via useAssinatura
@@ -64,12 +76,20 @@ export const SignupModal: React.FC<SignupModalProps> = ({
     email: '',
     whatsapp: '',
     cpf: '',
-    tipo_conta: 'INDIVIDUAL'
+    tipo_conta: 'INDIVIDUAL',
+    cep: '',
+    logradouro: '',
+    bairro: '',
+    localidade: '',
+    uf: '',
+    numero_residencia: '',
+    complemento_endereco: ''
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [validationStates, setValidationStates] = useState<ValidationStates>({
     whatsapp: 'idle',
-    cpf: 'idle'
+    cpf: 'idle',
+    cep: 'idle'
   });
   
   const { signup, isLoading, error: signupError, clearError } = useSignup();
@@ -93,12 +113,20 @@ export const SignupModal: React.FC<SignupModalProps> = ({
         whatsapp: '',
         cpf: '',
         tipo_conta: defaultPlan,
-        plano_codigo: planoDefault?.codigo_externo
+        plano_codigo: planoDefault?.codigo_externo,
+        cep: '',
+        logradouro: '',
+        bairro: '',
+        localidade: '',
+        uf: '',
+        numero_residencia: '',
+        complemento_endereco: ''
       });
       setErrors({});
       setValidationStates({
         whatsapp: 'idle',
-        cpf: 'idle'
+        cpf: 'idle',
+        cep: 'idle'
       });
       clearError();
     }
@@ -154,6 +182,22 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       newErrors.nome_empresa = 'Nome da empresa é obrigatório';
     }
 
+    if (!formData.cep.trim()) {
+      newErrors.cep = 'CEP é obrigatório';
+    } else if (!isCEPFormatComplete(formData.cep)) {
+      newErrors.cep = 'CEP incompleto';
+    } else if (!validateCEP(formData.cep)) {
+      newErrors.cep = 'CEP inválido';
+    } else if (validationStates.cep === 'invalid') {
+      newErrors.cep = 'CEP não encontrado';
+    } else if (validationStates.cep === 'validating') {
+      newErrors.cep = 'Aguarde a validação do CEP';
+    }
+
+    if (!formData.numero_residencia.trim()) {
+      newErrors.numero_residencia = 'Número da residência é obrigatório';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -195,6 +239,46 @@ export const SignupModal: React.FC<SignupModalProps> = ({
     [validateWhatsApp]
   );
 
+  // Debounced CEP validation and address lookup
+  const validateCEPDebounced = useCallback(
+    async (cep: string) => {
+      if (!isCEPFormatComplete(cep)) {
+        setValidationStates(prev => ({ ...prev, cep: 'idle' }));
+        return;
+      }
+
+      if (!validateCEP(cep)) {
+        setValidationStates(prev => ({ ...prev, cep: 'invalid' }));
+        setErrors(prev => ({ ...prev, cep: 'CEP inválido' }));
+        return;
+      }
+
+      setValidationStates(prev => ({ ...prev, cep: 'validating' }));
+      
+      try {
+        const endereco = await buscarEnderecoPorCEP(cep);
+        setValidationStates(prev => ({ ...prev, cep: 'valid' }));
+        
+        // Auto-completar campos de endereço
+        setFormData(prev => ({
+          ...prev,
+          logradouro: endereco.logradouro || '',
+          bairro: endereco.bairro || '',
+          localidade: endereco.localidade || '',
+          uf: endereco.uf || ''
+        }));
+        
+        // Limpar erro se havia
+        setErrors(prev => ({ ...prev, cep: undefined }));
+      } catch (error) {
+        setValidationStates(prev => ({ ...prev, cep: 'invalid' }));
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao validar CEP';
+        setErrors(prev => ({ ...prev, cep: errorMessage }));
+      }
+    },
+    []
+  );
+
   // Debounce timer for WhatsApp validation
   React.useEffect(() => {
     if (formData.whatsapp && /^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(formData.whatsapp)) {
@@ -205,6 +289,17 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       return () => clearTimeout(timer);
     }
   }, [formData.whatsapp, validateWhatsAppDebounced]);
+
+  // Debounce timer for CEP validation
+  React.useEffect(() => {
+    if (formData.cep && isCEPFormatComplete(formData.cep)) {
+      const timer = setTimeout(() => {
+        validateCEPDebounced(formData.cep);
+      }, 800);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [formData.cep, validateCEPDebounced]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     if (field === 'whatsapp') {
@@ -223,6 +318,22 @@ export const SignupModal: React.FC<SignupModalProps> = ({
         }));
       } else {
         setValidationStates(prev => ({ ...prev, cpf: 'idle' }));
+      }
+    }
+
+    if (field === 'cep') {
+      value = formatCEP(value);
+      // Reset CEP validation state when typing
+      setValidationStates(prev => ({ ...prev, cep: 'idle' }));
+      // Limpar campos de endereço quando CEP muda
+      if (formData.cep !== value) {
+        setFormData(prev => ({
+          ...prev,
+          logradouro: '',
+          bairro: '',
+          localidade: '',
+          uf: ''
+        }));
       }
     }
 
@@ -643,6 +754,112 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                           CPF válido
                         </p>
                       )}
+                    </div>
+
+                    {/* CEP */}
+                    <div className="space-y-2">
+                      <Label htmlFor="cep">CEP</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="cep"
+                          placeholder="00000-000"
+                          value={formData.cep}
+                          onChange={(e) => handleInputChange('cep', e.target.value)}
+                          className={cn(
+                            "pl-10 pr-10", 
+                            errors.cep && "border-red-500",
+                            validationStates.cep === 'valid' && "border-green-500",
+                            validationStates.cep === 'invalid' && "border-red-500"
+                          )}
+                          maxLength={9}
+                        />
+                        {/* Validation indicator */}
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {validationStates.cep === 'validating' && (
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                          )}
+                          {validationStates.cep === 'valid' && (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          )}
+                          {validationStates.cep === 'invalid' && (
+                            <AlertCircle className="w-4 h-4 text-red-500" />
+                          )}
+                        </div>
+                      </div>
+                      {errors.cep && <p className="text-xs text-red-500">{errors.cep}</p>}
+                      {validationStates.cep === 'valid' && !errors.cep && (
+                        <p className="text-xs text-green-600 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Endereço encontrado
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Campos de endereço auto-completados (read-only) */}
+                    {(formData.logradouro || formData.bairro || formData.localidade) && (
+                      <div className="space-y-2">
+                        <Label>Endereço</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {formData.logradouro && (
+                            <Input
+                              value={formData.logradouro}
+                              placeholder="Logradouro"
+                              readOnly
+                              className="bg-muted/50 text-muted-foreground"
+                            />
+                          )}
+                          <div className="grid grid-cols-2 gap-2">
+                            {formData.bairro && (
+                              <Input
+                                value={formData.bairro}
+                                placeholder="Bairro"
+                                readOnly
+                                className="bg-muted/50 text-muted-foreground"
+                              />
+                            )}
+                            {formData.localidade && formData.uf && (
+                              <Input
+                                value={`${formData.localidade} - ${formData.uf}`}
+                                placeholder="Cidade - UF"
+                                readOnly
+                                className="bg-muted/50 text-muted-foreground"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Número da Residência */}
+                    <div className="space-y-2">
+                      <Label htmlFor="numero_residencia">Número da Residência</Label>
+                      <div className="relative">
+                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="numero_residencia"
+                          placeholder="123"
+                          value={formData.numero_residencia}
+                          onChange={(e) => handleInputChange('numero_residencia', e.target.value)}
+                          className={cn("pl-10", errors.numero_residencia && "border-red-500")}
+                        />
+                      </div>
+                      {errors.numero_residencia && <p className="text-xs text-red-500">{errors.numero_residencia}</p>}
+                    </div>
+
+                    {/* Complemento do Endereço */}
+                    <div className="space-y-2">
+                      <Label htmlFor="complemento_endereco">Complemento (opcional)</Label>
+                      <div className="relative">
+                        <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="complemento_endereco"
+                          placeholder="Apartamento, bloco, etc."
+                          value={formData.complemento_endereco}
+                          onChange={(e) => handleInputChange('complemento_endereco', e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
 
                     {/* Nome da Empresa (apenas para Imobiliária) */}

@@ -8,6 +8,25 @@ export interface CustomerData {
   telefone?: string;
   userId: string;
   assinaturaId: string;
+  // Dados da conta
+  conta: {
+    id: string;
+    nome_conta: string;
+    tipo_conta: string;
+    documento: string;
+    max_corretores: number;
+  };
+  // Dados da assinatura
+  assinatura: {
+    id: string;
+    plano_id: number;
+    status: string;
+    data_fim_trial?: string;
+    data_proxima_cobranca?: string;
+    valor_atual: number;
+    ciclo_cobranca: string;
+    plano_nome: string;
+  };
 }
 
 export interface WebhookResponse {
@@ -24,6 +43,23 @@ class WebhookService {
     this.webhookUrl = import.meta.env.VITE_WEBHOOK_ASAAS_PROVISIONING_URL || 'https://editori.infusecomunicacao.online/webhook-test/guidoAsaas';
     
     // console.log('🔥 DEBUG - [WebhookService] URL configurada:', this.webhookUrl);
+  }
+
+  /**
+   * Gera URL de callback para sucesso do pagamento no Asaas
+   * Esta URL será usada no campo callback.successUrl da criação da assinatura
+   */
+  private getSuccessCallbackUrl(userId: string): string {
+    const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    return `${baseUrl}/payment-success?user=${userId}&source=asaas&redirect=dashboard`;
+  }
+
+  /**
+   * Gera URL alternativa para callback (se preferir uma página diferente)
+   */
+  public getAlternativeCallbackUrl(userId: string, destination: 'dashboard' | 'settings' | 'home' = 'dashboard'): string {
+    const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    return `${baseUrl}/payment-success?user=${userId}&source=asaas&redirect=${destination}`;
   }
 
   async provisionCustomer(data: CustomerData): Promise<WebhookResponse> {
@@ -52,7 +88,15 @@ class WebhookService {
             telefone: data.telefone || '',
             userId: data.userId,
             assinaturaId: data.assinaturaId,
+            // Dados da conta
+            conta: data.conta,
+            // Dados da assinatura
+            assinatura: data.assinatura,
             timestamp: new Date().toISOString()
+          },
+          // URL de callback para sucesso do pagamento no Asaas
+          callback: {
+            successUrl: this.getSuccessCallbackUrl(data.userId)
           }
         })
       });

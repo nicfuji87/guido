@@ -97,14 +97,7 @@ export const useConfiguracoes = () => {
         visible: userRole === 'DONO',
         permissaoMinima: 'DONO'
       },
-      {
-        id: 'integracao',
-        titulo: 'Integrações',
-        descricao: 'APIs e webhooks personalizados',
-        icone: '🔗',
-        visible: userRole === 'DONO' || userRole === 'ADMIN',
-        permissaoMinima: 'ADMIN'
-      }
+
     ];
 
     return secoes.filter(secao => secao.visible);

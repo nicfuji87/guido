@@ -30,6 +30,15 @@ interface SignupData {
   tipo_conta: 'INDIVIDUAL' | 'IMOBILIARIA';
   nome_empresa?: string;
   plano_codigo?: string; // Código do plano selecionado
+  // Campos de endereço
+  cep?: string;
+  logradouro?: string;
+  bairro?: string;
+  localidade?: string;
+  uf?: string;
+  ddd?: string;
+  numero_residencia?: string;
+  complemento_endereco?: string;
 }
 
 interface SignupResult {
@@ -251,7 +260,18 @@ export const useSignup = () => {
         // Dados da Evolution (se disponíveis)
         evolution_instance: evolutionResult.success ? evolutionResult.data?.instanceName : null,
         evolution_apikey: evolutionResult.success ? evolutionResult.data?.apiKey : null,
-        evolution_url: evolutionResult.success ? evolutionResult.data?.evolutionUrl : null
+        evolution_url: evolutionResult.success ? evolutionResult.data?.evolutionUrl : null,
+        // CPF/CNPJ para integração com sistemas de pagamento
+        cpfCnpj: cleanCPF,
+        // Dados de endereço
+        cep: data.cep ? Number(data.cep.replace(/\D/g, '')) : null,
+        logradouro: data.logradouro || null,
+        bairro: data.bairro || null,
+        localidade: data.localidade || null,
+        uf: data.uf || null,
+        ddd: data.ddd ? Number(data.ddd) : null,
+        numero_residencia: data.numero_residencia || null,
+        complemento_endereco: data.complemento_endereco || null
       };
       
       const { data: novoUsuario, error: erroNovoUsuario } = await supabase

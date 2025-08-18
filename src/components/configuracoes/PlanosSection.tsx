@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { CreditCard, CheckCircle, AlertTriangle, Calendar, Clock, Zap, Shield, Star, ArrowRight, X } from 'lucide-react';
+import { CreditCard, CheckCircle, AlertTriangle, Calendar, Clock, Zap, Star, ArrowRight, X, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { supabase } from '@/lib/supabaseClient';
 import { useViewContext } from '@/hooks/useViewContext';
+import { useToastContext } from '@/contexts/ToastContext';
 // AI dev note: UpgradeSubscriptionForm removido - agora usa modal simplificado de cadastro
 import { CustomerRegistrationModal } from '@/components/CustomerRegistrationModal';
-import { useAssinatura, type Plano } from '@/hooks/useAssinatura';
 import { useCustomerProvisioning } from '@/hooks/useCustomerProvisioning';
+import { prepareWebhookData } from '@/utils/webhookDataHelper';
+import { useAsaasInvoice, AsaasInvoiceResponse } from '@/hooks/useAsaasInvoice';
+import AsaasInvoiceFallback from '@/components/AsaasInvoiceFallback';
+import { getAsaasUrls } from '@/utils/asaasUrlHelper';
+import InvoiceDisplay from '@/components/InvoiceDisplay';
+import InvoicePlaceholder from '@/components/InvoicePlaceholder';
 
 interface AssinaturaInfo {
   id: string;
@@ -22,6 +28,7 @@ interface AssinaturaInfo {
   tentativas_cobranca?: number;
   id_assinatura_asaas?: string;
   id_customer_asaas?: string;
+  url_ultima_fatura?: string;
 }
 
 interface PlanoDisponivel {
@@ -35,17 +42,7 @@ interface PlanoDisponivel {
   destaque?: boolean;
 }
 
-// AI dev note: Tipo union para lidar com diferentes formatos de plano  
-type PlanoUnion = PlanoDisponivel | Plano | {
-  id?: number;
-  nome_plano: string;
-  preco_mensal: number;
-  tipo_plano?: string;
-  nome?: string;
-  preco?: number;
-  tipo?: string;
-  [key: string]: unknown; // Index signature para compatibilidade
-};
+
 
 // AI dev note: Tipo para planos no formato de upgrade/modal
 interface PlanoUpgrade {
@@ -61,9 +58,10 @@ interface PlanoUpgrade {
 
 export const PlanosSection: React.FC = () => {
   const { currentCorretor } = useViewContext();
-  const { planos } = useAssinatura();
   // AI dev note: refetchAssinatura removido - não usado mais
   const { isLoading: isProvisioning } = useCustomerProvisioning();
+  const { openInvoice, invoiceUrl, clearInvoiceUrl } = useAsaasInvoice();
+  const { success: showSuccessToast, error: showErrorToast, info: showInfoToast } = useToastContext();
   // AI dev note: provisionCustomer removido - usado via modal separado agora
   const [assinatura, setAssinatura] = useState<AssinaturaInfo | null>(null);
   const [planosDisponiveis, setPlanosDisponiveis] = useState<PlanoDisponivel[]>([]);
@@ -112,7 +110,8 @@ export const PlanosSection: React.FC = () => {
           tentativas_cobranca,
           id_assinatura_asaas,
           id_customer_asaas,
-          planos(nome_plano)
+          planos(nome_plano),
+          url_ultima_fatura
         `)
         .eq('conta_id', currentCorretor.conta_id)
         .single();
@@ -132,7 +131,8 @@ export const PlanosSection: React.FC = () => {
           data_fim_trial: assinaturaData.data_fim_trial,
           tentativas_cobranca: assinaturaData.tentativas_cobranca,
           id_assinatura_asaas: assinaturaData.id_assinatura_asaas,
-          id_customer_asaas: assinaturaData.id_customer_asaas
+          id_customer_asaas: assinaturaData.id_customer_asaas,
+          url_ultima_fatura: assinaturaData.url_ultima_fatura
         });
       }
 
@@ -184,7 +184,7 @@ export const PlanosSection: React.FC = () => {
         label: 'Ativo', 
         color: 'bg-green-900/20 text-green-400 border-green-700/30',
         icon: CheckCircle,
-        description: 'Assinatura em dia e funcionando',
+        description: '',
         action: 'INFO'
       },
       'PAGAMENTO_PENDENTE': { 
@@ -259,54 +259,191 @@ export const PlanosSection: React.FC = () => {
     return false; // Força abertura do modal de cadastro
   };
 
-  const handleRegularizarPagamento = async () => {
-    // console.log('🔥 DEBUG - [SIMPLIFICADO] Iniciando regularização de pagamento');
-    setError(null);
-    setIsProcessing(true);
-    
+  const salvarUrlFatura = async (urlFatura: string) => {
+    if (!assinatura) return;
+
     try {
-      // 1. VERIFICAR SE CLIENTE TEM ID DO ASAAS
-      const clienteOk = await verificarEProvisionarCliente();
-      if (!clienteOk) {
-        // console.log('🔥 DEBUG - [SIMPLIFICADO] Cliente precisa ser cadastrado - abrindo modal');
-        setShowCustomerRegistrationModal(true);
-        return;
+      const { error } = await supabase
+        .from('assinaturas')
+        .update({ 
+          url_ultima_fatura: urlFatura,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', assinatura.id);
+
+      if (error) {
+        // console.error('Erro ao salvar URL da fatura:', error);
+      } else {
+        // Atualizar estado local
+        setAssinatura(prev => prev ? { ...prev, url_ultima_fatura: urlFatura } : null);
+        // console.log('✅ URL da fatura salva com sucesso');
       }
-      
-      // 2. ENCONTRAR PLANO ATUAL
-      if (!assinatura) {
-        setError('Assinatura não encontrada');
-        return;
+    } catch (error) {
+      // console.error('Erro ao salvar URL da fatura:', error);
+    }
+  };
+
+  const handleRegularizarPagamento = async () => {
+    setIsProcessing(true);
+    setError(null);
+    
+    // Toast de loading para feedback imediato
+    showInfoToast(
+      'Processando pagamento...',
+      'Você será direcionado para a página de pagamento em instantes.'
+    );
+    
+    if (!currentCorretor || !assinatura) {
+      const errorMsg = 'Dados do usuário ou assinatura não identificados';
+      setError(errorMsg);
+      showErrorToast('Erro', errorMsg);
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      // Buscar dados completos do usuário na tabela usuarios
+      const user = supabase.auth.user();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
       }
-      
-      const planoAtual: PlanoUnion | undefined = planosDisponiveis.find(p => p.nome === assinatura.plano_nome) || 
-        planos.find(p => p.nome_plano === assinatura.plano_nome);
-      
-      if (!planoAtual) {
-        setError('Plano da assinatura não encontrado');
-        return;
+
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (userError) {
+        throw new Error(`Erro ao buscar dados do usuário: ${userError.message}`);
       }
+
+      if (!userData) {
+        throw new Error('Dados do usuário não encontrados');
+      }
+
+      // Preparar dados completos do webhook incluindo conta e assinatura
+      const webhookData = await prepareWebhookData({
+        nome: userData.name,
+        email: userData.email,
+        documento: userData.cpfCnpj || '',
+        telefone: userData.whatsapp,
+        userId: userData.id,
+        assinaturaId: assinatura.id
+      });
+
+      // Configurar webhook
+      const webhookUrl = import.meta.env.VITE_WEBHOOK_ASAAS_PROVISIONING_URL;
+      const apiKey = import.meta.env.VITE_WEBHOOK_ASAAS_PROVISIONING_API_KEY;
       
-      // 3. CONVERTER PARA FORMATO COMPATÍVEL
-      const planoParaUpgrade: PlanoUpgrade = {
-        id: planoAtual.id || 0,
-        nome_plano: ('nome' in planoAtual ? planoAtual.nome : planoAtual.nome_plano) as string,
-        preco_mensal: ('preco' in planoAtual ? planoAtual.preco : planoAtual.preco_mensal) as number,
-        preco_anual: null,
-        limite_corretores: 1,
-        tipo_plano: (('tipo' in planoAtual ? planoAtual.tipo : planoAtual.tipo_plano) || 'INDIVIDUAL') as string,
-        recursos: {},
-        is_ativo: true
-      };
-      
-      // console.log('🔥 DEBUG - Abrindo modal de pagamento para plano:', planoParaUpgrade.nome_plano);
-      setSelectedPlan(planoParaUpgrade);
-      setShowUpgradeModal(true);
+      if (!webhookUrl) {
+        throw new Error('URL do webhook não configurada');
+      }
+
+      if (!apiKey) {
+        throw new Error('API Key do webhook não configurada');
+      }
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api': apiKey,
+        },
+        body: JSON.stringify({
+          action: 'provision_customer',
+          // Dados do corretor atual (como antes)
+          corrector: {
+            id: currentCorretor.id,
+            nome: currentCorretor.nome,
+            email: currentCorretor.email,
+            conta_id: currentCorretor.conta_id,
+            funcao: currentCorretor.funcao
+          },
+          // Dados completos do usuário da tabela usuarios (como antes)
+          user: userData,
+          // Dados expandidos com conta e assinatura (novo)
+          data: webhookData
+        }),
+      });
+
+      if (!response.ok) {
+        // Tentar extrair erro específico da resposta
+        let errorMessage = `Erro no webhook: ${response.status}`;
+        try {
+          const errorData = await response.text();
+          
+          // Verificar se é erro de CPF/CNPJ inválido
+          if (errorData.includes('O CPF/CNPJ informado é inválido')) {
+            errorMessage = '❌ CPF/CNPJ inválido. Os dados do usuário contêm inconsistências. Verifique se o CPF/CNPJ está correto e tente novamente.';
+          } else if (errorData.includes('invalid_object')) {
+            errorMessage = '❌ Dados inválidos enviados para o sistema de pagamento. Verifique se todos os campos estão preenchidos corretamente.';
+          } else if (errorData.includes('AxiosError')) {
+            errorMessage = '❌ Erro na comunicação com o sistema de pagamento (Asaas). Tente novamente em alguns minutos.';
+          } else if (errorData.includes('400')) {
+            errorMessage = '❌ Erro nos dados enviados. Verifique se as informações do usuário estão corretas.';
+          }
+        } catch (parseError) {
+          // Se não conseguir parsear, usar mensagem padrão
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      // Processar resposta do webhook - pode conter URL da fatura
+      try {
+        const responseData = await response.json() as AsaasInvoiceResponse;
+        
+        // Usar helper para determinar a melhor URL
+        const urlInfo = getAsaasUrls(responseData);
+        
+        if (urlInfo) {
+          // Salvar URL da fatura na assinatura
+          await salvarUrlFatura(urlInfo.primaryUrl);
+          
+          // Webhook retornou URL(s) do Asaas - abrir popup E exibir na interface
+          // console.log(`🧾 Fatura detectada e salva: ${urlInfo.description}`);
+          
+          // Abrir popup automaticamente
+          const openResult = openInvoice(urlInfo.primaryUrl, {
+            newTab: true,
+            showFallback: true
+          });
+
+          if (openResult.success) {
+            const successMsg = `Fatura gerada com sucesso! A página de pagamento foi aberta em uma nova guia. Você também pode acessar através da seção "Fatura Atual" abaixo.`;
+            setError(`✅ ${successMsg}`);
+            showSuccessToast('Fatura Gerada!', 'Página de pagamento aberta + fatura disponível na interface.');
+          } else if (openResult.error === 'popup_blocked') {
+            const fallbackMsg = 'Fatura gerada com sucesso! Clique no botão de fallback abaixo ou acesse através da seção "Fatura Atual".';
+            setError(`✅ ${fallbackMsg}`);
+            showInfoToast('Popup Bloqueado', 'Use o botão de fallback ou a seção Fatura Atual para acessar.');
+          } else {
+            const successMsg = `Fatura gerada com sucesso! Acesse através da seção "Fatura Atual" abaixo.`;
+            setError(`✅ ${successMsg}`);
+            showSuccessToast('Fatura Gerada!', 'Fatura disponível na seção abaixo para pagamento.');
+          }
+
+          // Se tem URL de fallback, logar para debug
+          if (urlInfo.fallbackUrl) {
+            // console.log(`🔄 URL de fallback disponível: ${urlInfo.fallbackUrl}`);
+          }
+        } else {
+          const defaultMsg = 'Provisioning iniciado! O sistema processará sua solicitação com todos os dados: corretor, usuário completo, conta e assinatura.';
+          setError(`✅ ${defaultMsg}`);
+          showInfoToast('Processamento Iniciado', 'Aguarde enquanto processamos sua solicitação.');
+        }
+      } catch (jsonError) {
+        // Resposta não é JSON válido - ainda assim sucesso
+        const defaultMsg = 'Provisioning iniciado! O sistema processará sua solicitação com todos os dados: corretor, usuário completo, conta e assinatura.';
+        setError(`✅ ${defaultMsg}`);
+        showInfoToast('Processamento Iniciado', 'Aguarde enquanto processamos sua solicitação.');
+      }
       
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro na regularização';
-      // console.error('🔥 DEBUG - Erro na regularização:', errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao processar solicitação';
       setError(errorMessage);
+      showErrorToast('Erro no Pagamento', errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -572,11 +709,7 @@ export const PlanosSection: React.FC = () => {
                       ℹ️ Cliente configurado - Assinatura pendente
                     </p>
                   )}
-                  {assinatura.id_customer_asaas && assinatura.id_assinatura_asaas && (
-                    <p className="text-xs text-green-400 mt-1">
-                      ✅ Totalmente integrado com Asaas
-                    </p>
-                  )}
+
                 </div>
                 
                 <div className="text-right">
@@ -612,7 +745,7 @@ export const PlanosSection: React.FC = () => {
                   </div>
                 )}
                 
-                {assinatura.data_fim_trial && (
+                {assinatura.data_fim_trial && assinatura.status === 'TRIAL' && (
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-blue-400" />
                     <span className="text-gray-300">
@@ -621,14 +754,7 @@ export const PlanosSection: React.FC = () => {
                   </div>
                 )}
 
-                {assinatura.tentativas_cobranca && assinatura.tentativas_cobranca > 0 && (
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                    <span className="text-yellow-400">
-                      {assinatura.tentativas_cobranca} tentativa(s) de cobrança
-                    </span>
-                  </div>
-                )}
+
 
                 {(() => {
                   const tempo = getDiasRestantesTrialOuVencimento(assinatura);
@@ -667,10 +793,9 @@ export const PlanosSection: React.FC = () => {
                   size="sm"
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={handleRegularizarPagamento}
-                  disabled={isProcessing}
                 >
                   <Zap className="w-4 h-4 mr-2" />
-                  {isProcessing ? 'Processando...' : 'Regularizar Pagamento'}
+                  Regularizar Pagamento
                 </Button>
               )}
               
@@ -799,21 +924,43 @@ export const PlanosSection: React.FC = () => {
           </div>
         )}
 
-        {/* Informações adicionais e garantias */}
-        <div className="grid grid-cols-1 gap-6 mt-6">
-          <div className="p-4 bg-emerald-900/10 border border-emerald-700/30 rounded-lg">
-            <h4 className="text-emerald-400 font-medium mb-2 flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Garantias
-            </h4>
-            <ul className="text-sm text-emerald-300 space-y-1">
-              <li>• 7 dias de teste gratuito</li>
-              <li>• Cancele a qualquer momento</li>
-              <li>• Sem fidelidade ou multa</li>
-              <li>• Suporte técnico incluído</li>
-            </ul>
+
+
+        {/* Seção de Fatura Fixa */}
+        {assinatura && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Fatura & Pagamento
+            </h3>
+            
+            {assinatura.url_ultima_fatura ? (
+              <InvoiceDisplay
+                invoiceUrl={assinatura.url_ultima_fatura}
+                status={assinatura.status as 'TRIAL' | 'ATIVO' | 'PAGAMENTO_PENDENTE' | 'CANCELADO'}
+                valor={assinatura.valor_atual}
+                dataVencimento={assinatura.data_proxima_cobranca}
+                planoNome={assinatura.plano_nome}
+              />
+            ) : (
+              <InvoicePlaceholder
+                status={assinatura.status as 'TRIAL' | 'ATIVO' | 'PAGAMENTO_PENDENTE' | 'CANCELADO'}
+                planoNome={assinatura.plano_nome}
+                onGenerateInvoice={handleRegularizarPagamento}
+                isGenerating={isProcessing}
+              />
+            )}
           </div>
-        </div>
+        )}
+
+        {/* Fallback para fatura do Asaas quando popup é bloqueado */}
+        {invoiceUrl && (
+          <AsaasInvoiceFallback 
+            invoiceUrl={invoiceUrl} 
+            onClose={clearInvoiceUrl}
+            className="mb-6"
+          />
+        )}
 
         {/* Status da integração Asaas */}
         {assinatura && !assinatura.id_customer_asaas && (
