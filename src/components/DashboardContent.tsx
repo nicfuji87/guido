@@ -48,6 +48,11 @@ export const DashboardContent = () => {
     // TODO: Implementar modal de criação
   };
 
+  const handleViewMoreReminders = () => {
+    // TODO: Navegar para página completa de lembretes ou abrir modal
+    history.push('/lembretes');
+  };
+
   // Estado de erro moderno
   if (error) {
     return (
@@ -99,6 +104,7 @@ export const DashboardContent = () => {
             isLoading={isLoading}
             onToggleComplete={handleToggleReminder}
             onCreateReminder={handleCreateReminder}
+            onViewMore={handleViewMoreReminders}
           />
         ),
         priority: 'high' as const,

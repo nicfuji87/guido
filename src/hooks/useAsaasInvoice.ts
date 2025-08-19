@@ -12,6 +12,8 @@ export interface AsaasInvoiceResponse {
 export const useAsaasInvoice = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
+  const [isLoading] = useState(false);
 
   const openInvoice = (url: string, options: {
     newTab?: boolean;
@@ -63,6 +65,8 @@ export const useAsaasInvoice = () => {
     invoiceUrl,
     clearInvoiceUrl,
     isProcessing,
-    setIsProcessing
+    setIsProcessing,
+    error,
+    isLoading
   };
 };

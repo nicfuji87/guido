@@ -161,8 +161,6 @@ export const EvolutionWhatsAppWidget = () => {
   };
 
   const getStatusText = () => {
-
-    
     if (!instance) return 'Não configurado';
     
     switch (instance.state) {
@@ -340,6 +338,8 @@ export const EvolutionWhatsAppWidget = () => {
             </div>
           </div>
         )}
+
+
       </CardContent>
     </Card>
   );

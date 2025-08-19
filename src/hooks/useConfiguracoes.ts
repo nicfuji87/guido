@@ -71,14 +71,15 @@ export const useConfiguracoes = () => {
         titulo: 'Privacidade & Segurança',
         descricao: 'Controle sobre seus dados e visibilidade',
         icone: '🔒',
-        visible: true
+        visible: false, // Oculto para corretores por enquanto
+        permissaoMinima: 'ADMIN'
       },
       {
         id: 'empresa',
         titulo: 'Dados da Empresa',
         descricao: 'Informações da imobiliária ou escritório',
         icone: '🏢',
-        visible: userRole === 'DONO' || userRole === 'ADMIN',
+        visible: false, // Oculto para corretores por enquanto
         permissaoMinima: 'ADMIN'
       },
       {
@@ -86,7 +87,7 @@ export const useConfiguracoes = () => {
         titulo: 'Gerenciar Equipe',
         descricao: 'Adicionar e gerenciar corretores',
         icone: '👥',
-        visible: userRole === 'DONO' || userRole === 'ADMIN',
+        visible: false, // Oculto para corretores por enquanto
         permissaoMinima: 'ADMIN'
       },
       {

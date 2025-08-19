@@ -115,8 +115,11 @@ export const useDashboardData = (viewContext: ViewContext) => {
       .order('timestamp_ultima_mensagem', { ascending: true })
       .limit(10);
 
-    // Lembretes de hoje
-    const hoje = new Date().toISOString().split('T')[0];
+    // Lembretes dos próximos 5 dias
+    const hoje = new Date();
+    const proximos5Dias = new Date();
+    proximos5Dias.setDate(hoje.getDate() + 5);
+    
     const { data: lembretes } = await supabase
       .from('lembretes')
       .select(`
@@ -127,8 +130,8 @@ export const useDashboardData = (viewContext: ViewContext) => {
         cliente:clientes(id, nome)
       `)
       .eq('corretor_id', userId)
-      .gte('data_lembrete', hoje)
-      .lt('data_lembrete', `${hoje}T23:59:59`)
+      .gte('data_lembrete', hoje.toISOString())
+      .lte('data_lembrete', proximos5Dias.toISOString())
       .order('data_lembrete');
 
     // Métricas pessoais
@@ -153,7 +156,12 @@ export const useDashboardData = (viewContext: ViewContext) => {
         inteligencia_tendencia_sentimento_cliente: conv.inteligencia_tendencia_sentimento_cliente
       })) || [],
       lembretesHoje: lembretes || [],
-      metricasPessoais: metricas?.[0] || {
+      metricasPessoais: metricas?.[0] ? {
+        novosClientes: Number(metricas[0].novosclientes || 0),
+        respostasEnviadas: Number(metricas[0].respostasenviadas || 0),
+        taxaConversao: Number(metricas[0].taxaconversao || 0),
+        tempoMedioResposta: Number(metricas[0].tempomedioresposta || 0)
+      } : {
         novosClientes: 0,
         respostasEnviadas: 0,
         taxaConversao: 0,

@@ -1,35 +1,31 @@
 // AI dev note: Exemplo de como usar o PaymentStatusBanner na aplicação
 import React from 'react';
 import PaymentStatusBanner from '../PaymentStatusBanner';
+// Tipo simples para status de pagamento no exemplo
+type SimplePaymentStatus = 'OVERDUE' | 'PENDING' | 'PAID' | 'NONE';
 
-interface PaymentStatusExampleProps {
-  userId?: string;
-}
+const PaymentStatusExample: React.FC = () => {
+  const statuses: SimplePaymentStatus[] = ['OVERDUE', 'PENDING', 'PAID', 'NONE'];
 
-export const PaymentStatusExample: React.FC<PaymentStatusExampleProps> = ({ userId }) => {
   return (
-    <div className="space-y-4 p-4">
-      <h2 className="text-xl font-bold text-gray-900">
-        Status de Pagamento
-      </h2>
+    <div className="p-4 space-y-4">
+      <h1 className="text-2xl font-bold">Exemplos de Status de Pagamento</h1>
       
-      {/* Banner condicional baseado no status do usuário */}
-      <PaymentStatusBanner 
-        userId={userId}
-        className="max-w-2xl"
-      />
-      
-      <div className="text-sm text-gray-500">
-        <p>O banner aparece automaticamente baseado no campo <code>id_assinatura_asaas</code>:</p>
-        <ul className="list-disc list-inside mt-2 space-y-1">
-          <li><strong>id_assinatura_asaas = null:</strong> Banner azul "Ativar Assinatura"</li>
-          <li><strong>id_assinatura_asaas ≠ null:</strong> Banner vermelho "Regularizar Pagamento"</li>
-        </ul>
-        <p className="mt-2 text-xs">
-          <strong>Lógica:</strong> Se tem ID da assinatura no Asaas = tem faturas = precisa regularizar.<br/>
-          Se não tem ID = não tem assinatura ativa = precisa ativar.
-        </p>
-      </div>
+      {statuses.map(status => (
+        <div key={status as string} className="border p-4 rounded-lg">
+          <h2 className="text-lg font-semibold mb-2">
+            Status: <span className={`font-mono ${
+              status === 'PAID' ? 'text-green-500' :
+              status === 'PENDING' ? 'text-yellow-500' :
+              status === 'OVERDUE' ? 'text-red-500' :
+              'text-gray-500'
+            }`}>{status}</span>
+          </h2>
+          <PaymentStatusBanner 
+            userId="example-user-id"
+          />
+        </div>
+      ))}
     </div>
   );
 };

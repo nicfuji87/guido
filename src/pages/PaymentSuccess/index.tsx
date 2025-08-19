@@ -6,11 +6,10 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { motion } from 'framer-motion';
 
-interface PaymentSuccessProps {
-  // Props vindas da URL: ?user=xxx&source=asaas
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface PaymentSuccessPageProps {}
 
-export const PaymentSuccess: React.FC<PaymentSuccessProps> = () => {
+export const PaymentSuccess: React.FC<PaymentSuccessPageProps> = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [source, setSource] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);

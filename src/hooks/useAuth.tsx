@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkSession();
 
     // Listener para mudanças de autenticação (v1.x)
-    const authListener = supabase.auth.onAuthStateChange(
+    const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         log.debug('Auth state changed:', event, session?.user?.email);
         
@@ -105,10 +105,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // Cleanup subscription (v1.x)
     return () => {
-      if (authListener?.data) {
-        // Para Supabase v1.x, o listener retorna um objeto com data, não unsubscribe
-        // A função de cleanup é automática no v1.x
-      }
+      authListener?.unsubscribe();
     };
   }, []);
 

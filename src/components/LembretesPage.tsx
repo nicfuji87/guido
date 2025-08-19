@@ -306,11 +306,8 @@ const LembretesContent: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-300 mb-2">
                 {lembretes.length === 0 ? 'Nenhum lembrete encontrado' : 'Nenhum resultado encontrado'}
               </h3>
-              <p className="text-gray-400 mb-4">
-                {lembretes.length === 0 
-                  ? 'Crie seu primeiro lembrete para receber notificações via WhatsApp'
-                  : 'Tente ajustar os filtros para encontrar o que procura'
-                }
+              <p className="text-gray-400 mt-2">
+                Aqui você pode ver, criar e gerenciar seus lembretes.
               </p>
               {lembretes.length === 0 && (
                 <Button onClick={handleNovoLembrete} className="bg-blue-600 hover:bg-blue-700 text-white">

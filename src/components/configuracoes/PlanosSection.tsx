@@ -16,6 +16,8 @@ import AsaasInvoiceFallback from '@/components/AsaasInvoiceFallback';
 import { getAsaasUrls } from '@/utils/asaasUrlHelper';
 import InvoiceDisplay from '@/components/InvoiceDisplay';
 import InvoicePlaceholder from '@/components/InvoicePlaceholder';
+import { HistoricoFaturasModal } from '@/components/configuracoes/HistoricoFaturasModal';
+import { CancelarAssinaturaModal } from '@/components/configuracoes/CancelarAssinaturaModal';
 
 interface AssinaturaInfo {
   id: string;
@@ -72,6 +74,10 @@ export const PlanosSection: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<PlanoDisponivel | PlanoUpgrade | null>(null);
   // AI dev note: showProvisioningStep removido - não usado na nova abordagem
   const [showCustomerRegistrationModal, setShowCustomerRegistrationModal] = useState(false);
+  // AI dev note: Estado para controlar modal de histórico de faturas
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
+  // AI dev note: Estado para controlar modal de cancelamento de assinatura
+  const [isCancelarModalOpen, setIsCancelarModalOpen] = useState(false);
 
   const carregarDados = useCallback(async () => {
     // // console.log('🔥 DEBUG - =================== INÍCIO CARREGAMENTO DADOS ===================');
@@ -97,7 +103,7 @@ export const PlanosSection: React.FC = () => {
       // console.log('🔥 DEBUG - Limpando erros anteriores');
       setError(null);
       
-      // Carregar assinatura atual
+      // Carregar assinatura atual (filtrar soft-deleted)
       const { data: assinaturaData, error: assinaturaError } = await supabase
         .from('assinaturas')
         .select(`
@@ -114,6 +120,7 @@ export const PlanosSection: React.FC = () => {
           url_ultima_fatura
         `)
         .eq('conta_id', currentCorretor.conta_id)
+        .is('deleted_at', null)
         .single();
 
       if (assinaturaError && assinaturaError.code !== 'PGRST116') {
@@ -815,8 +822,9 @@ export const PlanosSection: React.FC = () => {
                 size="sm"
                 variant="outline"
                 className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                onClick={() => alert('Histórico de faturas será implementado em breve!')}
+                onClick={() => setIsHistoricoModalOpen(true)}
               >
+                <FileText className="w-4 h-4 mr-2" />
                 Ver Histórico
               </Button>
               
@@ -831,14 +839,16 @@ export const PlanosSection: React.FC = () => {
                 </Button>
               )}
               
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-red-600 text-red-400 hover:bg-red-900/20"
-                onClick={() => alert('Cancelamento será implementado em breve!')}
-              >
-                Cancelar
-              </Button>
+              {assinatura.status !== 'CANCELADO' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-red-600 text-red-400 hover:bg-red-900/20"
+                  onClick={() => setIsCancelarModalOpen(true)}
+                >
+                  Cancelar
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -1037,6 +1047,39 @@ export const PlanosSection: React.FC = () => {
             documento: ''
           }}
         />
+
+        {/* Modal de Histórico de Faturas */}
+        {assinatura && (
+          <HistoricoFaturasModal
+            isOpen={isHistoricoModalOpen}
+            onClose={() => setIsHistoricoModalOpen(false)}
+            assinaturaId={assinatura.id}
+            planoNome={assinatura.plano_nome}
+          />
+        )}
+
+        {/* Modal de Cancelamento de Assinatura */}
+        {assinatura && (
+          <CancelarAssinaturaModal
+            isOpen={isCancelarModalOpen}
+            onClose={() => setIsCancelarModalOpen(false)}
+            onSuccess={() => {
+              showSuccessToast(
+                'Cancelamento Solicitado!',
+                'Sua solicitação foi enviada. Você continuará com acesso até o final do período pago.'
+              );
+              carregarDados(); // Recarrega dados da assinatura
+            }}
+            assinatura={{
+              id: assinatura.id,
+              plano_nome: assinatura.plano_nome,
+              valor_atual: assinatura.valor_atual,
+              data_proxima_cobranca: assinatura.data_proxima_cobranca,
+              id_assinatura_asaas: assinatura.id_assinatura_asaas
+            }}
+            userId={currentCorretor?.id || ''}
+          />
+        )}
       </CardContent>
     </Card>
   );

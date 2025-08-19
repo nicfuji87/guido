@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, CheckCircle2, Circle, Plus, User } from 'lucide-react';
+import { Calendar, Clock, CheckCircle2, Circle, Plus, User, Eye } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Skeleton } from '@/components/ui';
 import { LembreteHoje } from '@/hooks/useDashboardData';
 import { cn } from '@/lib/utils';
 
-// AI dev note: Widget para lembretes do dia atual
-// Permite marcar como concluído e criar novos lembretes
+// AI dev note: Widget para lembretes dos próximos dias (não só hoje)
+// Mostra máximo 5 lembretes com botão "Ver mais"
 
 interface LembretesHojeWidgetProps {
   lembretes: LembreteHoje[];
   isLoading?: boolean;
   onToggleComplete?: (lembreteId: string, completed: boolean) => void;
   onCreateReminder?: () => void;
+  onViewMore?: () => void;
 }
 
 const ReminderItem = ({ 
@@ -29,12 +30,35 @@ const ReminderItem = ({
     onToggle?.(lembrete.id, newStatus);
   };
 
-  const formatTime = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('pt-BR', { 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const reminderDate = new Date(date);
+    reminderDate.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.floor((reminderDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    let dateText = '';
+    if (diffDays === 0) {
+      dateText = 'Hoje';
+    } else if (diffDays === 1) {
+      dateText = 'Amanhã';
+    } else if (diffDays === -1) {
+      dateText = 'Ontem';
+    } else if (diffDays > 0) {
+      dateText = `+${diffDays}d`;
+    } else {
+      dateText = `${diffDays}d`;
+    }
+    
+    const timeText = date.toLocaleTimeString('pt-BR', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
+    
+    return `${dateText} ${timeText}`;
   };
 
   return (
@@ -63,7 +87,7 @@ const ReminderItem = ({
             {lembrete.descricao}
           </p>
           <Badge variant="outline" className="text-xs shrink-0">
-            {formatTime(lembrete.data_lembrete)}
+            {formatDateTime(lembrete.data_lembrete)}
           </Badge>
         </div>
         
@@ -99,15 +123,21 @@ export const LembretesHojeWidget = ({
   lembretes, 
   isLoading, 
   onToggleComplete,
-  onCreateReminder
+  onCreateReminder,
+  onViewMore
 }: LembretesHojeWidgetProps) => {
   const pendingCount = lembretes.filter(l => l.status === 'PENDENTE').length;
   const completedCount = lembretes.filter(l => l.status === 'CONCLUIDO').length;
   const completionRate = lembretes.length > 0 ? (completedCount / lembretes.length) * 100 : 0;
 
-  // Separar lembretes por status
-  const pendingReminders = lembretes.filter(l => l.status === 'PENDENTE');
-  const completedReminders = lembretes.filter(l => l.status === 'CONCLUIDO');
+  // Limitar a 5 lembretes para exibição
+  const MAX_DISPLAY_ITEMS = 5;
+  const displayLembretes = lembretes.slice(0, MAX_DISPLAY_ITEMS);
+  const hasMoreItems = lembretes.length > MAX_DISPLAY_ITEMS;
+
+  // Separar lembretes por status (apenas os que serão exibidos)
+  const pendingReminders = displayLembretes.filter(l => l.status === 'PENDENTE');
+  const completedReminders = displayLembretes.filter(l => l.status === 'CONCLUIDO');
 
   return (
     <Card className="h-full">
@@ -115,7 +145,7 @@ export const LembretesHojeWidget = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-blue-500" />
-            <CardTitle className="text-lg">Lembretes de Hoje</CardTitle>
+            <CardTitle className="text-lg">Lembretes Próximos</CardTitle>
           </div>
           <Button 
             variant="outline" 
@@ -132,9 +162,14 @@ export const LembretesHojeWidget = ({
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             {lembretes.length === 0 ? 
-              'Nenhum lembrete para hoje' :
+              'Nenhum lembrete próximo' :
               `${pendingCount} ${pendingCount === 1 ? 'pendente' : 'pendentes'} de ${lembretes.length}`
             }
+            {hasMoreItems && (
+              <span className="text-xs text-muted-foreground">
+                (mostrando {MAX_DISPLAY_ITEMS})
+              </span>
+            )}
           </div>
           {lembretes.length > 0 && (
             <Badge variant={completionRate === 100 ? 'default' : 'secondary'}>
@@ -151,7 +186,7 @@ export const LembretesHojeWidget = ({
           <div className="text-center py-8">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
             <p className="text-sm text-muted-foreground mb-2">
-              Nenhum lembrete para hoje
+              Nenhum lembrete próximo
             </p>
             <p className="text-xs text-muted-foreground mb-4">
               Crie lembretes para não esquecer tarefas importantes
@@ -200,6 +235,21 @@ export const LembretesHojeWidget = ({
                 ))}
               </div>
             )}
+
+            {/* Botão Ver mais */}
+            {hasMoreItems && (
+              <div className="pt-3 border-t">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={onViewMore}
+                  className="w-full gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <Eye className="h-4 w-4" />
+                  Ver mais {lembretes.length - MAX_DISPLAY_ITEMS} lembrete{lembretes.length - MAX_DISPLAY_ITEMS !== 1 ? 's' : ''}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -207,7 +257,7 @@ export const LembretesHojeWidget = ({
         {lembretes.length > 0 && (
           <div className="mt-4 pt-3 border-t">
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-muted-foreground">Progresso do dia</span>
+              <span className="text-muted-foreground">Progresso geral</span>
               <span className="font-medium">{completedCount}/{lembretes.length}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">

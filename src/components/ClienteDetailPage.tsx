@@ -3,12 +3,15 @@ import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, User, Phone, Mail, MessageCircle, Clock, DollarSign, 
   TrendingUp, Calendar, AlertCircle, CheckCircle, XCircle, 
-  Target, Brain, Lightbulb
+  Target, Brain, Lightbulb, Building2, Plus
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { Card, CardHeader, CardTitle, CardContent, Badge, Skeleton, Avatar, AvatarImage, AvatarFallback } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, Badge, Skeleton, Avatar, AvatarImage, AvatarFallback, Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { ClienteWithConversa, useClientesData } from '@/hooks/useClientesData';
+import { useLembretes } from '@/hooks/useLembretes';
+import { LembreteForm } from '@/components/lembretes/LembreteForm';
+import { CreateLembreteData } from '@/types/lembretes';
 
 // AI dev note: Página de detalhamento completo do cliente
 // Mostra todos os dados de IA e análises da conversa
@@ -56,18 +59,24 @@ const formatDate = (dateString?: string) => {
   return new Date(dateString).toLocaleString('pt-BR');
 };
 
-export const ClienteDetailPage: React.FC = () => {
+// Componente interno que terá acesso ao ViewContext
+const ClienteDetailContent: React.FC<{ 
+  clienteId: string; 
+  isFromKanban: boolean; 
+  onClienteLoaded?: (cliente: ClienteWithConversa) => void; 
+}> = ({ clienteId, isFromKanban, onClienteLoaded }) => {
   const history = useHistory();
-  const location = useLocation();
-  const { clienteId } = useParams<ClienteDetailParams>();
   const { getClienteById } = useClientesData();
-  
-  // Detectar se veio do Kanban através do parâmetro query
-  const isFromKanban = new URLSearchParams(location.search).get('from') === 'kanban';
+  const { createLembrete } = useLembretes();
   
   const [cliente, setCliente] = useState<ClienteWithConversa | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estados para o modal de lembrete
+  const [isLembreteModalOpen, setIsLembreteModalOpen] = useState(false);
+  const [isCreatingLembrete, setIsCreatingLembrete] = useState(false);
+  const [shouldUsePseudoLembrete, setShouldUsePseudoLembrete] = useState(false);
 
   const handleBack = () => {
     if (isFromKanban) {
@@ -86,6 +95,9 @@ export const ClienteDetailPage: React.FC = () => {
         const clienteData = await getClienteById(clienteId);
         if (clienteData) {
           setCliente(clienteData);
+          onClienteLoaded?.(clienteData);
+          
+
         } else {
           setError('Cliente não encontrado');
         }
@@ -97,55 +109,110 @@ export const ClienteDetailPage: React.FC = () => {
     };
 
     fetchCliente();
-  }, [clienteId, getClienteById]);
+  }, [clienteId, getClienteById, onClienteLoaded]);
+
+  // Função para criar lembrete com dados pré-preenchidos
+  const handleCreateLembrete = () => {
+    setShouldUsePseudoLembrete(true);
+    setIsLembreteModalOpen(true);
+  };
+
+  const handleLembreteSubmit = async (data: CreateLembreteData) => {
+    setIsCreatingLembrete(true);
+    try {
+      const success = await createLembrete(data);
+      if (success) {
+        setIsLembreteModalOpen(false);
+        setShouldUsePseudoLembrete(false);
+      }
+      return success;
+    } finally {
+      setIsCreatingLembrete(false);
+    }
+  };
+
+  const handleLembreteModalClose = () => {
+    setIsLembreteModalOpen(false);
+    setShouldUsePseudoLembrete(false);
+  };
+
+  // Preparar pseudo-lembrete com dados da próxima ação para pré-preenchimento
+  const getPseudoLembreteForEdit = () => {
+    if (!cliente?.conversa) return null;
+
+    const conversa = cliente.conversa;
+    const dataLimite = conversa.data_limite_proxima_acao;
+    
+    // Se tiver data limite, usar ela, senão usar 1 hora no futuro
+    let dataLembrete = '';
+    if (dataLimite) {
+      dataLembrete = dataLimite;
+    } else {
+      const agora = new Date();
+      agora.setHours(agora.getHours() + 1);
+      dataLembrete = agora.toISOString();
+    }
+
+    // Criar um pseudo-lembrete que servirá para pré-preenchimento
+    return {
+      id: 'temp',
+      corretor_id: '',
+      cliente_id: cliente.id,
+      titulo: conversa.proxima_acao_recomendada || 'Follow-up com cliente',
+      descricao: conversa.proxima_acao_recomendada || '',
+      data_lembrete: dataLembrete,
+      tipo_lembrete: 'FOLLOW_UP' as const,
+      prioridade: 'MEDIA' as const,
+      status: 'PENDENTE' as const,
+      notificacao_enviada: false,
+      tentativas_envio: 0,
+      created_at: '',
+      updated_at: ''
+    };
+  };
 
 
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Carregando...">
-        <div className="space-y-6">
-          <Skeleton className="h-8 w-64 bg-gray-700" />
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-6">
-              <Skeleton className="h-48 bg-gray-700" />
-              <Skeleton className="h-64 bg-gray-700" />
-            </div>
-            <div className="space-y-6">
-              <Skeleton className="h-32 bg-gray-700" />
-              <Skeleton className="h-40 bg-gray-700" />
-            </div>
+      <div className="space-y-6 p-6">
+        <Skeleton className="h-8 w-64 bg-gray-700" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-48 bg-gray-700" />
+            <Skeleton className="h-64 bg-gray-700" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-32 bg-gray-700" />
+            <Skeleton className="h-40 bg-gray-700" />
           </div>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   if (error || !cliente) {
     return (
-      <DashboardLayout title="Erro">
-        <div className="flex items-center justify-center h-64 p-6">
-          <div className="text-center">
-            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">Cliente não encontrado</h3>
-            <p className="text-gray-400 mb-4">{error}</p>
-            <button 
-              onClick={handleBack}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              {isFromKanban ? 'Voltar para Conversas' : 'Voltar para lista'}
-            </button>
-          </div>
+      <div className="flex items-center justify-center h-64 p-6">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">Cliente não encontrado</h3>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button 
+            onClick={handleBack}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            {isFromKanban ? 'Voltar para Conversas' : 'Voltar para lista'}
+          </button>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   const conversa = cliente.conversa;
 
   return (
-    <DashboardLayout title={cliente.nome}>
-      <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6">
         {/* Header com navegação */}
         <div className="flex items-center gap-4">
           <button 
@@ -230,6 +297,8 @@ export const ClienteDetailPage: React.FC = () => {
               </CardContent>
             </Card>
 
+
+
             {conversa ? (
               <>
                 {/* Resumo da conversa */}
@@ -299,7 +368,7 @@ export const ClienteDetailPage: React.FC = () => {
                     {/* Necessidades */}
                     {conversa.necessidade && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400 mb-2">Necessidades</h4>
+                        <h4 className="text-sm font-medium text-gray-400 mb-2">Oportunidade Identificada</h4>
                         <p className="text-gray-300">{conversa.necessidade}</p>
                       </div>
                     )}
@@ -307,27 +376,40 @@ export const ClienteDetailPage: React.FC = () => {
                     {/* Perfil detalhado */}
                     {conversa.perfil && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-400 mb-2">Perfil Detalhado</h4>
+                        <h4 className="text-sm font-medium text-gray-400 mb-2">Perfil do Cliente</h4>
                         <p className="text-gray-300">{conversa.perfil}</p>
+                      </div>
+                    )}
+
+                    {/* Insight estratégico */}
+                    {conversa.principal_insight_estrategico && (
+                      <div className="p-4 bg-yellow-900/10 border border-yellow-700/30 rounded-lg">
+                        <h4 className="text-sm font-medium text-yellow-400 mb-2 flex items-center gap-2">
+                          <Lightbulb className="w-4 h-4" />
+                          Insight Estratégico
+                        </h4>
+                        <p className="text-gray-300">{conversa.principal_insight_estrategico}</p>
+                      </div>
+                    )}
+
+                    {/* Resumo do imóvel do CRM */}
+                    {conversa.resumo_imovel_crm && (
+                      <div className="p-4 bg-blue-900/10 border border-blue-700/30 rounded-lg">
+                        <h4 className="text-sm font-medium text-blue-400 mb-2 flex items-center gap-2">
+                          <Building2 className="w-4 h-4" />
+                          Resumo do Imóvel (CRM)
+                        </h4>
+                        {conversa.interacao_item_de_interesse && (
+                          <div className="mb-3">
+                            <p className="text-xs text-gray-400 mb-1">Código:</p>
+                            <p className="text-white font-mono">{conversa.interacao_item_de_interesse}</p>
+                          </div>
+                        )}
+                        <p className="text-gray-300">{conversa.resumo_imovel_crm}</p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
-
-                {/* Insights estratégicos */}
-                {conversa.principal_insight_estrategico && (
-                  <Card className="bg-yellow-900/10 border-yellow-700/30">
-                    <CardHeader>
-                      <CardTitle className="text-yellow-400 flex items-center gap-2">
-                        <Lightbulb className="w-5 h-5" />
-                        Insight Estratégico
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-300">{conversa.principal_insight_estrategico}</p>
-                    </CardContent>
-                  </Card>
-                )}
               </>
             ) : (
               <Card className="bg-gray-900/50 border-gray-700">
@@ -410,11 +492,19 @@ export const ClienteDetailPage: React.FC = () => {
                     <CardContent>
                       <p className="text-gray-300 mb-3">{conversa.proxima_acao_recomendada}</p>
                       {conversa.data_limite_proxima_acao && (
-                        <div className="text-sm text-blue-400">
+                        <div className="text-sm text-blue-400 mb-3">
                           <Clock className="w-4 h-4 inline mr-1" />
                           Até: {formatDate(conversa.data_limite_proxima_acao)}
                         </div>
                       )}
+                      <Button
+                        onClick={handleCreateLembrete}
+                        className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                        size="sm"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Criar lembrete
+                      </Button>
                     </CardContent>
                   </Card>
                 )}
@@ -458,7 +548,38 @@ export const ClienteDetailPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
+        
+        {/* Modal de Lembrete */}
+        <LembreteForm
+          isOpen={isLembreteModalOpen}
+          onClose={handleLembreteModalClose}
+          onSubmit={handleLembreteSubmit}
+          isLoading={isCreatingLembrete}
+          lembrete={shouldUsePseudoLembrete ? getPseudoLembreteForEdit() : null}
+        />
+    </div>
+  );
+};
+
+export const ClienteDetailPage: React.FC = () => {
+  const { clienteId } = useParams<ClienteDetailParams>();
+  const location = useLocation();
+  const [pageTitle, setPageTitle] = useState('Detalhes do Cliente');
+  
+  // Detectar se veio do Kanban através do parâmetro query
+  const isFromKanban = new URLSearchParams(location.search).get('from') === 'kanban';
+
+  const handleClienteLoaded = (cliente: ClienteWithConversa) => {
+    setPageTitle(cliente.nome);
+  };
+
+  return (
+    <DashboardLayout title={pageTitle}>
+      <ClienteDetailContent 
+        clienteId={clienteId} 
+        isFromKanban={isFromKanban} 
+        onClienteLoaded={handleClienteLoaded}
+      />
     </DashboardLayout>
   );
 };

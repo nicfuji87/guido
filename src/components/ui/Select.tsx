@@ -2,10 +2,11 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface SelectProps {
-  value: string;
-  onValueChange: (value: string) => void;
-  disabled?: boolean;
+  value?: string;
+  onValueChange?: (value: string) => void;
   children: React.ReactNode;
+  placeholder?: string;
+  disabled?: boolean;
 }
 
 interface SelectTriggerProps {
@@ -37,11 +38,12 @@ const SelectContext = React.createContext<{
   onValueChange: () => {},
 });
 
-export const Select: React.FC<SelectProps> = ({ 
-  value, 
-  onValueChange, 
+export const Select: React.FC<SelectProps> = ({
+  value = '',
+  onValueChange = () => { /* no op */ },
+  children,
+  placeholder: _placeholder,
   disabled = false,
-  children 
 }) => {
   return (
     <SelectContext.Provider value={{ value, onValueChange, disabled }}>

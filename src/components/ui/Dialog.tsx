@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface DialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children: React.ReactNode;
 }
 
@@ -38,8 +38,14 @@ const DialogContext = React.createContext<{
   onOpenChange: () => {},
 });
 
-export const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
-  React.useEffect(() => {
+export const Dialog: React.FC<DialogProps> = ({
+  open,
+  onOpenChange = () => { /* no op */ },
+  children,
+}) => {
+
+
+  useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onOpenChange(false);

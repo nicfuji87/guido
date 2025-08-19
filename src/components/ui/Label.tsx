@@ -1,9 +1,10 @@
-import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils";
+import React, { LabelHTMLAttributes } from "react";
 
-export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {}
 
-export function Label({ className, ...props }: LabelProps) {
+export const Label: React.FC<LabelProps> = ({ className, ...props }) => {
   return (
     <label
       data-slot="label"

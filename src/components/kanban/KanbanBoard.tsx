@@ -128,7 +128,7 @@ export const KanbanBoard = () => {
             <Input 
               placeholder="Buscar cliente... (min. 3 caracteres)"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
             />
           </div>
@@ -137,7 +137,7 @@ export const KanbanBoard = () => {
             {searchTerm.length >= 3 ? (
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4" />
-                <span>Filtrando por: "{searchTerm}"</span>
+                <span>Filtrando por: &quot;{searchTerm}&quot;</span>
                 <button 
                   onClick={() => setSearchTerm('')}
                   className="text-cyan-400 hover:text-cyan-300 underline"

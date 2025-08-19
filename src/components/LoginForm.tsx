@@ -110,7 +110,7 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   className="pl-10"
                   required
                   disabled={isLoading}

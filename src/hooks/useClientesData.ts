@@ -38,6 +38,7 @@ export interface ClienteWithConversa {
     contato_poder_decisao?: string;
     interacao_tipo_solicitacao?: string;
     interacao_item_de_interesse?: string;
+    resumo_imovel_crm?: string;
     inteligencia_motivacao_principal?: string;
     inteligencia_budget_declarado?: string;
     principal_insight_estrategico?: string;
@@ -103,6 +104,7 @@ export const useClientesData = () => {
             contato_poder_decisao,
             interacao_tipo_solicitacao,
             interacao_item_de_interesse,
+            resumo_imovel_crm,
             inteligencia_motivacao_principal,
             inteligencia_budget_declarado,
             principal_insight_estrategico,

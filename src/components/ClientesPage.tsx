@@ -18,7 +18,6 @@ export const ClientesPage: React.FC = () => {
   } = useClientesData();
 
   const isFiltered = searchTerm.length >= 3;
-  const totalClientes = clientes.length;
 
   if (error) {
     return (
@@ -44,9 +43,9 @@ export const ClientesPage: React.FC = () => {
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Lista de Clientes</h1>
+              <h1 className="text-3xl font-bold text-white">Painel de Clientes</h1>
               <p className="text-gray-400">
-                {isLoading ? 'Carregando...' : `${totalClientes} cliente${totalClientes !== 1 ? 's' : ''} encontrado${totalClientes !== 1 ? 's' : ''}`}
+                Gerencie seus clientes, adicione novos e acompanhe as conversas.
               </p>
             </div>
           </div>
@@ -56,9 +55,9 @@ export const ClientesPage: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
               type="text"
-              placeholder="Buscar por nome ou telefone..."
+              placeholder="Buscar cliente por nome, e-mail ou telefone..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               className="pl-10 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500/20"
             />
           </div>

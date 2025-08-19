@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-interface PaymentStatusData {
+export interface PaymentStatusData {
   hasAsaasSubscription: boolean; // Se tem id_assinatura_asaas preenchido
   assinaturaStatus: string | null;
   proximaCobranca: string | null;
@@ -10,6 +10,9 @@ interface PaymentStatusData {
   planoNome: string | null;
   isLoading: boolean;
 }
+
+// Alias para retrocompatibilidade
+export type PaymentStatus = PaymentStatusData;
 
 export const usePaymentStatus = (userId?: string) => {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusData>({

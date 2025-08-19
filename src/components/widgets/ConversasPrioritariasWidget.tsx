@@ -178,11 +178,11 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-export const ConversasPrioritariasWidget = ({ 
+export const ConversasPrioritariasWidget: React.FC<ConversasPrioritariasWidgetProps> = ({ 
   conversas, 
   isLoading, 
   onOpenConversation 
-}: ConversasPrioritariasWidgetProps) => {
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const urgentCount = conversas.filter(c => c.waitingTime > 24).length;
   const veryUrgentCount = conversas.filter(c => c.waitingTime > 72).length;

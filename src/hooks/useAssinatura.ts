@@ -128,6 +128,7 @@ export const useAssinatura = (): UseAssinaturaReturn => {
           plano:planos(*)
         `)
         .eq('conta_id', user.conta_id)
+        .is('deleted_at', null)
         .order('data_criacao', { ascending: false })
         .limit(1)
         .single();
