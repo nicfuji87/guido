@@ -33,11 +33,13 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
       // AI dev note: Enviar magic link diretamente - o Supabase gerencia a verificação
       // Se o usuário não existir em auth.users, o Supabase retornará erro apropriado
       
-      // Na v1.x, usar signIn para magic link
+      // Na v1.x, usar signIn para magic link  
+      // AI dev note: Usar VITE_APP_URL para produção ao invés de window.location.origin
+      const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { error } = await supabase.auth.signIn({
         email: email.trim()
       }, {
-        redirectTo: `${window.location.origin}/app`
+        redirectTo: `${baseUrl}/app`
       });
 
       if (error) {
