@@ -9,15 +9,12 @@ O magic link está redirecionando para `localhost:3000` ao invés da URL da Verc
 
 ## 🎯 **Próximos Passos**
 
-### **1. Obter URL exata da Vercel**
-Primeiro, confirme qual é a URL exata da sua aplicação na Vercel:
-- Acesse seu projeto na Vercel
-- Copie a URL de produção (exemplo: `https://guido-abc123.vercel.app`)
+### **1. URL da Vercel Identificada** ✅
+URL da aplicação: **https://guido-mauve.vercel.app/**
 
-### **2. Atualizar arquivo .env**
+### **2. Arquivo .env Atualizado** ✅
 ```bash
-# Substitua pela URL real da Vercel
-VITE_APP_URL=https://sua-url-real.vercel.app
+VITE_APP_URL=https://guido-mauve.vercel.app
 ```
 
 ### **3. Obter Token de Acesso do Supabase**
@@ -31,10 +28,10 @@ VITE_APP_URL=https://sua-url-real.vercel.app
 Execute estes comandos no terminal (substitua os valores pelos seus):
 
 ```bash
-# Definir variáveis
+# Definir variáveis (substitua apenas o SUPABASE_ACCESS_TOKEN)
 export SUPABASE_ACCESS_TOKEN="seu-token-aqui"
 export PROJECT_REF="zpzzvkjwnttrdtuvtmwv"
-export VERCEL_URL="https://sua-url-real.vercel.app"
+export VERCEL_URL="https://guido-mauve.vercel.app"
 
 # Configurar Site URL e Redirect URLs
 curl -X PATCH "https://api.supabase.com/v1/projects/$PROJECT_REF/config/auth" \
@@ -56,19 +53,19 @@ curl -X PATCH "https://api.supabase.com/v1/projects/$PROJECT_REF/config/auth" \
 Alternativamente, você pode configurar manualmente:
 
 1. Acesse [https://supabase.com/dashboard/project/_/auth/url-configuration](https://supabase.com/dashboard/project/_/auth/url-configuration)
-2. Em **Site URL**, coloque: `https://sua-url-real.vercel.app`
+2. Em **Site URL**, coloque: `https://guido-mauve.vercel.app`
 3. Em **Redirect URLs**, adicione:
-   - `https://sua-url-real.vercel.app`
-   - `https://sua-url-real.vercel.app/**`
+   - `https://guido-mauve.vercel.app`
+   - `https://guido-mauve.vercel.app/**`
    - `http://localhost:3000` (para desenvolvimento)
    - `http://localhost:3000/**`
    - `https://*-nicfuji87.vercel.app/**` (para preview URLs)
 
 ## 🔄 **Após Configuração**
 
-1. **Atualizar .env local:**
+1. **Arquivo .env já atualizado:** ✅
    ```bash
-   VITE_APP_URL=https://sua-url-real.vercel.app
+   VITE_APP_URL=https://guido-mauve.vercel.app
    ```
 
 2. **Fazer commit e push:**
