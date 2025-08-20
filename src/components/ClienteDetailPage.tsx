@@ -3,7 +3,7 @@ import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, User, Phone, Mail, MessageCircle, Clock, DollarSign, 
   TrendingUp, Calendar, AlertCircle, CheckCircle, XCircle, 
-  Target, Brain, Lightbulb, Building2, Plus
+  Target, Brain, Lightbulb, Building2, Plus, Bot, X
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent, Badge, Skeleton, Avatar, AvatarImage, AvatarFallback, Button } from '@/components/ui';
@@ -12,6 +12,10 @@ import { ClienteWithConversa, useClientesData } from '@/hooks/useClientesData';
 import { useLembretes } from '@/hooks/useLembretes';
 import { LembreteForm } from '@/components/lembretes/LembreteForm';
 import { CreateLembreteData } from '@/types/lembretes';
+import { useToastContext } from '@/contexts/ToastContext';
+import { useViewContext } from '@/hooks/useViewContext';
+import { prepareWebhookData } from '@/utils/webhookDataHelper';
+import { supabase } from '@/lib/supabaseClient';
 
 // AI dev note: Página de detalhamento completo do cliente
 // Mostra todos os dados de IA e análises da conversa
@@ -68,6 +72,8 @@ const ClienteDetailContent: React.FC<{
   const history = useHistory();
   const { getClienteById } = useClientesData();
   const { createLembrete } = useLembretes();
+  const toast = useToastContext();
+  const { currentCorretor } = useViewContext();
   
   const [cliente, setCliente] = useState<ClienteWithConversa | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,6 +83,11 @@ const ClienteDetailContent: React.FC<{
   const [isLembreteModalOpen, setIsLembreteModalOpen] = useState(false);
   const [isCreatingLembrete, setIsCreatingLembrete] = useState(false);
   const [shouldUsePseudoLembrete, setShouldUsePseudoLembrete] = useState(false);
+  
+  // Estados para geração de follow-up
+  const [isGeneratingFollowUp, setIsGeneratingFollowUp] = useState(false);
+  const [generatedMessage, setGeneratedMessage] = useState<string | null>(null);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   const handleBack = () => {
     if (isFromKanban) {
@@ -169,6 +180,199 @@ const ClienteDetailContent: React.FC<{
       created_at: '',
       updated_at: ''
     };
+  };
+
+  // AI dev note: Função para gerar follow-up via IA usando webhook n8n - seguindo padrão dos outros webhooks
+  const handleGenerateFollowUp = async () => {
+    if (!cliente || !currentCorretor) return;
+    
+    setIsGeneratingFollowUp(true);
+    
+    try {
+      toast.info('Gerando follow-up...', 'Aguarde enquanto nossa IA analisa o perfil do cliente e gera uma sugestão personalizada');
+      
+      // Buscar dados do usuário atual (seguindo padrão dos outros webhooks)
+      const user = supabase.auth.user();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (userError || !userData) {
+        throw new Error('Dados do usuário não encontrados');
+      }
+
+      // Buscar assinatura ativa do corretor atual
+      const { data: assinaturaData, error: assinaturaError } = await supabase
+        .from('assinaturas')
+        .select('id')
+        .eq('conta_id', currentCorretor.conta_id)
+        .is('deleted_at', null)
+        .single();
+
+      if (assinaturaError || !assinaturaData) {
+        throw new Error('Assinatura do corretor não encontrada');
+      }
+
+      // Preparar dados completos do webhook
+      const webhookData = await prepareWebhookData({
+        nome: userData.name,
+        email: userData.email,
+        documento: userData.cpfCnpj || '',
+        telefone: userData.whatsapp,
+        userId: userData.id,
+        assinaturaId: assinaturaData.id
+      });
+
+      const webhookUrl = import.meta.env.VITE_WEBHOOK_ASAAS_PROVISIONING_URL;
+      const apiKey = import.meta.env.VITE_WEBHOOK_ASAAS_PROVISIONING_API_KEY;
+      
+      if (!webhookUrl) {
+        throw new Error('URL do webhook não configurada');
+      }
+
+      if (!apiKey) {
+        throw new Error('API Key do webhook não configurada');
+      }
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api': apiKey
+        },
+        body: JSON.stringify({
+          action: 'generate_followup',
+          // Dados do corretor atual
+          corrector: {
+            id: currentCorretor.id,
+            nome: currentCorretor.nome,
+            email: currentCorretor.email,
+            conta_id: currentCorretor.conta_id,
+            funcao: currentCorretor.funcao
+          },
+          // Dados completos do usuário
+          user: userData,
+          // Dados expandidos com conta e assinatura
+          data: webhookData,
+          // Dados específicos do cliente para o follow-up
+          cliente: {
+            id: cliente.id,
+            nome: cliente.nome,
+            telefone: cliente.telefone,
+            email: cliente.email,
+            status_funil: cliente.status_funil,
+            conversa: cliente.conversa ? {
+              resumo_gerado: cliente.conversa.resumo_gerado,
+              necessidade: cliente.conversa.necessidade,
+              perfil: cliente.conversa.perfil,
+              principal_insight_estrategico: cliente.conversa.principal_insight_estrategico,
+              proxima_acao_recomendada: cliente.conversa.proxima_acao_recomendada,
+              sentimento_geral: cliente.conversa.sentimento_geral,
+              inteligencia_motivacao_principal: cliente.conversa.inteligencia_motivacao_principal,
+              inteligencia_budget_declarado: cliente.conversa.inteligencia_budget_declarado
+            } : null,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro no webhook: ${response.status} ${response.statusText}`);
+      }
+
+      // Processar resposta do webhook com a mensagem gerada pela IA
+      const result = await response.json();
+      
+      // Extrair mensagem do formato retornado pela IA - versão robusta
+      let mensagemGerada = '';
+      
+      try {
+        // Formato padrão da IA: [{"content":{"parts":[{"text":"..."}]}}]
+        if (Array.isArray(result) && result.length > 0) {
+          const firstItem = result[0];
+          if (firstItem?.content?.parts && Array.isArray(firstItem.content.parts)) {
+            for (const part of firstItem.content.parts) {
+              if (part?.text && typeof part.text === 'string') {
+                mensagemGerada = part.text.trim();
+                break;
+              }
+            }
+          }
+        }
+        
+        // Fallbacks para outros formatos possíveis
+        if (!mensagemGerada) {
+          // Formato objeto direto: {"content":{"parts":[{"text":"..."}]}}
+          if (result?.content?.parts?.[0]?.text) {
+            mensagemGerada = result.content.parts[0].text.trim();
+          }
+          // Formato resposta direta: {"response": "..."}
+          else if (result?.response) {
+            mensagemGerada = result.response.trim();
+          }
+          // Formato texto direto: {"text": "..."}
+          else if (result?.text) {
+            mensagemGerada = result.text.trim();
+          }
+          // Formato mensagem: {"message": "..."}
+          else if (result?.message) {
+            mensagemGerada = result.message.trim();
+          }
+        }
+        
+      } catch (parseError) {
+        console.error('Erro ao processar resposta da IA:', parseError);
+      }
+
+      if (!mensagemGerada || mensagemGerada.length === 0) {
+        throw new Error('Não foi possível extrair a mensagem gerada pela IA');
+      }
+
+      // Armazenar mensagem e mostrar modal
+      setGeneratedMessage(mensagemGerada);
+      setShowMessageModal(true);
+      
+      toast.success('Follow-up gerado!', 'Mensagem personalizada criada pela IA. Revise e envie quando quiser.');
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error('Erro ao gerar follow-up', errorMessage);
+    } finally {
+      setIsGeneratingFollowUp(false);
+    }
+  };
+
+  // Função para enviar mensagem para WhatsApp
+  const handleSendToWhatsApp = () => {
+    if (!generatedMessage || !cliente) return;
+
+    const phoneNumbers = cliente.telefone?.replace(/\D/g, '');
+    if (phoneNumbers) {
+      // Codificar mensagem para URL
+      const encodedMessage = encodeURIComponent(generatedMessage);
+      const whatsappUrl = `https://wa.me/${phoneNumbers}?text=${encodedMessage}`;
+      
+      // Abrir WhatsApp em nova aba
+      window.open(whatsappUrl, '_blank');
+      
+      // Fechar modal e limpar mensagem
+      setShowMessageModal(false);
+      setGeneratedMessage(null);
+      
+      toast.info('WhatsApp aberto!', 'A mensagem foi pré-preenchida. Revise e envie quando quiser.');
+    }
+  };
+
+  // Função para fechar modal sem enviar
+  const handleCloseMessageModal = () => {
+    setShowMessageModal(false);
+    setGeneratedMessage(null);
   };
 
 
@@ -510,40 +714,74 @@ const ClienteDetailContent: React.FC<{
                 )}
 
                 {/* Status de follow-up */}
-                {conversa.status_followup && (
-                  <Card className="bg-gray-900/50 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5" />
-                        Follow-up
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          {conversa.status_followup === 'Concluído' ? (
-                            <CheckCircle className="w-4 h-4 text-green-400" />
-                          ) : conversa.status_followup === 'Pendente' ? (
-                            <Clock className="w-4 h-4 text-yellow-400" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-400" />
+                <Card className="bg-gray-900/50 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      Follow-up
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {conversa?.status_followup && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            {conversa.status_followup === 'Concluído' ? (
+                              <CheckCircle className="w-4 h-4 text-green-400" />
+                            ) : conversa.status_followup === 'Pendente' ? (
+                              <Clock className="w-4 h-4 text-yellow-400" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-red-400" />
+                            )}
+                            <span className="text-white">{conversa.status_followup}</span>
+                          </div>
+                          
+                          {conversa.motivo_followup && (
+                            <p className="text-sm text-gray-400">{conversa.motivo_followup}</p>
                           )}
-                          <span className="text-white">{conversa.status_followup}</span>
+                          
+                          {conversa.data_proximo_followup && (
+                            <p className="text-sm text-blue-400">
+                              Próximo: {formatDate(conversa.data_proximo_followup)}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Seção de geração de follow-up via IA */}
+                      <div className="border-t border-gray-700 pt-4">
+                        <div className="mb-3">
+                          <h4 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
+                            <Bot className="w-4 h-4 text-cyan-400" />
+                            Gerar Follow-up com IA
+                          </h4>
+                          <p className="text-xs text-gray-400">
+                            Nossa IA criará uma sugestão personalizada de follow-up baseada no perfil e histórico do cliente.
+                          </p>
                         </div>
                         
-                        {conversa.motivo_followup && (
-                          <p className="text-sm text-gray-400">{conversa.motivo_followup}</p>
-                        )}
-                        
-                        {conversa.data_proximo_followup && (
-                          <p className="text-sm text-blue-400">
-                            Próximo: {formatDate(conversa.data_proximo_followup)}
-                          </p>
-                        )}
+                        <Button
+                          onClick={handleGenerateFollowUp}
+                          disabled={isGeneratingFollowUp}
+                          className="bg-cyan-600 hover:bg-cyan-700 text-white text-sm w-full"
+                          size="sm"
+                        >
+                          {isGeneratingFollowUp ? (
+                            <>
+                              <Clock className="w-4 h-4 mr-2 animate-spin" />
+                              Gerando...
+                            </>
+                          ) : (
+                            <>
+                              <Bot className="w-4 h-4 mr-2" />
+                              Gerar Follow-up
+                            </>
+                          )}
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
+                    </div>
+                  </CardContent>
+                </Card>
               </>
             )}
           </div>
@@ -557,6 +795,60 @@ const ClienteDetailContent: React.FC<{
           isLoading={isCreatingLembrete}
           lembrete={shouldUsePseudoLembrete ? getPseudoLembreteForEdit() : null}
         />
+
+        {/* Modal da Mensagem Gerada */}
+        {showMessageModal && generatedMessage && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-900 rounded-lg border border-gray-700 w-full max-w-2xl max-h-[80vh] overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                <div>
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Bot className="w-5 h-5 text-cyan-400" />
+                    Follow-up Gerado pela IA
+                  </h3>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Para: {cliente?.nome} ({cliente?.telefone})
+                  </p>
+                </div>
+                <button 
+                  onClick={handleCloseMessageModal}
+                  className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              {/* Conteúdo da mensagem */}
+              <div className="p-6 overflow-y-auto max-h-96">
+                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                  <h4 className="text-sm font-medium text-gray-300 mb-3">Mensagem personalizada:</h4>
+                  <p className="text-white leading-relaxed whitespace-pre-wrap">
+                    {generatedMessage}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer com ações */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-700 bg-gray-900/50">
+                <Button
+                  onClick={handleCloseMessageModal}
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSendToWhatsApp}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Enviar no WhatsApp
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };
