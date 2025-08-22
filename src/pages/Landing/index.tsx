@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Play, ArrowRight, Zap, Target, Users, Home, Clock, AlertTriangle, MessageSquare, MessageCircle, Settings, CheckCircle, Brain, Star } from 'lucide-react'
+import { Play, ArrowRight, Zap, Target, Users, Home, Clock, AlertTriangle, MessageSquare, MessageCircle, Settings, CheckCircle, Brain, Star, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { NavBar } from '@/components/NavBar'
 import { VideoPlayer } from '@/components/VideoPlayer'
@@ -12,6 +12,36 @@ import { GradientText } from '@/components/GradientText'
 import { FloatingCard } from '@/components/FloatingCard'
 import { PremiumButton } from '@/components/PremiumButton'
 import { ParticleBackground } from '@/components/ParticleBackground'
+
+// FAQ Component
+const FAQItem = ({ question, answer, index }: { question: string; answer: string; index: number }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  
+  return (
+    <AnimatedSection delay={index * 100}>
+      <FloatingCard className="overflow-hidden">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full text-left p-6 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
+        >
+          <h3 className="text-lg font-semibold pr-4">{question}</h3>
+          {isOpen ? (
+            <ChevronUp className="h-5 w-5 text-[#00F6FF] flex-shrink-0" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" />
+          )}
+        </button>
+        {isOpen && (
+          <div className="px-6 pb-6 border-t border-gray-700/50">
+            <div className="pt-4 text-gray-300 leading-relaxed whitespace-pre-line">
+              {answer}
+            </div>
+          </div>
+        )}
+      </FloatingCard>
+    </AnimatedSection>
+  )
+}
 
 export default function Landing() {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
@@ -46,6 +76,7 @@ export default function Landing() {
           { name: 'Recursos', href: '#features', icon: Zap },
           { name: 'Sobre', href: '#mission', icon: Target },
           { name: 'Planos', href: '#pricing', icon: Users },
+          { name: 'FAQ', href: '#faq', icon: HelpCircle },
         ]}
       />
 
@@ -552,6 +583,141 @@ export default function Landing() {
           </div>
 
 
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-4xl mx-auto">
+          <AnimatedSection>
+            <div className="text-center mb-12 sm:mb-16">
+              <div className="w-fit mx-auto mb-4">
+                <div className="w-16 h-16 bg-[#00F6FF]/10 border border-[#00F6FF]/20 rounded-2xl flex items-center justify-center">
+                  <HelpCircle className="h-8 w-8 text-[#00F6FF]" />
+                </div>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+                Perguntas <GradientText gradient="primary">Frequentes</GradientText>
+              </h2>
+              <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto px-4">
+                Tudo que você precisa saber sobre o Guido e como ele pode transformar seu negócio
+              </p>
+            </div>
+          </AnimatedSection>
+          
+          <div className="space-y-4">
+            {[
+              {
+                question: "O que é o Guido, exatamente?",
+                answer: "O Guido é um guia de inteligência artificial projetado para ser o parceiro estratégico do corretor de imóveis. Ele não é apenas um software, mas um assistente que se integra à sua rotina para automatizar tarefas repetitivas, como atualizar o CRM e redigir mensagens, e para guiar suas negociações com sugestões inteligentes. A missão do Guido é amplificar seu talento, liberando seu tempo para que você possa focar no que faz de melhor: vender e se relacionar com clientes."
+              },
+              {
+                question: "Como o Guido se diferencia de outros CRMs imobiliários?",
+                answer: "Diferente dos CRMs imobiliários tradicionais que são sistemas passivos de armazenamento de dados, o Guido é um guia de IA proativo que age diretamente onde o negócio acontece: nas suas conversas do WhatsApp. Ele não substitui seu CRM, mas sim o potencializa, automatizando a atualização de informações com simples comandos e sugerindo as respostas mais estratégicas em tempo real para quebrar objeções. Em essência, enquanto um CRM exige seu tempo para ser organizado, o Guido devolve seu tempo para que você possa focar exclusivamente em negociar e vender."
+              },
+              {
+                question: "Isso substitui o meu CRM atual?",
+                answer: "Não, e essa é a melhor parte! O Guido não é mais um CRM para você alimentar. Ele foi feito para se conectar ao seu sistema de CRM atual e superalimentá-lo. Enquanto seu CRM armazena os dados, o Guido atua sobre eles, automatizando as atualizações e extraindo insights das suas conversas para que suas informações estejam sempre atualizadas sem esforço manual."
+              },
+              {
+                question: "Como funciona a integração com WhatsApp?",
+                answer: "Conectamos seu WhatsApp Business ao Guido da mesma forma que você conecta seu WhatsApp Business no WhatsApp Web."
+              },
+              {
+                question: "Preciso mudar meu número de WhatsApp?",
+                answer: "Não! O Guido funciona com seu WhatsApp Business atual. Mantemos todo seu histórico e contatos, apenas adicionamos inteligência e organização às suas conversas."
+              },
+              {
+                question: "Como funciona o trial gratuito?",
+                answer: "Oferecemos 7 dias de trial completo para você testar todas as funcionalidades. No caso de imobiliárias, toda a equipe pode testar durante o período. Não cobramos cartão antecipadamente e você pode cancelar a qualquer momento."
+              },
+              {
+                question: "Para imobiliárias, como é feita a gestão da equipe?",
+                answer: "O administrador da imobiliária convida corretores por email com códigos únicos. Cada corretor tem seu próprio acesso, mas o admin controla a assinatura, visualiza métricas de toda equipe e gerencia permissões. O pagamento é unificado e baseado no número de corretores."
+              },
+              {
+                question: "Que tipo de automações o Guido oferece?",
+                answer: "Classificação inteligente de leads por intenção de compra/locação, lembretes automáticos para follow-up, agente notificador para conversas em risco, organização automática no funil de vendas e insights de performance."
+              },
+              {
+                question: "Como funciona o sistema de lembretes?",
+                answer: "Criamos lembretes inteligentes baseados no comportamento do cliente: follow-up após visita, retorno de proposta, renovação de contrato, aniversário do cliente. Você pode criar lembretes manuais e personalizar prioridades e tipos (ligação, WhatsApp, email, visita)."
+              },
+              {
+                question: "O que é o \"Funil de Vendas Inteligente\"?",
+                answer: "É nosso sistema Kanban adaptado para imobiliário: Lead → Qualificado → Proposta → Negociação → Fechado. Clientes movem-se automaticamente baseado nas interações, ou você pode mover manualmente. Cada estágio tem automações específicas."
+              },
+              {
+                question: "Como funciona a \"Memória Inteligente\" de clientes?",
+                answer: "O sistema registra automaticamente todo histórico de interações, preferências mencionadas, orçamento, localização desejada, comentários sobre imóveis visitados. Assim você sempre tem contexto completo antes de qualquer conversa."
+              },
+              {
+                question: "Que métricas posso acompanhar?",
+                answer: "Corretor Individual: Conversas ativas, taxa de conversão, tempo médio de resposta, lembretes pendentes, pipeline de negociação. Gestores: Métricas da equipe, ranking de performance, conversas em risco, novos clientes, comparativo mensal de fechamentos."
+              },
+              {
+                question: "Quais formas de pagamento vocês aceitam?",
+                answer: "Aceitamos somente Cartão de crédito."
+              },
+              {
+                question: "Posso cancelar a qualquer momento?",
+                answer: "Sim, sem multa ou burocracia. Seu acesso permanece até o fim do período pago. Todos seus dados ficam disponíveis para exportação por 30 dias após cancelamento."
+              },
+              {
+                question: "Meus dados de clientes estão seguros?",
+                answer: "Absolutamente! Usamos criptografia de ponta, servidores no Brasil, backup automático e compliance LGPD. Seus dados nunca são compartilhados."
+              },
+              {
+                question: "E se eu esquecer de pagar?",
+                answer: "Enviamos avisos por email antes do vencimento. Após vencimento, você tem 5 dias de carência. Depois disso, a conta fica suspensa mas seus dados permanecem seguros por 30 dias para regularização."
+              },
+              {
+                question: "É difícil configurar o Guido?",
+                answer: "Não! O processo é 100% automatizado. Após cadastro, você deverá conectar seu WhatsApp Business como conecta o WhatsApp Web e em poucos minutos você está operando."
+              },
+              {
+                question: "Preciso treinar minha equipe?",
+                answer: "O Guido foi desenhado para ser intuitivo. A maioria dos corretores se adapta em 1-2 dias. Oferecemos treinamento opcional via video-chamada para equipes maiores e material de apoio completo."
+              },
+              {
+                question: "Oferecem suporte técnico?",
+                answer: "Sim! Suporte via chat, com agendamento, durante horário comercial."
+              },
+              {
+                question: "O Guido é adequado para corretor iniciante?",
+                answer: "Perfeitamente! O sistema ajuda organizar desde o primeiro cliente, automatiza tarefas administrativas e oferece insights para melhorar performance. É um investimento que se paga rapidamente com o aumento de produtividade."
+              },
+              {
+                question: "Como posso testar antes de assinar?",
+                answer: "Simples! Cadastre-se para 7 dias de trial gratuito. Não pedimos cartão antecipadamente. Em 5 minutos você está testando com clientes reais. Se não gostar, é só não continuar."
+              }
+            ].map((faq, index) => (
+              <FAQItem
+                key={index}
+                question={faq.question}
+                answer={faq.answer}
+                index={index}
+              />
+            ))}
+          </div>
+
+          {/* Call to Action */}
+          <AnimatedSection delay={400}>
+            <div className="text-center mt-12 space-y-4">
+              <p className="text-gray-400">Ainda tem dúvidas?</p>
+              <PremiumButton 
+                variant="outline" 
+                size="lg"
+                onClick={() => {
+                  const pricingSection = document.getElementById('pricing');
+                  pricingSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Falar com nossa Equipe
+              </PremiumButton>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
