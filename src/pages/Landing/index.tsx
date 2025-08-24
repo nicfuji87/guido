@@ -53,6 +53,14 @@ export default function Landing() {
     // Signup success - redirect to dashboard
   }
 
+  // Função para abrir WhatsApp com mensagem pré-definida
+  const openWhatsApp = (message: string) => {
+    const phoneNumber = '556136862676'
+    const encodedMessage = encodeURIComponent(message)
+    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+    window.open(url, '_blank')
+  }
+
   const openSignupModal = (skipSelection = false, plan: 'INDIVIDUAL' | 'IMOBILIARIA' = 'INDIVIDUAL') => {
     setSkipPlanSelection(skipSelection)
     setDefaultPlan(plan)
@@ -571,7 +579,12 @@ export default function Landing() {
                     ))}
                   </ul>
 
-                  <PremiumButton variant="outline" size="lg" className="w-full group">
+                  <PremiumButton 
+                    variant="outline" 
+                    size="lg" 
+                    className="w-full group"
+                    onClick={() => openWhatsApp('Olá, estou no site e gostaria de mais informações sobre o serviço do Guido para imobiliárias')}
+                  >
                     <MessageCircle className="mr-2 h-5 w-5" />
                     Falar com Vendas
                   </PremiumButton>
@@ -708,10 +721,7 @@ export default function Landing() {
               <PremiumButton 
                 variant="outline" 
                 size="lg"
-                onClick={() => {
-                  const pricingSection = document.getElementById('pricing');
-                  pricingSection?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => openWhatsApp('Olá, estou no site e gostaria de mais informações sobre o Guido')}
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
                 Falar com nossa Equipe
@@ -757,6 +767,29 @@ export default function Landing() {
         skipPlanSelection={skipPlanSelection}
         defaultPlan={defaultPlan}
       />
+
+      {/* Botão Flutuante do WhatsApp */}
+      <div 
+        className="fixed bottom-6 right-6 z-50 cursor-pointer group animate-bounce hover:animate-none transition-all duration-300"
+        onClick={() => openWhatsApp('Olá, estou no site e gostaria de mais informações')}
+      >
+        <div className="relative">
+          {/* Shadow effect */}
+          <div className="absolute inset-0 bg-[#25D366] rounded-full blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
+          
+          {/* Button */}
+          <div className="relative w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center shadow-2xl hover:shadow-[#25D366]/50 hover:scale-110 transition-all duration-300 border-4 border-white">
+            <img
+              src="/images/partners/whatsapp-icon-message.png"
+              alt="WhatsApp"
+              className="w-8 h-8 object-contain filter invert brightness-0"
+            />
+          </div>
+          
+          {/* Notification dot */}
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+        </div>
+      </div>
     </div>
   )
 }
