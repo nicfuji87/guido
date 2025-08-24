@@ -775,19 +775,16 @@ export default function Landing() {
       >
         <div className="relative">
           {/* Shadow effect */}
-          <div className="absolute inset-0 bg-[#25D366] rounded-full blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
+          <div className="absolute inset-0 rounded-full blur-xl opacity-30 bg-black group-hover:opacity-50 transition-opacity" />
           
-          {/* Button */}
-          <div className="relative w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center shadow-2xl hover:shadow-[#25D366]/50 hover:scale-110 transition-all duration-300 border-4 border-white">
+          {/* Icon only */}
+          <div className="relative hover:scale-110 transition-all duration-300">
             <img
               src="/images/partners/whatsapp-icon-message.png"
               alt="WhatsApp"
-              className="w-10 h-10 object-contain"
+              className="w-16 h-16 object-contain filter drop-shadow-2xl"
             />
           </div>
-          
-          {/* Notification dot */}
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse" />
         </div>
       </div>
     </div>
