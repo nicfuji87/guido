@@ -86,11 +86,12 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
 
         log.debug('Buscando dados do corretor', 'useViewContext', { email: user.email });
 
-        // Buscar corretor atual
+        // Buscar corretor atual (apenas ativos)
         const { data: corretor, error } = await supabase
           .from('corretores')
           .select('id, nome, email, funcao, conta_id')
           .eq('email', user.email)
+          .is('deleted_at', null)
           .single();
 
         if (error) {
@@ -101,7 +102,8 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
             const { data: corretorList, error: altError } = await supabase
               .from('corretores')
               .select('id, nome, email, funcao, conta_id')
-              .eq('email', user.email);
+              .eq('email', user.email)
+              .is('deleted_at', null);
             
             if (altError) {
               log.error('Erro na busca alternativa', 'useViewContext', altError);
@@ -179,6 +181,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
         .from('corretores')
         .select('id, nome, email, funcao')
         .eq('conta_id', contaId)
+        .is('deleted_at', null)
         .order('nome');
 
       if (error) {

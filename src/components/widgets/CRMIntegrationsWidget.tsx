@@ -228,11 +228,12 @@ export const CRMIntegrationsWidget = () => {
       setIsLoading(true);
       setError(null);
       
-      // AI dev note: Buscar integrações CRM específicas na tabela corretores
+      // AI dev note: Buscar integrações CRM específicas na tabela corretores (apenas ativos)
       const { data, error: supabaseError } = await supabase
         .from('corretores')
         .select('id, nome, crm, crm_loft_key, crm_loft_url, crm_loft_id, crm_loft_email, crm_rd_key, crm_imoview_email, crm_imoview_senha, crm_imoview_chave')
         .eq('conta_id', currentCorretor.conta_id)
+        .is('deleted_at', null)
         .not('crm', 'is', null)
         .order('updated_at', { ascending: false });
 

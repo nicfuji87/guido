@@ -11,9 +11,13 @@ export const softDeleteFilters = {
   // Filtro padrão para usuários ativos (não soft-deleted)  
   // usuariosAtivos: () => supabase.from('usuarios').select('*').or('deleted_at.is.null'),
   
+  // Filtro padrão para corretores ativos (não soft-deleted)  
+  // corretoresAtivos: () => supabase.from('corretores').select('*').or('deleted_at.is.null'),
+  
   // Para queries que precisam incluir soft-deleted (ex: durante cancelamento)
   assinaturasTodas: () => supabase.from('assinaturas').select(),
-  usuariosTodos: () => supabase.from('usuarios').select()
+  usuariosTodos: () => supabase.from('usuarios').select(),
+  corretoresTodos: () => supabase.from('corretores').select()
 };
 
 export const performSoftDelete = {
@@ -57,6 +61,19 @@ export const performSoftDelete = {
         updated_at: now
       })
       .eq('auth_user_id', authUserId);
+  },
+
+  // Soft delete de corretor
+  corretor: async (corretorId: string) => {
+    const now = new Date().toISOString();
+    
+    return await supabase
+      .from('corretores')
+      .update({
+        deleted_at: now,
+        updated_at: now
+      })
+      .eq('id', corretorId);
   }
 };
 
@@ -85,6 +102,19 @@ export const restoreSoftDelete = {
         updated_at: now
       })
       .eq('id', usuarioId);
+  },
+
+  // Restaurar corretor soft-deleted
+  corretor: async (corretorId: string) => {
+    const now = new Date().toISOString();
+    
+    return await supabase
+      .from('corretores')
+      .update({
+        deleted_at: null,
+        updated_at: now
+      })
+      .eq('id', corretorId);
   }
 };
 
@@ -106,6 +136,17 @@ export const isSoftDeleted = {
       .from('usuarios')
       .select('deleted_at')
       .eq('id', usuarioId)
+      .single();
+      
+    if (error) return false;
+    return data?.deleted_at !== null;
+  },
+
+  corretor: async (corretorId: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('corretores')
+      .select('deleted_at')
+      .eq('id', corretorId)
       .single();
       
     if (error) return false;

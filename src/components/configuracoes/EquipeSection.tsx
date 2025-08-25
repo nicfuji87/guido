@@ -43,6 +43,7 @@ export const EquipeSection: React.FC = () => {
         .from('corretores')
         .select('id, nome, email, funcao, created_at, cpf')
         .eq('conta_id', currentCorretor.conta_id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;

@@ -113,11 +113,12 @@ export const useConfiguracoes = () => {
     try {
       setError(null);
       
-      // Carregar dados do perfil
+      // Carregar dados do perfil (apenas se ativo)
       const { data: corretorData, error: corretorError } = await supabase
         .from('corretores')
         .select('*')
         .eq('id', currentCorretor.id)
+        .is('deleted_at', null)
         .single();
 
       if (corretorError) throw corretorError;
