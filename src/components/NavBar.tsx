@@ -92,7 +92,7 @@ export function NavBar({ items, className, logoSrc, fixed = true, showLogin = tr
             transition={{ duration: 0.25 }}
             src={logoSrc}
             alt="Guido"
-            className="ml-1 mr-2 h-5 w-auto md:h-6"
+            className="ml-1 mr-2 h-4 w-auto md:h-5"
           />
         ) : null}
         {items.map((item) => {

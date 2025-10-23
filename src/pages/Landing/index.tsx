@@ -94,29 +94,29 @@ export default function Landing() {
         <BeamsBackground className="absolute inset-0" intensity="subtle" />
         
         <div className="relative z-10 max-w-7xl mx-auto w-full">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Content Column */}
-            <div className="text-center lg:text-left space-y-6 lg:space-y-8">
+            <div className="text-center lg:text-left space-y-4 lg:space-y-6">
               {/* Logo */}
               <AnimatedSection delay={0}>
                 <img 
                   src="/images/guido/guido logo dark - sem fundo.png" 
                   alt="Guido Logo" 
-                  className="h-12 sm:h-16 md:h-20 lg:h-24 xl:h-28 w-auto object-contain mx-auto lg:mx-0"
+                  className="h-10 sm:h-12 md:h-14 lg:h-16 xl:h-18 w-auto object-contain mx-auto lg:mx-0"
                 />
               </AnimatedSection>
               
               {/* Main Headline */}
-              <div className="space-y-4">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-none">
-                  <div className="mb-2">
+              <div className="space-y-3">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-5xl font-bold leading-tight">
+                  <div className="mb-1">
                     <AnimatedText 
                       text="Nunca mais perca"
                       className=""
                       delay={200}
                     />
                   </div>
-                  <div className="mb-2">
+                  <div className="mb-1">
                     <AnimatedText 
                       text="dinheiro com seus"
                       className=""
@@ -133,7 +133,7 @@ export default function Landing() {
 
               {/* Subheadline */}
               <AnimatedSection delay={800}>
-                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto lg:mx-0">
+                <p className="text-base sm:text-lg md:text-xl lg:text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                   Guido é uma{' '}
                   <span className="relative inline-block">
                     <span className="bg-[rgba(0,246,255,0.10)] text-[#00F6FF] px-3 py-1 rounded-lg border border-[rgba(0,246,255,0.20)]">
@@ -194,13 +194,13 @@ export default function Landing() {
             <div className="relative">
               <AnimatedSection delay={600}>
                 <div className="relative float">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-3xl blur-2xl" />
+                  <div className="absolute -inset-2 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-2xl blur-xl" />
                   <VideoPlayer
                     thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
                     videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
                     title="Veja o Guido em Ação"
                     description="Descubra como revolucionar sua rotina"
-                    className="relative z-10 rounded-2xl shadow-2xl"
+                    className="relative z-10 rounded-xl shadow-xl max-w-md mx-auto"
                   />
                 </div>
               </AnimatedSection>
@@ -259,11 +259,11 @@ export default function Landing() {
             ].map((problem, index) => (
               <AnimatedSection key={index} delay={problem.delay}>
                 <FloatingCard className="h-full">
-                  <div className="space-y-4">
-                    <div className="w-fit rounded-xl bg-[#00F6FF]/10 border border-[#00F6FF]/20 p-3">
-                      <problem.icon className="h-8 w-8 text-[#00F6FF]" />
+                  <div className="space-y-3">
+                    <div className="w-fit rounded-lg bg-[#00F6FF]/10 border border-[#00F6FF]/20 p-2">
+                      <problem.icon className="h-6 w-6 text-[#00F6FF]" />
                     </div>
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-base font-semibold">
                       {problem.title}
                     </h3>
                     <p className="text-gray-400 text-sm leading-relaxed">
@@ -377,16 +377,16 @@ export default function Landing() {
             ].map((feature, index) => (
               <AnimatedSection key={index} delay={index * 200}>
                 <FloatingCard className="h-full group">
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div className="flex items-start justify-between">
-                      <div className="w-fit rounded-xl bg-[#00F6FF]/10 border border-[#00F6FF]/20 p-3 group-hover:bg-[#00F6FF]/20 transition-colors">
-                        <feature.icon className="h-10 w-10 text-[#00F6FF]" />
+                      <div className="w-fit rounded-lg bg-[#00F6FF]/10 border border-[#00F6FF]/20 p-2 group-hover:bg-[#00F6FF]/20 transition-colors">
+                        <feature.icon className="h-6 w-6 text-[#00F6FF]" />
                       </div>
                       <Badge className="text-xs bg-[#00F6FF]/10 text-[#00F6FF] border-[#00F6FF]/20">
                         {feature.badge}
                       </Badge>
                     </div>
-                    <h3 className="text-lg font-semibold group-hover:text-[#00F6FF] transition-colors">
+                    <h3 className="text-base font-semibold group-hover:text-[#00F6FF] transition-colors">
                       {feature.title}
                     </h3>
                     <p className="text-gray-400 text-sm leading-relaxed">
@@ -497,23 +497,23 @@ export default function Landing() {
             </div>
           </AnimatedSection>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
             {/* Plano Corretor */}
             <AnimatedSection delay={200}>
               <FloatingCard className="relative h-full" glowIntensity="high">
                 <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-[#00F6FF] to-[#0EA5E9] text-[#0D1117] font-semibold border-0">
                   ⭐ Mais Popular
                 </Badge>
-                <div className="text-center space-y-6 pt-4">
+                <div className="text-center space-y-4 pt-4">
                   <div>
-                    <h3 className="text-2xl font-bold">Plano Corretor</h3>
-                    <p className="text-gray-400">Ideal para profissionais autônomos</p>
+                    <h3 className="text-xl font-bold">Plano Corretor</h3>
+                    <p className="text-gray-400 text-sm">Ideal para profissionais autônomos</p>
                   </div>
                   
                   <div className="space-y-2">
-                    <div className="text-5xl font-extrabold">
+                    <div className="text-4xl font-extrabold">
                       <GradientText gradient="primary">R$ 149</GradientText>
-                      <span className="text-xl font-normal text-gray-400">/mês</span>
+                      <span className="text-lg font-normal text-gray-400">/mês</span>
                     </div>
                     <p className="text-sm text-gray-500">ou R$ 1.490/ano (2 meses grátis)</p>
                   </div>
@@ -550,14 +550,14 @@ export default function Landing() {
             {/* Plano Imobiliária */}
             <AnimatedSection delay={400}>
               <FloatingCard className="h-full border-2 border-[#00F6FF]/20">
-                <div className="text-center space-y-6">
+                <div className="text-center space-y-4">
                   <div>
-                    <h3 className="text-2xl font-bold">Plano Imobiliária</h3>
-                    <p className="text-gray-400">Para equipes e imobiliárias</p>
+                    <h3 className="text-xl font-bold">Plano Imobiliária</h3>
+                    <p className="text-gray-400 text-sm">Para equipes e imobiliárias</p>
                   </div>
                   
                   <div className="space-y-2">
-                    <div className="text-5xl font-extrabold">
+                    <div className="text-4xl font-extrabold">
                       <GradientText gradient="primary">Consultar</GradientText>
                     </div>
                     <p className="text-sm text-gray-500">Preço personalizado por usuário</p>

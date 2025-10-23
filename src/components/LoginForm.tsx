@@ -153,10 +153,12 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
           </div>
 
           {/* Separator */}
-          <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-            <span className="bg-background text-muted-foreground relative z-10 px-2">
+          <div className="relative flex items-center justify-center text-sm">
+            <div className="flex-grow border-t border-border"></div>
+            <span className="bg-background text-muted-foreground px-4">
               Ou
             </span>
+            <div className="flex-grow border-t border-border"></div>
           </div>
 
           {/* Alternative Options */}

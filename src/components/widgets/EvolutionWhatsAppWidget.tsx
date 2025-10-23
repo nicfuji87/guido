@@ -5,6 +5,8 @@ import { evolutionApi } from '@/lib/evolutionApi';
 import { EvolutionInstance, EvolutionQRCode } from '@/types/evolution';
 import { useViewContext } from '@/hooks/useViewContext';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabaseClient';
+import { prepareWebhookData } from '@/utils/webhookDataHelper';
 
 // AI dev note: Widget para conectar WhatsApp via Evolution API
 // Permite gerar QR code e monitorar status da conexão
@@ -16,6 +18,7 @@ export const EvolutionWhatsAppWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastStatusCheck, setLastStatusCheck] = useState<Date | null>(null);
+  const [hasTriggeredConnectedWebhook, setHasTriggeredConnectedWebhook] = useState(false);
   
   const pollIntervalRef = useRef<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -23,9 +26,118 @@ export const EvolutionWhatsAppWidget = () => {
   const instanceName = currentCorretor?.evolution_instance || (currentCorretor ? `guido_${currentCorretor.id}` : 'guido_default');
   const userApiKey = currentCorretor?.evolution_apikey;
 
+  // AI dev note: Função para disparar webhook quando WhatsApp conectar com sucesso
+  const triggerConnectedWebhook = useCallback(async () => {
+    try {
+      const webhookUrl = import.meta.env.VITE_WEBHOOK_ASAAS_PROVISIONING_URL;
+      const apiKey = import.meta.env.VITE_WEBHOOK_ASAAS_PROVISIONING_API_KEY;
+      
+      if (!webhookUrl || !apiKey) {
+        console.warn('Webhook não configurado - VITE_WEBHOOK_ASAAS_PROVISIONING_URL ou API key não encontrada');
+        return;
+      }
 
+      // Buscar dados completos do usuário na tabela usuarios
+      const user = supabase.auth.user();
+      if (!user) {
+        console.error('Usuário não autenticado para webhook');
+        return;
+      }
 
-  const loadInstanceStatus = useCallback(async (showLoading = true) => {
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (userError || !userData) {
+        console.error('Erro ao buscar dados do usuário para webhook:', userError?.message);
+        return;
+      }
+
+      // Buscar assinatura ativa
+      const { data: assinatura, error: assinaturaError } = await supabase
+        .from('assinaturas')
+        .select('*')
+        .eq('user_id', userData.id)
+        .eq('status', 'ATIVO')
+        .single();
+
+      if (assinaturaError || !assinatura) {
+        // Tentar buscar qualquer assinatura se não houver ativa
+        const { data: anyAssinatura, error: anyAssinaturaError } = await supabase
+          .from('assinaturas')
+          .select('*')
+          .eq('user_id', userData.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (anyAssinaturaError || !anyAssinatura) {
+          console.error('Erro ao buscar assinatura para webhook:', assinaturaError?.message);
+          return;
+        }
+        
+        // Usar a assinatura encontrada
+        var finalAssinatura = anyAssinatura;
+      } else {
+        var finalAssinatura = assinatura;
+      }
+
+      // Preparar dados completos do webhook incluindo conta e assinatura
+      const webhookData = await prepareWebhookData({
+        nome: userData.name,
+        email: userData.email,
+        documento: userData.cpfCnpj || '',
+        telefone: userData.whatsapp,
+        userId: userData.id,
+        assinaturaId: finalAssinatura.id
+      });
+
+      // Disparar webhook com tipo "conectado"
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api': apiKey,
+        },
+        body: JSON.stringify({
+          action: 'whatsapp_connected', // AI dev note: Tipo específico para conexão WhatsApp
+          // Dados do corretor atual (compatibilidade)
+          corrector: {
+            id: currentCorretor?.id,
+            nome: currentCorretor?.nome,
+            email: currentCorretor?.email,
+            conta_id: currentCorretor?.conta_id,
+            funcao: currentCorretor?.funcao
+          },
+          // Dados completos do usuário da tabela usuarios
+          user: userData,
+          // Dados expandidos com conta e assinatura
+          data: {
+            ...webhookData,
+            // Dados específicos da conexão WhatsApp
+            connection: {
+              instance_name: instanceName,
+              connected_at: new Date().toISOString(),
+              evolution_url: userData.evolution_url
+            }
+          }
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Webhook de conexão WhatsApp disparado com sucesso');
+      } else {
+        console.warn('⚠️ Webhook de conexão WhatsApp retornou erro:', response.status, response.statusText);
+      }
+
+    } catch (error) {
+      console.error('❌ Erro ao disparar webhook de conexão WhatsApp:', error);
+    }
+  }, [currentCorretor, instanceName]);
+
+  const loadInstanceStatus = useCallback(async (showLoading = true, isInitialCheck = false) => {
     if (!instanceName) {
       return;
     }
@@ -34,16 +146,38 @@ export const EvolutionWhatsAppWidget = () => {
       if (showLoading) setIsLoading(true);
       setError(null);
       
+      const previousState = instance?.state;
       const status = await evolutionApi.getInstanceStatus(instanceName, userApiKey);
       
       setInstance(status);
       setLastStatusCheck(new Date());
+
+      // AI dev note: Detectar conexão bem-sucedida e disparar webhook apenas uma vez
+      // Disparar apenas quando:
+      // 1. Estado mudou de outro para 'open' (conexão estabelecida)
+      // 2. Não é verificação de monitoramento automático (isInitialCheck = false significa ação manual)
+      // 3. Webhook ainda não foi disparado nesta sessão
+      if (
+        status.state === 'open' && 
+        previousState !== 'open' && 
+        isInitialCheck && // Somente em verificações manuais (não polling)
+        !hasTriggeredConnectedWebhook
+      ) {
+        console.log('🎯 WhatsApp conectado com sucesso! Disparando webhook...');
+        setHasTriggeredConnectedWebhook(true);
+        
+        // Disparar webhook em background (não bloquear interface)
+        setTimeout(() => {
+          triggerConnectedWebhook();
+        }, 1000);
+      }
+
     } catch (err) {
       setError('Erro ao verificar status da conexão');
     } finally {
       if (showLoading) setIsLoading(false);
     }
-  }, [instanceName, userApiKey]);
+  }, [instanceName, userApiKey, instance?.state, hasTriggeredConnectedWebhook, triggerConnectedWebhook]);
 
   const createInstance = async () => {
     try {
@@ -74,8 +208,8 @@ export const EvolutionWhatsAppWidget = () => {
       const qr = await evolutionApi.connectInstance(instanceName, userApiKey);
       setQrCode(qr);
       
-      // Atualizar status
-      await loadInstanceStatus(false);
+      // Atualizar status - ação manual, pode disparar webhook se conectar
+      await loadInstanceStatus(false, true);
     } catch (err) {
       // console.error('Erro ao gerar QR code:', err);
       setError('Erro ao gerar QR code');
@@ -94,8 +228,8 @@ export const EvolutionWhatsAppWidget = () => {
       await evolutionApi.restartInstance(instanceName, userApiKey);
       setQrCode(null);
       
-      // Aguardar um pouco e verificar status
-      setTimeout(() => loadInstanceStatus(false), 2000);
+      // Aguardar um pouco e verificar status - não disparar webhook pois é reinício
+      setTimeout(() => loadInstanceStatus(false, false), 2000);
     } catch (err) {
       // console.error('Erro ao reiniciar instância:', err);
       setError('Erro ao reiniciar instância');
@@ -129,12 +263,13 @@ export const EvolutionWhatsAppWidget = () => {
       return;
     }
     
-    // Carregar status inicial
-    loadInstanceStatus();
+    // Carregar status inicial - pode disparar webhook se conectado
+    loadInstanceStatus(true, true);
     
     // Configurar polling a cada 60 segundos
     pollIntervalRef.current = setInterval(() => {
-      loadInstanceStatus(false); // Não mostrar loading no polling
+      // AI dev note: Polling automático - NÃO disparar webhook
+      loadInstanceStatus(false, false);
     }, 60000);
     
     // Cleanup
