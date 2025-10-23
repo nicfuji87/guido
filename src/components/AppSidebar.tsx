@@ -2,7 +2,6 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   Home, 
-  MessageCircle, 
   Users, 
   Calendar, 
   Link2, 
@@ -23,7 +22,7 @@ import {
 import { Button, Avatar, AvatarFallback, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui';
 import { useViewContext } from '@/hooks/useViewContext';
 import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus';
-import { useConversasBadge } from '@/hooks/useConversasBadge';
+// import { useConversasBadge } from '@/hooks/useConversasBadge'; // Removido temporariamente - funcionalidade kanban não disponível
 import { useLembretesBadge } from '@/hooks/useLembretesBadge';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +46,7 @@ export const AppSidebar = () => {
   const { userRole } = useViewContext();
   const { systemStatus } = useWhatsAppStatus();
   const location = useLocation();
-  const pendingConversations = useConversasBadge();
+  // const pendingConversations = useConversasBadge(); // Removido temporariamente - funcionalidade kanban não disponível
   const urgentReminders = useLembretesBadge();
 
   // AI dev note: Função para determinar se um item está ativo baseado na rota atual
@@ -78,12 +77,13 @@ export const AppSidebar = () => {
       icon: Home,
       href: "/app"
     },
-    {
-      title: "Conversas", 
-      icon: MessageCircle,
-      href: "/conversations",
-      badge: pendingConversations > 0 ? pendingConversations : undefined
-    },
+    // AI dev note: Item 'Conversas' removido temporariamente - funcionalidade kanban não disponível para usuários no momento
+    // {
+    //   title: "Conversas", 
+    //   icon: MessageCircle,
+    //   href: "/conversations",
+    //   badge: pendingConversations > 0 ? pendingConversations : undefined
+    // },
     {
       title: "Clientes",
       icon: Users,

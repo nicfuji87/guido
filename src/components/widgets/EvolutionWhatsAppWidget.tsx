@@ -55,6 +55,9 @@ export const EvolutionWhatsAppWidget = () => {
         return;
       }
 
+      // Declarar variável para armazenar a assinatura final
+      let finalAssinatura;
+
       // Buscar assinatura ativa
       const { data: assinatura, error: assinaturaError } = await supabase
         .from('assinaturas')
@@ -79,9 +82,9 @@ export const EvolutionWhatsAppWidget = () => {
         }
         
         // Usar a assinatura encontrada
-        var finalAssinatura = anyAssinatura;
+        finalAssinatura = anyAssinatura;
       } else {
-        var finalAssinatura = assinatura;
+        finalAssinatura = assinatura;
       }
 
       // Preparar dados completos do webhook incluindo conta e assinatura
