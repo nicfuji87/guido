@@ -59,6 +59,7 @@ export interface CorretorData {
   crm_loft_url?: string;
   crm_loft_id?: string;
   crm_loft_email?: string;
+  crm_loft_empresa_id?: string;
   crm_rd_key?: string;
   crm_imobzi_token?: string;
   crm_imoview_usuario?: string;
@@ -76,6 +77,7 @@ export interface CorretorUpdateData {
   crm_loft_url?: string;
   crm_loft_id?: string;
   crm_loft_email?: string;
+  crm_loft_empresa_id?: string;
   crm_rd_key?: string;
   crm_imobzi_token?: string;
   crm_imoview_usuario?: string;

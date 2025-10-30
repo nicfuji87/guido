@@ -111,6 +111,7 @@ export interface Corretor {
   crm_loft_url?: string;
   crm_loft_id?: string;
   crm_loft_email?: string;
+  crm_loft_empresa_id?: string;
 }
 
 // AI dev note: Interface para usuários com suporte a soft delete  

@@ -175,7 +175,8 @@ const SUPPORTED_CRMS = [
       { name: 'key', label: 'Chave de API', type: 'password', required: true },
       { name: 'url', label: 'URL da API', type: 'url', required: true },
       { name: 'id', label: 'ID do Corretor', type: 'text', required: true },
-      { name: 'email', label: 'Email da Conta', type: 'email', required: true }
+      { name: 'email', label: 'Email da Conta', type: 'email', required: true },
+      { name: 'empresa_id', label: 'ID da empresa', type: 'text', required: false }
     ]
   },
   {
@@ -231,7 +232,7 @@ export const CRMIntegrationsWidget = () => {
       // AI dev note: Buscar integrações CRM específicas na tabela corretores (apenas ativos)
       const { data, error: supabaseError } = await supabase
         .from('corretores')
-        .select('id, nome, crm, crm_loft_key, crm_loft_url, crm_loft_id, crm_loft_email, crm_rd_key, crm_imoview_email, crm_imoview_senha, crm_imoview_chave')
+        .select('id, nome, crm, crm_loft_key, crm_loft_url, crm_loft_id, crm_loft_email, crm_loft_empresa_id, crm_rd_key, crm_imoview_email, crm_imoview_senha, crm_imoview_chave')
         .eq('conta_id', currentCorretor.conta_id)
         .is('deleted_at', null)
         .not('crm', 'is', null)
@@ -304,6 +305,7 @@ export const CRMIntegrationsWidget = () => {
           updateData.crm_loft_url = selectedCRM.formData.url;
           updateData.crm_loft_id = selectedCRM.formData.id;
           updateData.crm_loft_email = selectedCRM.formData.email;
+          updateData.crm_loft_empresa_id = selectedCRM.formData.empresa_id || null;
           break;
         case 'rd':
           updateData.crm_rd_key = selectedCRM.formData.token;
@@ -356,6 +358,7 @@ export const CRMIntegrationsWidget = () => {
           crm_loft_url: null,
           crm_loft_id: null,
           crm_loft_email: null,
+          crm_loft_empresa_id: null,
           crm_rd_key: null,
           crm_imoview_email: null,
           crm_imoview_senha: null,
