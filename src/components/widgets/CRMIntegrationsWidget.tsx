@@ -176,7 +176,7 @@ const SUPPORTED_CRMS = [
       { name: 'url', label: 'URL da API', type: 'url', required: true },
       { name: 'id', label: 'ID do Corretor', type: 'text', required: true },
       { name: 'email', label: 'Email da Conta', type: 'email', required: true },
-      { name: 'empresa_id', label: 'ID da empresa', type: 'text', required: false }
+      { name: 'empresa_id', label: 'ID da empresa', type: 'text', required: true }
     ]
   },
   {
