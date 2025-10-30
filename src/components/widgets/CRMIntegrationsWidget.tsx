@@ -305,7 +305,7 @@ export const CRMIntegrationsWidget = () => {
           updateData.crm_loft_url = selectedCRM.formData.url;
           updateData.crm_loft_id = selectedCRM.formData.id;
           updateData.crm_loft_email = selectedCRM.formData.email;
-          updateData.crm_loft_empresa_id = selectedCRM.formData.empresa_id || null;
+          updateData.crm_loft_empresa_id = selectedCRM.formData.empresa_id || undefined;
           break;
         case 'rd':
           updateData.crm_rd_key = selectedCRM.formData.token;
