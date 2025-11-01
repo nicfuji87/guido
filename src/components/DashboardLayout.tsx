@@ -14,22 +14,9 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
-  // Detectar se é mobile e iniciar sidebar fechada
-  const [isMobile, setIsMobile] = React.useState(false);
-  
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024); // lg breakpoint do Tailwind
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   return (
     <ViewContextProvider>
-      <SidebarProvider defaultExpanded={!isMobile}>
+      <SidebarProvider>
         <div className="min-h-screen flex w-full bg-background">
           {/* Sidebar */}
           <AppSidebar />

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 // AI dev note: Componente Sidebar simplificado baseado no shadcn
@@ -27,6 +28,32 @@ interface SidebarProviderProps {
 
 export const SidebarProvider = ({ children, defaultExpanded = true }: SidebarProviderProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const location = useLocation();
+  
+  // Detectar se é mobile
+  const [isMobile, setIsMobile] = React.useState(false);
+  
+  React.useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      // Se for mobile, sempre fechar a sidebar
+      if (mobile) {
+        setExpanded(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // Fechar sidebar ao navegar no mobile
+  React.useEffect(() => {
+    if (isMobile) {
+      setExpanded(false);
+    }
+  }, [location.pathname, isMobile]);
 
   const toggle = () => setExpanded(!expanded);
 
@@ -179,6 +206,7 @@ export const SidebarMenuButton = React.forwardRef<
         href={href} 
         className={baseClasses}
         ref={ref as React.Ref<HTMLAnchorElement>}
+        onClick={onClick}
         {...props}
       >
         {children}
