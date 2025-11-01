@@ -70,15 +70,15 @@ export const Sidebar = ({ children, className }: SidebarProps) => {
       )}
       
       <aside className={cn(
-        'bg-card border-r transition-all duration-300 flex-shrink-0',
+        'bg-card border-r transition-all duration-300',
         isMobile ? (
-          // Mobile: sidebar como drawer overlay
+          // Mobile: sidebar como drawer overlay - não ocupa espaço quando fechada
           expanded 
             ? 'fixed inset-y-0 left-0 z-50 w-64 shadow-2xl' 
-            : 'fixed inset-y-0 left-0 z-50 -translate-x-full w-64'
+            : 'fixed inset-y-0 left-0 z-50 -translate-x-full w-64 pointer-events-none'
         ) : (
-          // Desktop: sidebar normal
-          expanded ? 'w-64' : 'w-16'
+          // Desktop: sidebar normal - sempre ocupa espaço
+          cn('flex-shrink-0', expanded ? 'w-64' : 'w-16')
         ),
         className
       )}>
