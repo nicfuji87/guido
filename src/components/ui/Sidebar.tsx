@@ -70,7 +70,7 @@ export const Sidebar = ({ children, className }: SidebarProps) => {
       )}
       
       <aside className={cn(
-        'bg-card border-r transition-all duration-300',
+        'bg-card border-r transition-all duration-300 flex-shrink-0',
         isMobile ? (
           // Mobile: sidebar como drawer overlay
           expanded 
@@ -205,7 +205,7 @@ interface SidebarInsetProps {
 }
 
 export const SidebarInset = ({ children, className }: SidebarInsetProps) => (
-  <main className={cn('flex-1 flex flex-col', className)}>
+  <main className={cn('flex-1 flex flex-col min-w-0', className)}>
     {children}
   </main>
 );
