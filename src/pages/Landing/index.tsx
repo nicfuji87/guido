@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Play, ArrowRight, Zap, Target, Users, Home, Clock, AlertTriangle, MessageSquare, MessageCircle, Settings, CheckCircle, Brain, Star, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
+import { ArrowRight, Zap, Target, Users, Home, Clock, AlertTriangle, MessageSquare, MessageCircle, Settings, CheckCircle, Brain, Star, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { NavBar } from '@/components/NavBar'
 import { VideoPlayer } from '@/components/VideoPlayer'
@@ -144,13 +144,13 @@ export default function Landing() {
                 </p>
               </AnimatedSection>
 
-              {/* CTA Buttons */}
+              {/* CTA Button */}
               <AnimatedSection delay={1000}>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
+                <div className="flex justify-center lg:justify-start">
                   <PremiumButton 
                     size="lg" 
                     shimmer 
-                    className="group"
+                    className="group w-full sm:w-auto"
                     onClick={() => {
                       const pricingSection = document.getElementById('pricing');
                       pricingSection?.scrollIntoView({ behavior: 'smooth' });
@@ -159,10 +159,20 @@ export default function Landing() {
                     Começar Agora - GRÁTIS
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </PremiumButton>
-                  <PremiumButton variant="outline" size="lg">
-                    <Play className="mr-2 h-5 w-5" />
-                    Ver Demo
-                  </PremiumButton>
+                </div>
+              </AnimatedSection>
+
+              {/* Video - Mobile Only */}
+              <AnimatedSection delay={1200} className="lg:hidden">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-2xl blur-xl" />
+                  <VideoPlayer
+                    thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
+                    videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                    title="Veja o Guido em Ação"
+                    description="Descubra como revolucionar sua rotina"
+                    className="relative z-10 rounded-xl shadow-xl"
+                  />
                 </div>
               </AnimatedSection>
 
@@ -190,8 +200,8 @@ export default function Landing() {
               </AnimatedSection>
             </div>
 
-            {/* Video Column */}
-            <div className="relative">
+            {/* Video Column - Desktop Only */}
+            <div className="relative hidden lg:block">
               <AnimatedSection delay={600}>
                 <div className="relative float">
                   <div className="absolute -inset-2 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-2xl blur-xl" />
