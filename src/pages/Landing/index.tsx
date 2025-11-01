@@ -144,8 +144,22 @@ export default function Landing() {
                 </p>
               </AnimatedSection>
 
+              {/* Video - Mobile Only */}
+              <AnimatedSection delay={1000} className="lg:hidden">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-2xl blur-xl" />
+                  <VideoPlayer
+                    thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
+                    videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                    title="Veja o Guido em Ação"
+                    description="Descubra como revolucionar sua rotina"
+                    className="relative z-10 rounded-xl shadow-xl"
+                  />
+                </div>
+              </AnimatedSection>
+
               {/* CTA Button */}
-              <AnimatedSection delay={1000}>
+              <AnimatedSection delay={1200}>
                 <div className="flex justify-center lg:justify-start">
                   <PremiumButton 
                     size="lg" 
@@ -159,20 +173,6 @@ export default function Landing() {
                     Começar Agora - GRÁTIS
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </PremiumButton>
-                </div>
-              </AnimatedSection>
-
-              {/* Video - Mobile Only */}
-              <AnimatedSection delay={1200} className="lg:hidden">
-                <div className="relative">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-2xl blur-xl" />
-                  <VideoPlayer
-                    thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
-                    videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                    title="Veja o Guido em Ação"
-                    description="Descubra como revolucionar sua rotina"
-                    className="relative z-10 rounded-xl shadow-xl"
-                  />
                 </div>
               </AnimatedSection>
 
