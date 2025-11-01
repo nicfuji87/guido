@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MessageCircle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Avatar, AvatarImage, AvatarFallback, Skeleton } from '@/components/ui';
+import { Card, CardHeader, CardDescription, CardContent, Button, Badge, Avatar, AvatarImage, AvatarFallback, Skeleton } from '@/components/ui';
 import { ConversaPrioritaria } from '@/hooks/useDashboardData';
 import { cn } from '@/lib/utils';
 
