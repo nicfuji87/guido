@@ -7,6 +7,7 @@ import { LembretesHojeWidget } from './widgets/LembretesHojeWidget';
 import { MetricasPessoaisWidget } from './widgets/MetricasPessoaisWidget';
 import { useViewContext } from '@/hooks/useViewContext';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useLembretes } from '@/hooks/useLembretes';
 import { Skeleton } from '@/components/ui';
 import { AlertCircle, TrendingUp, Users, Clock } from 'lucide-react';
 
@@ -16,7 +17,8 @@ import { AlertCircle, TrendingUp, Users, Clock } from 'lucide-react';
 export const DashboardContent = () => {
   const history = useHistory();
   const viewContext = useViewContext();
-  const { data, isLoading, error } = useDashboardData(viewContext);
+  const { data, isLoading, error, refetch } = useDashboardData(viewContext);
+  const { marcarComoConcluido, marcarComoPendente } = useLembretes();
 
   // Estado de loading inicial com componente moderno
   if (isLoading && !data) {
@@ -38,14 +40,23 @@ export const DashboardContent = () => {
     }
   };
 
-  const handleToggleReminder = (lembreteId: string, completed: boolean) => {
-    // TODO: Implementar update do lembrete
-    void lembreteId;
-    void completed;
+  const handleToggleReminder = async (lembreteId: string, completed: boolean) => {
+    try {
+      if (completed) {
+        await marcarComoConcluido(lembreteId);
+      } else {
+        await marcarComoPendente(lembreteId);
+      }
+      // Recarregar dados do dashboard
+      await refetch();
+    } catch (err) {
+      console.error('Erro ao atualizar lembrete:', err);
+    }
   };
 
   const handleCreateReminder = () => {
-    // TODO: Implementar modal de criação
+    // Navegar para a página de lembretes onde pode criar novo
+    history.push('/lembretes?action=create');
   };
 
   const handleViewMoreReminders = () => {

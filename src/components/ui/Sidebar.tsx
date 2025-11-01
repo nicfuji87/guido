@@ -32,9 +32,7 @@ export const SidebarProvider = ({ children, defaultExpanded = true }: SidebarPro
 
   return (
     <SidebarContext.Provider value={{ expanded, toggle }}>
-      <div className="flex min-h-screen bg-background">
-        {children}
-      </div>
+      {children}
     </SidebarContext.Provider>
   );
 };
@@ -58,6 +56,11 @@ export const Sidebar = ({ children, className }: SidebarProps) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Se for mobile e não expandido, não renderizar nada (nem espaço vazio)
+  if (isMobile && !expanded) {
+    return null;
+  }
+
   return (
     <>
       {/* Backdrop em mobile quando sidebar está aberta */}
@@ -72,10 +75,8 @@ export const Sidebar = ({ children, className }: SidebarProps) => {
       <aside className={cn(
         'bg-card border-r transition-all duration-300',
         isMobile ? (
-          // Mobile: sidebar como drawer overlay - não ocupa espaço quando fechada
-          expanded 
-            ? 'fixed inset-y-0 left-0 z-50 w-64 shadow-2xl' 
-            : 'fixed inset-y-0 left-0 z-50 -translate-x-full w-64 pointer-events-none'
+          // Mobile: sidebar como drawer overlay
+          'fixed inset-y-0 left-0 z-50 w-64 shadow-2xl'
         ) : (
           // Desktop: sidebar normal - sempre ocupa espaço
           cn('flex-shrink-0', expanded ? 'w-64' : 'w-16')

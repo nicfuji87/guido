@@ -35,7 +35,7 @@ export const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
           <AppSidebar />
           
           {/* Área principal */}
-          <SidebarInset className="flex flex-col">
+          <SidebarInset className="flex flex-col w-full">
             {/* Header */}
             <DashboardHeader title={title} />
             

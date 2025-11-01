@@ -115,15 +115,20 @@ export const useDashboardData = (viewContext: ViewContext) => {
       .order('timestamp_ultima_mensagem', { ascending: true })
       .limit(10);
 
-    // Lembretes dos próximos 5 dias
+    // Lembretes dos próximos 5 dias + lembretes vencidos pendentes
     const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0); // Início do dia
     const proximos5Dias = new Date();
     proximos5Dias.setDate(hoje.getDate() + 5);
+    proximos5Dias.setHours(23, 59, 59, 999); // Fim do dia
     
-    const { data: lembretes } = await supabase
+    // Buscar lembretes em duas queries separadas para garantir funcionamento
+    // 1. Lembretes dos próximos 5 dias
+    const { data: lembretesProximos, error: errorProximos } = await supabase
       .from('lembretes')
       .select(`
         id,
+        titulo,
         descricao,
         data_lembrete,
         status,
@@ -132,7 +137,54 @@ export const useDashboardData = (viewContext: ViewContext) => {
       .eq('corretor_id', userId)
       .gte('data_lembrete', hoje.toISOString())
       .lte('data_lembrete', proximos5Dias.toISOString())
-      .order('data_lembrete');
+      .order('data_lembrete', { ascending: true });
+    
+    // 2. Lembretes pendentes vencidos
+    const { data: lembretesVencidos, error: errorVencidos } = await supabase
+      .from('lembretes')
+      .select(`
+        id,
+        titulo,
+        descricao,
+        data_lembrete,
+        status,
+        cliente:clientes(id, nome)
+      `)
+      .eq('corretor_id', userId)
+      .eq('status', 'PENDENTE')
+      .lt('data_lembrete', hoje.toISOString())
+      .order('data_lembrete', { ascending: true });
+    
+    // Combinar e remover duplicatas
+    type LembreteRaw = {
+      id: string;
+      titulo: string | null;
+      descricao: string;
+      data_lembrete: string;
+      status: string;
+      cliente: { id: string; nome: string } | null;
+    };
+    
+    const lembretesMap = new Map<string, LembreteRaw>();
+    
+    if (lembretesProximos) {
+      lembretesProximos.forEach((l: LembreteRaw) => lembretesMap.set(l.id, l));
+    }
+    
+    if (lembretesVencidos) {
+      lembretesVencidos.forEach((l: LembreteRaw) => lembretesMap.set(l.id, l));
+    }
+    
+    const lembretes = Array.from(lembretesMap.values()).sort((a, b) => 
+      new Date(a.data_lembrete).getTime() - new Date(b.data_lembrete).getTime()
+    );
+    
+    if (errorProximos || errorVencidos) {
+      log.error('Erro ao buscar lembretes', 'useDashboardData', { 
+        errorProximos, 
+        errorVencidos 
+      });
+    }
 
     // Métricas pessoais
     const { data: metricas } = await supabase.rpc('get_personal_metrics', {
@@ -155,7 +207,16 @@ export const useDashboardData = (viewContext: ViewContext) => {
         status_contorno_objecao: conv.status_contorno_objecao,
         inteligencia_tendencia_sentimento_cliente: conv.inteligencia_tendencia_sentimento_cliente
       })) || [],
-      lembretesHoje: lembretes || [],
+      lembretesHoje: (lembretes || []).map(l => ({
+        id: l.id,
+        descricao: l.titulo ? `${l.titulo}${l.descricao ? ': ' + l.descricao : ''}` : l.descricao || '',
+        cliente: l.cliente ? {
+          id: l.cliente.id,
+          nome: l.cliente.nome
+        } : undefined,
+        data_lembrete: l.data_lembrete,
+        status: l.status as 'PENDENTE' | 'CONCLUIDO'
+      })),
       metricasPessoais: metricas?.[0] ? {
         novosClientes: Number(metricas[0].novosclientes || 0),
         respostasEnviadas: Number(metricas[0].respostasenviadas || 0),
