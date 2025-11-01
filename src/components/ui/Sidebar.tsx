@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 
 // AI dev note: Componente Sidebar simplificado baseado no shadcn
 // Implementação básica para o dashboard do Guido
+// Funciona como overlay em mobile e sidebar tradicional em desktop
 
 interface SidebarContextValue {
   expanded: boolean;
@@ -44,16 +45,46 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ children, className }: SidebarProps) => {
-  const { expanded } = useSidebar();
+  const { expanded, toggle } = useSidebar();
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
-    <aside className={cn(
-      'bg-card border-r transition-all duration-300',
-      expanded ? 'w-64' : 'w-16',
-      className
-    )}>
-      {children}
-    </aside>
+    <>
+      {/* Backdrop em mobile quando sidebar está aberta */}
+      {isMobile && expanded && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={toggle}
+          aria-label="Fechar menu"
+        />
+      )}
+      
+      <aside className={cn(
+        'bg-card border-r transition-all duration-300',
+        isMobile ? (
+          // Mobile: sidebar como drawer overlay
+          expanded 
+            ? 'fixed inset-y-0 left-0 z-50 w-64 shadow-2xl' 
+            : 'fixed inset-y-0 left-0 z-50 -translate-x-full w-64'
+        ) : (
+          // Desktop: sidebar normal
+          expanded ? 'w-64' : 'w-16'
+        ),
+        className
+      )}>
+        {children}
+      </aside>
+    </>
   );
 };
 

@@ -112,29 +112,33 @@ export const AppSidebar = () => {
   return (
     <Sidebar className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 border-r border-gray-700/50 shadow-2xl relative">
       <SidebarHeader className="p-6 border-b border-gray-700/30 relative">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center">
           {expanded && (
-            <div className="flex-1 flex justify-center">
-              <img 
-                src="/images/guido/guido logo dark - sem fundo.png" 
-                alt="Guido Logo" 
-                className="w-16 h-16 object-contain filter brightness-0 invert"
-              />
-            </div>
+            <img 
+              src="/images/guido/guido logo dark - sem fundo.png" 
+              alt="Guido Logo" 
+              className="w-16 h-16 object-contain filter brightness-0 invert"
+            />
+          )}
+          {!expanded && (
+            <img 
+              src="/images/guido/guido logo dark - sem fundo.png" 
+              alt="Guido Logo" 
+              className="w-10 h-10 object-contain filter brightness-0 invert"
+            />
           )}
         </div>
         
-        {/* Botão de toggle sempre visível */}
+        {/* Botão de toggle - visível apenas em desktop */}
         <Button
           variant="ghost" 
           size="sm"
           onClick={toggle}
           className={cn(
-            "h-10 w-10 p-0 text-gray-300 hover:text-white hover:bg-cyan-600/20 transition-all duration-200 rounded-lg z-20",
+            "hidden lg:flex h-10 w-10 p-0 text-gray-300 hover:text-white hover:bg-cyan-600/20 transition-all duration-200 rounded-lg z-20",
             "absolute top-3 right-3",
             "shadow-lg border border-gray-600/50 hover:border-cyan-400/70",
-            "backdrop-blur-sm bg-gray-800/80",
-            !expanded && "ring-2 ring-cyan-500/30 animate-pulse"
+            "backdrop-blur-sm bg-gray-800/80"
           )}
           title={expanded ? "Recolher menu" : "Expandir menu"}
         >
@@ -169,15 +173,15 @@ export const AppSidebar = () => {
                 {expanded && (
                   <>
                     <span className="truncate font-medium text-sm">{item.title}</span>
-                    {item.badge && (
-                      <span className="ml-auto bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full px-2.5 py-1 min-w-[1.25rem] h-6 flex items-center justify-center font-semibold shadow-lg ring-1 ring-orange-400/30">
+                    {item.badge && item.badge > 0 && (
+                      <span className="ml-auto bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[1.5rem] h-5 flex items-center justify-center font-semibold shadow-lg ring-1 ring-orange-400/30 whitespace-nowrap flex-shrink-0">
                         {item.badge > 9 ? '9+' : item.badge}
                       </span>
                     )}
                   </>
                 )}
-                {!expanded && item.badge && (
-                  <span className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-semibold shadow-lg ring-2 ring-gray-800 ring-offset-1 ring-offset-gray-800">
+                {!expanded && item.badge && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold shadow-lg ring-2 ring-gray-800">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
                 )}

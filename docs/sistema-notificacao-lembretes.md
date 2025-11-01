@@ -54,10 +54,12 @@ POST https://zpzzvkjwnttrdtuvtmwv.supabase.co/functions/v1/create-lembrete
 
 ### Headers
 ```
-apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NDEzOTIsImV4cCI6MjA2OTIxNzM5Mn0.p1gdUMzd3dW2KavL5oqMG0yALOFW9IKktDlfLWLfW68
+apikey: YOUR_SUPABASE_ANON_KEY
 
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY0MTM5MiwiZXhwIjoyMDY5MjE3MzkyfQ._H8utVfPmTg1ZUWukLjEqEZS2H4fWYtdA-YDoJ_enDQ
+Authorization: Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY
 ```
+
+**⚠️ IMPORTANTE:** Substitua `YOUR_SUPABASE_ANON_KEY` e `YOUR_SUPABASE_SERVICE_ROLE_KEY` pelas suas chaves reais do Supabase (Project Settings → API).
 
 ### Body
 ```json
@@ -94,8 +96,8 @@ SELECT cron.schedule(
     url := 'https://zpzzvkjwnttrdtuvtmwv.supabase.co/functions/v1/check-lembretes',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NDEzOTIsImV4cCI6MjA2OTIxNzM5Mn0.p1gdUMzd3dW2KavL5oqMG0yALOFW9IKktDlfLWLfW68',
-      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY0MTM5MiwiZXhwIjoyMDY5MjE3MzkyfQ._H8utVfPmTg1ZUWukLjEqEZS2H4fWYtdA-YDoJ_enDQ'
+      'apikey', 'YOUR_SUPABASE_ANON_KEY',
+      'Authorization', 'Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY'
     ),
     body := '{}'::jsonb
   );
@@ -105,6 +107,8 @@ SELECT cron.schedule(
 -- Verificar
 SELECT * FROM cron.job WHERE jobname = 'check-lembretes-job';
 ```
+
+**⚠️ IMPORTANTE:** Substitua as chaves nas linhas acima antes de executar.
 
 **⚠️ Como funciona o timing:**
 - Cron executa: 15:40, 15:45, 15:50...
@@ -299,7 +303,7 @@ SELECT cron.schedule(
       url := 'https://zpzzvkjwnttrdtuvtmwv.supabase.co/functions/v1/check-lembretes',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY0MTM5MiwiZXhwIjoyMDY5MjE3MzkyfQ._H8utVfPmTg1ZUWukLjEqEZS2H4fWYtdA-YDoJ_enDQ'
+        'Authorization', 'Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY'
       ),
       body := '{}'::jsonb
     ) as request_id;
@@ -309,6 +313,8 @@ SELECT cron.schedule(
 -- Verificar se o job foi criado
 SELECT * FROM cron.job WHERE jobname = 'check-lembretes-job';
 ```
+
+**⚠️ IMPORTANTE:** Substitua `YOUR_SUPABASE_SERVICE_ROLE_KEY` pela sua chave real antes de executar.
 
 **⏰ Expressão Cron:**
 - `*/5 * * * *` = A cada 5 minutos
@@ -340,9 +346,11 @@ POST https://zpzzvkjwnttrdtuvtmwv.supabase.co/functions/v1/check-lembretes
 ```bash
 curl -X POST \
   https://zpzzvkjwnttrdtuvtmwv.supabase.co/functions/v1/check-lembretes \
-  -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NDEzOTIsImV4cCI6MjA2OTIxNzM5Mn0.p1gdUMzd3dW2KavL5oqMG0yALOFW9IKktDlfLWLfW68' \
-  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY0MTM5MiwiZXhwIjoyMDY5MjE3MzkyfQ._H8utVfPmTg1ZUWukLjEqEZS2H4fWYtdA-YDoJ_enDQ'
+  -H 'apikey: YOUR_SUPABASE_ANON_KEY' \
+  -H 'Authorization: Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY'
 ```
+
+**⚠️ IMPORTANTE:** Substitua pelas suas chaves reais do Supabase.
 
 **Resposta esperada:**
 ```json
@@ -368,8 +376,8 @@ curl -X POST \
 ```bash
 curl -X POST \
   https://zpzzvkjwnttrdtuvtmwv.supabase.co/functions/v1/create-lembrete \
-  -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NDEzOTIsImV4cCI6MjA2OTIxNzM5Mn0.p1gdUMzd3dW2KavL5oqMG0yALOFW9IKktDlfLWLfW68' \
-  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwenp2a2p3bnR0cmR0dXZ0bXd2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzY0MTM5MiwiZXhwIjoyMDY5MjE3MzkyfQ._H8utVfPmTg1ZUWukLjEqEZS2H4fWYtdA-YDoJ_enDQ' \
+  -H 'apikey: YOUR_SUPABASE_ANON_KEY' \
+  -H 'Authorization: Bearer YOUR_SUPABASE_SERVICE_ROLE_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "corretor_id": "edceea62-d4cb-4e1c-9784-2a4faaf55062",
@@ -378,6 +386,8 @@ curl -X POST \
     "data_lembrete": "'$(date -u -d '+2 minutes' +%Y-%m-%dT%H:%M:%S.000Z)'"
   }'
 ```
+
+**⚠️ IMPORTANTE:** Substitua pelas suas chaves reais do Supabase.
 
 **Aguarde 5-10 minutos** e verifique:
 1. Logs da Edge Function `check-lembretes`

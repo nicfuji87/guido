@@ -71,12 +71,14 @@ export const UpdateConversationsButton: React.FC<UpdateConversationsButtonProps>
         bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 
         text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200
         ${isUpdating ? 'from-cyan-700 to-blue-700' : ''}
+        text-xs sm:text-sm px-3 sm:px-4 py-2 h-auto
         ${className}
       `}
       title="Atualizar as últimas 60 conversas (pode levar até 60 segundos)"
     >
-      <RefreshCw className={`w-4 h-4 mr-2 ${isUpdating ? 'animate-spin' : ''}`} />
-      {isUpdating ? 'Atualizando...' : 'Atualizar Conversas'}
+      <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 ${isUpdating ? 'animate-spin' : ''}`} />
+      <span className="hidden sm:inline">{isUpdating ? 'Atualizando...' : 'Atualizar Conversas'}</span>
+      <span className="sm:hidden">{isUpdating ? 'Atualizando...' : 'Atualizar'}</span>
     </Button>
   );
 };
