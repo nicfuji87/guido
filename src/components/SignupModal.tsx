@@ -428,20 +428,20 @@ export const SignupModal: React.FC<SignupModalProps> = ({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="relative w-full max-w-md mx-auto"
+          className="relative w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto px-2 sm:px-0"
         >
           <Card className="bg-background/95 backdrop-blur-xl border border-border/50 shadow-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border/50">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/50">
               <div>
-                <h2 className="text-xl font-bold text-foreground">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">
                   {step === 'plan' && 'Escolha seu Plano'}
                   {step === 'form' && 'Criar Conta'}
                   {step === 'loading' && 'Criando sua conta...'}
                   {step === 'success' && 'Bem-vindo!'}
                   {step === 'error' && 'Ops! Algo deu errado'}
                 </h2>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   {step === 'plan' && 'Teste grátis por 7 dias, sem cartão'}
                   {step === 'form' && '7 dias grátis + acesso imediato'}
                   {step === 'loading' && 'Preparando sua experiência...'}
@@ -463,7 +463,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <AnimatePresence>
                 {/* Plan Selection */}
                 {step === 'plan' && (
@@ -625,7 +625,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                     animate="visible"
                     exit="exit"
                     onSubmit={handleSubmit}
-                    className="space-y-4"
+                    className="space-y-3"
                   >
                     {/* Selected Plan Badge */}
                     <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg">
