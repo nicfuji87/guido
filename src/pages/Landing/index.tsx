@@ -108,7 +108,7 @@ export default function Landing() {
               
               {/* Main Headline */}
               <div className="space-y-3">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-5xl font-bold leading-tight">
+                <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-5xl font-bold leading-tight">
                   <div className="mb-1">
                     <AnimatedText 
                       text="Nunca mais perca"
@@ -133,7 +133,7 @@ export default function Landing() {
 
               {/* Subheadline */}
               <AnimatedSection delay={800}>
-                <p className="text-base sm:text-lg md:text-xl lg:text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                <p className="text-sm sm:text-lg md:text-xl lg:text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                   Guido é uma{' '}
                   <span className="relative inline-block">
                     <span className="bg-[rgba(0,246,255,0.10)] text-[#00F6FF] px-3 py-1 rounded-lg border border-[rgba(0,246,255,0.20)]">
@@ -144,6 +144,19 @@ export default function Landing() {
                 </p>
               </AnimatedSection>
 
+              {/* Trust Badge - Mobile Only */}
+              <AnimatedSection delay={900} className="lg:hidden">
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-400">✓</span> 7 dias grátis
+                  </span>
+                  <span className="text-gray-600">•</span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-400">✓</span> Sem cartão
+                  </span>
+                </div>
+              </AnimatedSection>
+
               {/* Video - Mobile Only */}
               <AnimatedSection delay={1000} className="lg:hidden">
                 <div className="relative">
@@ -151,7 +164,7 @@ export default function Landing() {
                   <VideoPlayer
                     thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
                     videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                    title="Veja o Guido em Ação"
+                    title="▶ Ver como funciona (2 min)"
                     description="Descubra como revolucionar sua rotina"
                     className="relative z-10 rounded-xl shadow-xl"
                   />
@@ -160,7 +173,7 @@ export default function Landing() {
 
               {/* CTA Button */}
               <AnimatedSection delay={1200}>
-                <div className="flex justify-center lg:justify-start">
+                <div className="flex flex-col items-center lg:items-start gap-3">
                   <PremiumButton 
                     size="lg" 
                     shimmer 
@@ -173,11 +186,19 @@ export default function Landing() {
                     Começar Agora - GRÁTIS
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </PremiumButton>
+                  
+                  {/* Scroll Indicator - Mobile Only */}
+                  <div className="lg:hidden flex flex-col items-center gap-1 text-xs text-gray-500 animate-bounce">
+                    <span>Role para ver mais</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
               </AnimatedSection>
 
               {/* Social Proof */}
-              <AnimatedSection delay={1200}>
+              <AnimatedSection delay={1400}>
                 <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-center lg:justify-start">
                   <div className="flex items-center gap-3">
                     <div className="flex -space-x-2">
@@ -187,13 +208,13 @@ export default function Landing() {
                         </div>
                       ))}
                     </div>
-                    <div className="text-xs sm:text-sm text-gray-400">
-                      +2.000 corretores já usam
+                    <div className="text-sm sm:text-sm text-gray-300 font-semibold">
+                      <span className="text-[#00F6FF]">+2.000</span> corretores já usam
                     </div>
                   </div>
                   <div className="flex">
                     {[1,2,3,4,5].map(i => (
-                      <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-500 text-yellow-500" />
+                      <Star key={i} className="w-4 h-4 sm:w-4 sm:h-4 fill-yellow-500 text-yellow-500" />
                     ))}
                   </div>
                 </div>
