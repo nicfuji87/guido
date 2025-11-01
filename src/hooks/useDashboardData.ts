@@ -37,7 +37,6 @@ export interface LembreteHoje {
 export interface MetricasPessoais {
   novosClientes: number;
   respostasEnviadas: number;
-  taxaConversao: number;
   tempoMedioResposta: number;
 }
 
@@ -79,7 +78,6 @@ export const useDashboardData = (viewContext: ViewContext) => {
     metricasPessoais: {
       novosClientes: 0,
       respostasEnviadas: 0,
-      taxaConversao: 0,
       tempoMedioResposta: 0
     },
     metricasEquipe: {
@@ -220,12 +218,10 @@ export const useDashboardData = (viewContext: ViewContext) => {
       metricasPessoais: metricas?.[0] ? {
         novosClientes: Number(metricas[0].novosclientes || 0),
         respostasEnviadas: Number(metricas[0].respostasenviadas || 0),
-        taxaConversao: Number(metricas[0].taxaconversao || 0),
         tempoMedioResposta: Number(metricas[0].tempomedioresposta || 0)
       } : {
         novosClientes: 0,
         respostasEnviadas: 0,
-        taxaConversao: 0,
         tempoMedioResposta: 0
       }
     };

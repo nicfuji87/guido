@@ -309,23 +309,25 @@ export const DashboardContent = () => {
       )}
 
       {/* Container principal com design moderno */}
-      <div className="p-6 space-y-8 max-w-7xl mx-auto">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-8 max-w-7xl mx-auto overflow-x-hidden">
         {/* Header elegante */}
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
+          <div className="space-y-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent truncate">
               {viewContext.viewMode === 'self' ? 
                 `Olá, ${viewContext.currentCorretor?.nome?.split(' ')[0] || 'Corretor'}! 👋` : 
                viewContext.viewMode === 'team' ? 'Dashboard da Equipe' : 'Dashboard do Corretor'}
             </h1>
-            <p className="text-gray-300 flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              {new Date().toLocaleDateString('pt-BR', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
+            <p className="text-xs sm:text-sm text-gray-300 flex items-center gap-1 sm:gap-2">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">
+                {new Date().toLocaleDateString('pt-BR', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </span>
             </p>
           </div>
           
@@ -333,7 +335,7 @@ export const DashboardContent = () => {
         </div>
 
         {/* Grid de widgets modernizado */}
-        <WidgetGrid widgets={widgets} className="grid gap-6" />
+        <WidgetGrid widgets={widgets} className="grid gap-3 sm:gap-6" />
       </div>
     </div>
   );

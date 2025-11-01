@@ -91,8 +91,8 @@ const MetricCard = ({
 };
 
 const LoadingSkeleton = () => (
-  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-    {[1, 2, 3, 4].map((i) => (
+  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    {[1, 2, 3].map((i) => (
       <Card key={i}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <Skeleton className="h-4 w-20" />
@@ -119,18 +119,16 @@ export const MetricasPessoaisWidget = ({
     return <LoadingSkeleton />;
   }
 
-  // AI dev note: Usar dados reais do Supabase via MCP
+  // AI dev note: Usar dados reais do Supabase via MCP (função get_personal_metrics)
   const safeMetricas = metricas || {
     novosClientes: 0,
     respostasEnviadas: 0,
-    taxaConversao: 0,
     tempoMedioResposta: 0
   };
 
   // AI dev note: Formatação dos valores reais
   const novosClientes = String(safeMetricas.novosClientes || 0);
   const respostasEnviadas = String(safeMetricas.respostasEnviadas || 0);
-  const taxaConversao = (safeMetricas.taxaConversao || 0).toFixed(1) + '%';
   const tempoMedioResposta = (safeMetricas.tempoMedioResposta || 0).toFixed(1) + 'h';
 
   const getTimeRangeLabel = () => {
@@ -169,7 +167,6 @@ export const MetricasPessoaisWidget = ({
 
   const novosClientesTrend = getTrend(safeMetricas.novosClientes);
   const respostasTrend = getTrend(safeMetricas.respostasEnviadas);
-  const conversaoTrend = getTrend(safeMetricas.taxaConversao);
   const tempoRespostaTrend = getTrend(safeMetricas.tempoMedioResposta, false); // Tempo menor é melhor
 
   const metrics = [
@@ -190,14 +187,6 @@ export const MetricasPessoaisWidget = ({
       subtitle: getTimeRangeLabel()
     },
     {
-      title: 'Taxa de Conversão',
-      value: taxaConversao,
-      icon: Target,
-      trend: conversaoTrend.trend,
-      change: conversaoTrend.change,
-      subtitle: 'leads → negócios'
-    },
-    {
       title: 'Tempo Médio de Resposta',
       value: tempoMedioResposta,
       icon: Clock,
@@ -216,7 +205,7 @@ export const MetricasPessoaisWidget = ({
         </span>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {metrics.map((metric, index) => (
           <MetricCard
             key={index}
@@ -251,10 +240,10 @@ export const MetricasPessoaisWidget = ({
             <span className="text-sm font-medium">Próximo Objetivo</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            {safeMetricas.taxaConversao < 20 
-              ? 'Foque em melhorar a qualificação de leads para aumentar conversão.'
-              : safeMetricas.tempoMedioResposta > 2
+            {safeMetricas.tempoMedioResposta > 2
               ? 'Otimize o tempo de resposta para melhor experiência do cliente.'
+              : safeMetricas.respostasEnviadas < 10
+              ? 'Aumente a frequência de respostas para melhorar o engajamento.'
               : 'Excelente performance! Continue expandindo sua base de clientes.'
             }
           </p>

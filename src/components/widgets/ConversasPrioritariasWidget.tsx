@@ -69,15 +69,15 @@ const ConversationItem = ({
   return (
     <div 
       className={cn(
-        'p-4 rounded-xl border cursor-pointer transition-all hover:shadow-sm group',
+        'p-2 sm:p-4 rounded-xl border cursor-pointer transition-all hover:shadow-sm group',
         'bg-gray-800 hover:bg-gray-700/80 border-gray-700',
         isVeryUrgent && 'border-red-700 bg-red-900/40 hover:bg-red-900/60',
         isUrgent && 'border-amber-700 bg-amber-900/40 hover:bg-amber-900/60'
       )}
       onClick={() => onOpen?.(conversa.id)}
     >
-      <div className="flex items-start gap-3">
-        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-gray-600">
+      <div className="flex items-start gap-2 sm:gap-3">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 ring-2 ring-gray-600">
           {conversa.cliente.profilePicUrl && (
             <AvatarImage 
               src={conversa.cliente.profilePicUrl} 
@@ -91,13 +91,13 @@ const ConversationItem = ({
         </Avatar>
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2">
-            <h4 className="font-semibold text-sm text-white truncate">
+          <div className="flex items-center justify-between gap-1 sm:gap-2 mb-1 sm:mb-2">
+            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <h4 className="font-semibold text-xs sm:text-sm text-white truncate">
               {conversa.cliente.nome}
             </h4>
               {conversa.sentimento_geral && (
-                <span className="text-xs" title={conversa.sentimento_geral}>
+                <span className="text-xs shrink-0" title={conversa.sentimento_geral}>
                   {getSentimentIcon(conversa.sentimento_geral)}
                 </span>
               )}
@@ -112,7 +112,7 @@ const ConversationItem = ({
             <Badge 
               variant={getBadgeVariant()} 
               className={cn(
-                "text-xs font-medium shrink-0",
+                "text-[10px] sm:text-xs font-medium shrink-0 px-1.5 sm:px-2 py-0.5",
                 isVeryUrgent && "bg-red-800 text-red-200 border-red-600",
                 isUrgent && "bg-amber-800 text-amber-200 border-amber-600",
                 !isVeryUrgent && !isUrgent && "bg-gray-700 text-gray-300 border-gray-600"
@@ -123,18 +123,18 @@ const ConversationItem = ({
             </div>
           </div>
           
-          <p className="text-sm text-gray-300 mb-3 leading-relaxed" style={{ wordBreak: 'break-word' }}>
-            {truncateMessage(conversa.lastMessage)}
+          <p className="text-xs sm:text-sm text-gray-300 mb-2 sm:mb-3 leading-relaxed" style={{ wordBreak: 'break-word' }}>
+            {truncateMessage(conversa.lastMessage, 80)}
           </p>
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               <div className="flex items-center gap-1">
               <div className={cn(
                 'w-2.5 h-2.5 rounded-full',
                 isVeryUrgent ? 'bg-red-500' : isUrgent ? 'bg-amber-500' : 'bg-green-500'
               )} />
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+              <span className="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wide">
                 {conversa.plataforma}
               </span>
               </div>
@@ -142,14 +142,14 @@ const ConversationItem = ({
               {conversa.status_contorno_objecao && conversa.status_contorno_objecao !== '' && (
                 <div className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
-                  <span className="text-xs text-yellow-400" title={`Objeção: ${conversa.status_contorno_objecao}`}>
+                  <span className="text-[10px] sm:text-xs text-yellow-400" title={`Objeção: ${conversa.status_contorno_objecao}`}>
                     Objeção
                   </span>
                 </div>
               )}
             </div>
             
-            <ExternalLink className="h-4 w-4 text-gray-500 group-hover:text-gray-300 transition-colors" />
+            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 group-hover:text-gray-300 transition-colors shrink-0" />
           </div>
         </div>
       </div>
@@ -194,41 +194,27 @@ export const ConversasPrioritariasWidget: React.FC<ConversasPrioritariasWidgetPr
 
   return (
     <Card className="h-full bg-white border-0 shadow-sm ring-1 ring-gray-900/5 hover:shadow-md transition-shadow">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              'p-2 rounded-lg',
-              veryUrgentCount > 0 ? 'bg-red-900 text-red-400' : 
-              urgentCount > 0 ? 'bg-amber-900 text-amber-400' : 'bg-blue-900 text-blue-400'
-            )}>
-              <MessageCircle className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="text-lg font-semibold text-white">
-                Conversas Prioritárias
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-300 mt-1">
-                {conversas.length === 0 ? 
-                  'Nenhuma conversa aguardando' :
-                  `${conversas.length} ${conversas.length === 1 ? 'conversa aguardando' : 'conversas aguardando'} resposta`
-                }
-              </CardDescription>
-            </div>
+      <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-6 pt-3 sm:pt-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={cn(
+            'p-1.5 sm:p-2 rounded-lg shrink-0',
+            veryUrgentCount > 0 ? 'bg-red-900 text-red-400' : 
+            urgentCount > 0 ? 'bg-amber-900 text-amber-400' : 'bg-blue-900 text-blue-400'
+          )}>
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
-          
-          {(urgentCount > 0 || veryUrgentCount > 0) && (
-            <Badge 
-              variant={veryUrgentCount > 0 ? 'destructive' : 'secondary'}
-              className="px-2 py-1 text-xs font-medium"
-            >
-              {veryUrgentCount > 0 ? `${veryUrgentCount} críticas` : `${urgentCount} urgentes`}
-            </Badge>
-          )}
+          <div className="min-w-0">
+            <CardDescription className="text-xs sm:text-sm text-gray-300">
+              {conversas.length === 0 ? 
+                'Nenhuma conversa aguardando' :
+                `${conversas.length} ${conversas.length === 1 ? 'conversa aguardando' : 'conversas aguardando'} resposta`
+              }
+            </CardDescription>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6">
         {isLoading ? (
           <LoadingSkeleton />
         ) : conversas.length === 0 ? (
@@ -244,8 +230,8 @@ export const ConversasPrioritariasWidget: React.FC<ConversasPrioritariasWidgetPr
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+          <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
               {conversasToShow.map((conversa) => (
               <ConversationItem
                 key={conversa.id}
@@ -256,10 +242,10 @@ export const ConversasPrioritariasWidget: React.FC<ConversasPrioritariasWidgetPr
           </div>
 
             {shouldShowButton && (
-              <div className="mt-4 pt-4 border-t border-gray-700">
+              <div className="mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-gray-700">
             <Button 
               variant="outline" 
-                  className="w-full h-10 text-sm font-medium hover:bg-gray-700 border-gray-600 text-gray-300 hover:text-white transition-colors"
+                  className="w-full h-8 sm:h-10 text-xs sm:text-sm font-medium hover:bg-gray-700 border-gray-600 text-gray-300 hover:text-white transition-colors"
               size="sm"
                   onClick={() => {
                     if (hasMoreConversas) {

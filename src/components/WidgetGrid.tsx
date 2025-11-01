@@ -47,16 +47,16 @@ export const WidgetGrid = ({ widgets, className }: WidgetGridProps) => {
   };
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-4 sm:space-y-6 min-w-0', className)}>
       {/* Widgets de alta prioridade - Layout principal */}
       {highPriorityWidgets.length > 0 && (
-        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 min-w-0">
           {highPriorityWidgets.map((widget) => (
             <div 
               key={widget.id} 
               className={cn(
                 getWidgetClasses(widget.size),
-                'transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg'
+                'transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg min-w-0'
               )}
             >
               {widget.component}
