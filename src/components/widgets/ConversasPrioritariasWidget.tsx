@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { MessageCircle, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageCircle, ExternalLink, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
 import { Card, CardHeader, CardDescription, CardContent, Button, Badge, Avatar, AvatarImage, AvatarFallback, Skeleton } from '@/components/ui';
-import { ConversaPrioritaria } from '@/hooks/useDashboardData';
+import { ConversaPrioritaria, ConversasSortOrder } from '@/hooks/useDashboardData';
 import { cn } from '@/lib/utils';
 
 // AI dev note: Widget para mostrar conversas que aguardam resposta do corretor
 // Priorizado por tempo de espera e urgência
+// Com filtro de ordenação (mais antigas/mais recentes)
 
 interface ConversasPrioritariasWidgetProps {
   conversas: ConversaPrioritaria[];
   isLoading?: boolean;
   onOpenConversation?: (conversaId: string) => void;
+  sortOrder: ConversasSortOrder;
+  onSortOrderChange: (sortOrder: ConversasSortOrder) => void;
 }
 
 const ConversationItem = ({ 
@@ -181,7 +184,9 @@ const LoadingSkeleton = () => (
 export const ConversasPrioritariasWidget: React.FC<ConversasPrioritariasWidgetProps> = ({ 
   conversas, 
   isLoading, 
-  onOpenConversation 
+  onOpenConversation,
+  sortOrder,
+  onSortOrderChange
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const urgentCount = conversas.filter(c => c.waitingTime > 24).length;
@@ -192,25 +197,47 @@ export const ConversasPrioritariasWidget: React.FC<ConversasPrioritariasWidgetPr
   const hasMoreConversas = conversas.length > INITIAL_VISIBLE_COUNT;
   const shouldShowButton = conversas.length > 0; // Sempre mostrar se há conversas
 
+  const toggleSortOrder = () => {
+    onSortOrderChange(sortOrder === 'oldest' ? 'newest' : 'oldest');
+  };
+
   return (
     <Card className="h-full bg-white border-0 shadow-sm ring-1 ring-gray-900/5 hover:shadow-md transition-shadow">
       <CardHeader className="pb-2 sm:pb-4 px-3 sm:px-6 pt-3 sm:pt-6">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className={cn(
-            'p-1.5 sm:p-2 rounded-lg shrink-0',
-            veryUrgentCount > 0 ? 'bg-red-900 text-red-400' : 
-            urgentCount > 0 ? 'bg-amber-900 text-amber-400' : 'bg-blue-900 text-blue-400'
-          )}>
-            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <div className={cn(
+              'p-1.5 sm:p-2 rounded-lg shrink-0',
+              veryUrgentCount > 0 ? 'bg-red-900 text-red-400' : 
+              urgentCount > 0 ? 'bg-amber-900 text-amber-400' : 'bg-blue-900 text-blue-400'
+            )}>
+              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <CardDescription className="text-xs sm:text-sm text-gray-300">
+                {conversas.length === 0 ? 
+                  'Nenhuma conversa aguardando' :
+                  `${conversas.length} ${conversas.length === 1 ? 'conversa aguardando' : 'conversas aguardando'} resposta`
+                }
+              </CardDescription>
+            </div>
           </div>
-          <div className="min-w-0">
-            <CardDescription className="text-xs sm:text-sm text-gray-300">
-              {conversas.length === 0 ? 
-                'Nenhuma conversa aguardando' :
-                `${conversas.length} ${conversas.length === 1 ? 'conversa aguardando' : 'conversas aguardando'} resposta`
-              }
-            </CardDescription>
-          </div>
+          
+          {/* Filtro de ordenação - responsivo */}
+          {conversas.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSortOrder}
+              className="shrink-0 h-7 sm:h-8 px-2 sm:px-3 text-xs hover:bg-gray-700"
+              title={sortOrder === 'oldest' ? 'Mostrando mais antigas primeiro' : 'Mostrando mais recentes primeiro'}
+            >
+              <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">
+                {sortOrder === 'oldest' ? 'Antigas' : 'Recentes'}
+              </span>
+            </Button>
+          )}
         </div>
       </CardHeader>
 

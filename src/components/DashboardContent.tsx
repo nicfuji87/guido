@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { WidgetGrid } from './WidgetGrid';
 import { LoadingDashboard } from './LoadingDashboard';
@@ -6,7 +6,7 @@ import { ConversasPrioritariasWidget } from './widgets/ConversasPrioritariasWidg
 import { LembretesHojeWidget } from './widgets/LembretesHojeWidget';
 import { MetricasPessoaisWidget } from './widgets/MetricasPessoaisWidget';
 import { useViewContext } from '@/hooks/useViewContext';
-import { useDashboardData } from '@/hooks/useDashboardData';
+import { useDashboardData, ConversasSortOrder } from '@/hooks/useDashboardData';
 import { useLembretes } from '@/hooks/useLembretes';
 import { Skeleton } from '@/components/ui';
 import { AlertCircle, TrendingUp, Users, Clock } from 'lucide-react';
@@ -17,7 +17,8 @@ import { AlertCircle, TrendingUp, Users, Clock } from 'lucide-react';
 export const DashboardContent = () => {
   const history = useHistory();
   const viewContext = useViewContext();
-  const { data, isLoading, error, refetch } = useDashboardData(viewContext);
+  const [sortOrder, setSortOrder] = useState<ConversasSortOrder>('oldest');
+  const { data, isLoading, error, refetch } = useDashboardData(viewContext, sortOrder);
   const { marcarComoConcluido, marcarComoPendente } = useLembretes();
 
   // Estado de loading inicial com componente moderno
@@ -101,6 +102,8 @@ export const DashboardContent = () => {
             conversas={data.conversasPrioritarias}
             isLoading={isLoading}
             onOpenConversation={handleOpenConversation}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
           />
         ),
         priority: 'high' as const,

@@ -66,7 +66,9 @@ export interface DashboardData {
   }>;
 }
 
-export const useDashboardData = (viewContext: ViewContext) => {
+export type ConversasSortOrder = 'oldest' | 'newest';
+
+export const useDashboardData = (viewContext: ViewContext, sortOrder: ConversasSortOrder = 'oldest') => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,12 +92,13 @@ export const useDashboardData = (viewContext: ViewContext) => {
     rankingEquipe: []
   }), []);
 
-  const fetchPersonalMetrics = useCallback(async (userId: string, timeRange: string) => {
+  const fetchPersonalMetrics = useCallback(async (userId: string, timeRange: string, sortOrder: ConversasSortOrder) => {
     const daysBack = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
     const dateFilter = new Date();
     dateFilter.setDate(dateFilter.getDate() - daysBack);
 
     // Conversas prioritárias (aguardando corretor)
+    // AI dev note: Ordenação baseada no filtro do usuário (mais antigas primeiro ou mais recentes primeiro)
     const { data: conversas } = await supabase
       .from('conversas')
       .select(`
@@ -110,7 +113,7 @@ export const useDashboardData = (viewContext: ViewContext) => {
         cliente:clientes(id, nome, profilePicUrl)
       `)
       .eq('status_conversa', 'AGUARDANDO_CORRETOR')
-      .order('timestamp_ultima_mensagem', { ascending: true })
+      .order('timestamp_ultima_mensagem', { ascending: sortOrder === 'oldest' })
       .limit(10);
 
     // Lembretes dos próximos 5 dias + lembretes vencidos pendentes
@@ -227,10 +230,11 @@ export const useDashboardData = (viewContext: ViewContext) => {
     };
   }, []);
 
-  const fetchTeamMetrics = useCallback(async (contaId: string, timeRange: string) => {
+  const fetchTeamMetrics = useCallback(async (contaId: string, timeRange: string, sortOrder: ConversasSortOrder) => {
     const daysBack = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
 
     // Conversas de risco (toda a equipe)
+    // AI dev note: Ordenação baseada no filtro do usuário (mais antigas primeiro ou mais recentes primeiro)
     const { data: conversasRisco } = await supabase
       .from('conversas')
       .select(`
@@ -247,7 +251,7 @@ export const useDashboardData = (viewContext: ViewContext) => {
       .eq('clientes.conta_id', contaId)
       .eq('status_conversa', 'AGUARDANDO_CORRETOR')
       .lt('timestamp_ultima_mensagem', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-      .order('timestamp_ultima_mensagem', { ascending: true })
+      .order('timestamp_ultima_mensagem', { ascending: sortOrder === 'oldest' })
       .limit(10);
 
     // Métricas da equipe
@@ -309,18 +313,18 @@ export const useDashboardData = (viewContext: ViewContext) => {
 
       if (viewContext.viewMode === 'self') {
         // Dados pessoais
-        const personalData = await fetchPersonalMetrics(viewContext.userId, viewContext.timeRange);
+        const personalData = await fetchPersonalMetrics(viewContext.userId, viewContext.timeRange, sortOrder);
         dashboardData = personalData;
       } else if (viewContext.viewMode === 'team') {
         // Dados da equipe + dados pessoais do admin
         const [personalData, teamData] = await Promise.all([
-          fetchPersonalMetrics(viewContext.userId, viewContext.timeRange),
-          fetchTeamMetrics(viewContext.contaId, viewContext.timeRange)
+          fetchPersonalMetrics(viewContext.userId, viewContext.timeRange, sortOrder),
+          fetchTeamMetrics(viewContext.contaId, viewContext.timeRange, sortOrder)
         ]);
         dashboardData = { ...personalData, ...teamData };
       } else if (viewContext.viewMode === 'corretor_specific' && viewContext.selectedCorretor) {
         // Dados de corretor específico
-        const corretorData = await fetchPersonalMetrics(viewContext.selectedCorretor, viewContext.timeRange);
+        const corretorData = await fetchPersonalMetrics(viewContext.selectedCorretor, viewContext.timeRange, sortOrder);
         dashboardData = corretorData;
       } else {
         throw new Error('Configuração de visualização inválida');
@@ -337,7 +341,7 @@ export const useDashboardData = (viewContext: ViewContext) => {
     } finally {
       setIsLoading(false);
     }
-  }, [viewContext, fetchPersonalMetrics, fetchTeamMetrics, getEmptyData]);
+  }, [viewContext, fetchPersonalMetrics, fetchTeamMetrics, getEmptyData, sortOrder]);
 
   // Fetch inicial e quando contexto muda
   useEffect(() => {
