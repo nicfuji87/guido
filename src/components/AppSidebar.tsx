@@ -49,6 +49,26 @@ export const AppSidebar = () => {
   // const pendingConversations = useConversasBadge(); // Removido temporariamente - funcionalidade kanban não disponível
   const urgentReminders = useLembretesBadge();
 
+  // Detectar se é mobile
+  const [isMobile, setIsMobile] = React.useState(false);
+  
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handler para fechar sidebar no mobile ao clicar em um item
+  const handleMenuClick = () => {
+    if (isMobile && expanded) {
+      toggle();
+    }
+  };
+
   // AI dev note: Função para determinar se um item está ativo baseado na rota atual
   const isItemActive = (item: SidebarItem): boolean => {
     const currentPath = location.pathname;
@@ -155,6 +175,7 @@ export const AppSidebar = () => {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton 
                   href={item.href}
+                  onClick={handleMenuClick}
                   className={cn(
                     "relative group transition-all duration-200 rounded-xl",
                     "text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-purple-600/20",
@@ -196,6 +217,7 @@ export const AppSidebar = () => {
                       <SidebarMenuButton 
                         key={child.title}
                         href={child.href}
+                        onClick={handleMenuClick}
                         className={cn(
                           "text-sm transition-all duration-200 rounded-lg py-2 px-3",
                           isChildActive 

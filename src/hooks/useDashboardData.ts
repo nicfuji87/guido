@@ -277,7 +277,12 @@ export const useDashboardData = (viewContext: ViewContext) => {
         status_contorno_objecao: conv.status_contorno_objecao,
         inteligencia_tendencia_sentimento_cliente: conv.inteligencia_tendencia_sentimento_cliente
       })) || [],
-      metricasEquipe: metricas?.[0] || {
+      metricasEquipe: metricas?.[0] ? {
+        totalNovosClientes: Number(metricas[0].totalnovosclientes || 0),
+        tempoMedioResposta: Number(metricas[0].tempomedioresposta || 0),
+        negociosFechados: Number(metricas[0].negociosfechados || 0),
+        taxaSucesso: Number(metricas[0].taxasucesso || 0)
+      } : {
         totalNovosClientes: 0,
         tempoMedioResposta: 0,
         negociosFechados: 0,
