@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { log } from '@/utils/logger';
+import { recoverIncompleteSignup } from '@/utils/signupRecovery';
 
 
 // AI dev note: Hook de autenticação integrado com Supabase
@@ -39,7 +40,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // AI dev note: Função para verificar se o corretor está ativo (não soft-deleted)
-  const checkCorretorStatus = async (authUserId: string, email: string): Promise<{ isValid: boolean; corretorId?: string; name?: string }> => {
+  // AGORA com recuperação automática de cadastros incompletos
+  const checkCorretorStatus = async (authUserId: string, email: string): Promise<{ isValid: boolean; corretorId?: string; name?: string; recovered?: boolean }> => {
     try {
       // Buscar corretor associado ao email (único)
       const { data: corretor, error } = await supabase
@@ -50,6 +52,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (error) {
         log.warn('Corretor não encontrado para o email', 'useAuth', { email, error });
+        
+        // AI dev note: NOVO - Tentar recuperar cadastro incompleto antes de deslogar
+        log.info('🔧 Tentando recuperar cadastro incompleto...', 'useAuth', { authUserId, email });
+        
+        const recovery = await recoverIncompleteSignup(authUserId, email);
+        
+        if (recovery.success) {
+          log.info('✅ Cadastro recuperado com sucesso!', 'useAuth', { authUserId, email });
+          
+          // Tentar buscar corretor novamente
+          const { data: corretorRecuperado } = await supabase
+            .from('corretores')
+            .select('id, nome, deleted_at')
+            .eq('email', email.toLowerCase())
+            .single();
+          
+          if (corretorRecuperado && !corretorRecuperado.deleted_at) {
+            return {
+              isValid: true,
+              corretorId: corretorRecuperado.id,
+              name: corretorRecuperado.nome,
+              recovered: true
+            };
+          }
+        }
+        
+        log.error('❌ Não foi possível recuperar cadastro', 'useAuth', { authUserId, email });
         return { isValid: false };
       }
 
@@ -66,7 +95,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return { 
         isValid: true, 
         corretorId: corretor.id,
-        name: corretor.nome
+        name: corretor.nome,
+        recovered: false
       };
     } catch (error) {
       log.error('Erro ao verificar status do corretor', 'useAuth', { error });
