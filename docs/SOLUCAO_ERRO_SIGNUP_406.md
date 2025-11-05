@@ -198,10 +198,33 @@ AND p.proname = 'complete_signup';
 ## 📝 Data da Implementação
 
 - **Data**: 05/11/2025
-- **Migração**: `add_signup_permissions_and_function`
+- **Migrações**: 
+  - `add_signup_permissions_and_function` (inicial)
+  - `fix_complete_signup_column_names` (correção de case-sensitive)
 - **Arquivos modificados**:
   - `src/hooks/useSignup.ts`
-  - Nova migração no banco de dados
+  - `src/lib/supabaseClient.ts`
+  - `src/utils/cacheExamples.tsx` (removido)
+  
+## 🔧 Correções Adicionais
+
+### Case-Sensitive em Nomes de Colunas
+A coluna `cpfCnpj` na tabela `usuarios` usa camelCase. No PostgreSQL, é necessário usar aspas duplas para preservar o case:
+
+```sql
+-- ❌ ERRADO (converte para lowercase)
+INSERT INTO usuarios (cpfCnpj, ...) VALUES (...)
+
+-- ✅ CORRETO (preserva case)
+INSERT INTO usuarios ("cpfCnpj", ...) VALUES (...)
+```
+
+**Erro original**: 
+```
+column "cpfcnpj" of relation "usuarios" does not exist
+```
+
+**Solução**: Migração `fix_complete_signup_column_names` adicionou aspas duplas ao nome da coluna.
 
 ---
 
@@ -210,4 +233,5 @@ AND p.proname = 'complete_signup';
 - [Supabase RLS Documentation](https://supabase.com/docs/guides/auth/row-level-security)
 - [PostgreSQL SECURITY DEFINER](https://www.postgresql.org/docs/current/sql-createfunction.html)
 - [Supabase Database Functions](https://supabase.com/docs/guides/database/functions)
+
 
