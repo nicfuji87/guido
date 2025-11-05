@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { LoginForm } from '@/components/LoginForm'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { CheckCircle } from 'lucide-react'
 
 export default function Login() {
-  const [searchParams] = useSearchParams()
+  const location = useLocation()
   const [showConfirmMessage, setShowConfirmMessage] = useState(false)
   
   useEffect(() => {
+    // Parsear query params manualmente
+    const searchParams = new URLSearchParams(location.search)
+    
     // Mostrar mensagem se vier do email de confirmação
     if (searchParams.get('confirmacao') === 'true') {
       setShowConfirmMessage(true)
@@ -16,7 +19,7 @@ export default function Login() {
         window.history.replaceState({}, '', '/login')
       }, 5000)
     }
-  }, [searchParams])
+  }, [location.search])
   
   const handleLoginSuccess = () => {
     // Optional: redirect logic or additional actions after successful email sent

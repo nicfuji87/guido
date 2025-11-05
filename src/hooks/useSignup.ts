@@ -67,10 +67,7 @@ export const useSignup = () => {
       
       const signUpResponse = await supabase.auth.signUp({
         email: data.email.trim().toLowerCase(),
-        password: crypto.randomUUID(), // Senha temporária - usuário usará magic link
-        options: {
-          emailRedirectTo: `${window.location.origin}/login?confirmacao=true`
-        }
+        password: crypto.randomUUID() // Senha temporária - usuário usará magic link
       });
 
       const authUser = signUpResponse.user;

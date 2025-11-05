@@ -962,7 +962,10 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                       Não recebeu o email? Verifique a pasta de spam ou lixo eletrônico.
                     </p>
                     <Button
-                      onClick={onClose}
+                      onClick={() => {
+                        onClose();
+                        onSuccess?.();
+                      }}
                       className="w-full"
                     >
                       Entendi
