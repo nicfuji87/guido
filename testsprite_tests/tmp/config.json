@@ -1,0 +1,16 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "executionArgs": {
+    "projectName": "guido",
+    "projectPath": "D:\\Cursor Projetos\\guido",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-7SVOJX12mk5pOmX2m_FScu4grEQWcrq6oEDf_wlkpnIfwhjm9DIrYX3pcHTu_Tib2LeYLc52DtWlWvga9CTri_ARGMAlTXuo74j4JyMhWwSR59ADlP66d69KWkKeaOF25fs"
+    }
+  },
+  "proxy": "http://dbfa74c5-f965-4ccc-9198-c80061e0cf74:bbb717T6PvTSgK6wYIjNAUsfJHgAH8XJ@tun.testsprite.com:8080"
+}

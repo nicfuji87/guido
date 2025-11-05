@@ -62,77 +62,8 @@ export const useSignup = () => {
       const cleanCPF = unformatCPF(data.cpf);
       const formattedCPF = formatCPF(cleanCPF);
       
-      // Buscar plano_id se foi fornecido codigo
-      let plano_id = null;
-      if (data.plano_codigo) {
-        const { data: planoSelecionado } = await supabase
-          .from('planos')
-          .select('id')
-          .eq('codigo_externo', data.plano_codigo)
-          .eq('is_ativo', true)
-          .single();
-        
-        if (planoSelecionado) {
-          plano_id = planoSelecionado.id;
-        }
-      }
-
-      log.info('PASSO 2: Executando signup completo no banco', 'SIGNUP');
-
-      // === PASSO 2: USAR FUNÇÃO COMPLETE_SIGNUP DO BANCO ===
-      // AI dev note: Esta função faz todo o processo atomicamente com SECURITY DEFINER
-      // Cria: conta, corretor, usuário e assinatura trial em uma transação
-      const { data: signupResultRaw, error: signupError } = await supabase
-        .rpc('complete_signup', {
-          p_email: data.email.trim().toLowerCase(),
-          p_nome: data.nome,
-          p_cpf: formattedCPF,
-          p_whatsapp: data.whatsapp,
-          p_tipo_conta: data.tipo_conta,
-          p_nome_empresa: data.nome_empresa || null,
-          p_cep: data.cep ? Number(data.cep.replace(/\D/g, '')) : null,
-          p_logradouro: data.logradouro || null,
-          p_bairro: data.bairro || null,
-          p_localidade: data.localidade || null,
-          p_uf: data.uf || null,
-          p_numero_residencia: data.numero_residencia || null,
-          p_complemento: data.complemento_endereco || null,
-          p_plano_id: plano_id
-        });
-
-      log.debug('Resultado complete_signup', 'SIGNUP', { signupResultRaw, signupError });
-
-      if (signupError) {
-        log.error('Erro no complete_signup', 'SIGNUP', signupError);
-        throw new Error(signupError.message);
-      }
-
-      // Tipar corretamente o resultado (função retorna JSON)
-      const signupResult = signupResultRaw as unknown as {
-        success: boolean;
-        conta_id: string;
-        corretor_id: string;
-        usuario_id: string;
-        assinatura_id: string;
-        plano_id: number;
-        message: string;
-      };
-
-      if (!signupResult || !signupResult.success) {
-        throw new Error('Erro ao criar cadastro. Tente novamente.');
-      }
-
-      const { conta_id, corretor_id, usuario_id, assinatura_id } = signupResult;
-
-      log.info('Cadastro criado com sucesso no banco', 'SIGNUP', { 
-        conta_id, 
-        corretor_id, 
-        usuario_id, 
-        assinatura_id 
-      });
-
-      // === PASSO 3: CRIAR USUÁRIO NO AUTH.USERS DO SUPABASE ===
-      log.info('PASSO 3: Criando usuário no sistema de autenticação', 'SIGNUP');
+      // === PASSO 2: CRIAR USUÁRIO NO AUTH.USERS PRIMEIRO (SEGURANÇA) ===
+      log.info('PASSO 2: Criando usuário no sistema de autenticação', 'SIGNUP');
       
       const signUpResponse = await supabase.auth.signUp({
         email: data.email.trim().toLowerCase(),
@@ -175,8 +106,79 @@ export const useSignup = () => {
       const authUserId = authUser.id;
       log.info('Usuário criado no auth.users com sucesso', 'SIGNUP', { auth_user_id: authUserId });
 
-      // === PASSO 4: CRIAR INSTÂNCIA EVOLUTION ===
-      log.info('PASSO 4: Criando instância Evolution', 'SIGNUP');
+      // === PASSO 3: BUSCAR PLANO SE FORNECIDO ===
+      let plano_id = null;
+      if (data.plano_codigo) {
+        const { data: planoSelecionado } = await supabase
+          .from('planos')
+          .select('id')
+          .eq('codigo_externo', data.plano_codigo)
+          .eq('is_ativo', true)
+          .single();
+        
+        if (planoSelecionado) {
+          plano_id = planoSelecionado.id;
+        }
+      }
+
+      log.info('PASSO 4: Executando signup completo no banco', 'SIGNUP');
+
+      // === PASSO 4: USAR FUNÇÃO COMPLETE_SIGNUP DO BANCO ===
+      // AI dev note: Esta função faz todo o processo atomicamente com SECURITY DEFINER
+      // Cria: conta, corretor, usuário e assinatura trial em uma transação
+      // IMPORTANTE: auth_user_id é passado para vincular corretamente desde o início
+      const { data: signupResultRaw, error: signupError } = await supabase
+        .rpc('complete_signup', {
+          p_email: data.email.trim().toLowerCase(),
+          p_nome: data.nome,
+          p_cpf: formattedCPF,
+          p_whatsapp: data.whatsapp,
+          p_tipo_conta: data.tipo_conta,
+          p_auth_user_id: authUserId, // ⭐ VINCULADO DESDE O INÍCIO
+          p_nome_empresa: data.nome_empresa || null,
+          p_cep: data.cep ? Number(data.cep.replace(/\D/g, '')) : null,
+          p_logradouro: data.logradouro || null,
+          p_bairro: data.bairro || null,
+          p_localidade: data.localidade || null,
+          p_uf: data.uf || null,
+          p_numero_residencia: data.numero_residencia || null,
+          p_complemento: data.complemento_endereco || null,
+          p_plano_id: plano_id
+        });
+
+      log.debug('Resultado complete_signup', 'SIGNUP', { signupResultRaw, signupError });
+
+      if (signupError) {
+        log.error('Erro no complete_signup', 'SIGNUP', signupError);
+        throw new Error(signupError.message);
+      }
+
+      // Tipar corretamente o resultado (função retorna JSON)
+      const signupResult = signupResultRaw as unknown as {
+        success: boolean;
+        conta_id: string;
+        corretor_id: string;
+        usuario_id: string;
+        assinatura_id: string;
+        plano_id: number;
+        message: string;
+      };
+
+      if (!signupResult || !signupResult.success) {
+        throw new Error('Erro ao criar cadastro. Tente novamente.');
+      }
+
+      const { conta_id, corretor_id, usuario_id, assinatura_id } = signupResult;
+
+      log.info('Cadastro criado com sucesso no banco', 'SIGNUP', { 
+        conta_id, 
+        corretor_id, 
+        usuario_id, 
+        assinatura_id 
+      });
+
+      // === PASSO 5: CRIAR INSTÂNCIA EVOLUTION ===
+      log.info('PASSO 5: Criando instância Evolution', 'SIGNUP');
       
       const evolutionResult = await createEvolutionInstance(data.nome, data.whatsapp);
 
@@ -184,13 +186,12 @@ export const useSignup = () => {
         log.warn('Falha ao criar instância Evolution', 'SIGNUP', evolutionResult.error);
       }
 
-      // === PASSO 5: ATUALIZAR USUÁRIO COM DADOS DA EVOLUTION E AUTH ===
-      log.info('PASSO 5: Atualizando usuário com dados de Evolution e Auth', 'SIGNUP');
+      // === PASSO 6: ATUALIZAR USUÁRIO COM DADOS DA EVOLUTION ===
+      log.info('PASSO 6: Atualizando usuário com dados de Evolution', 'SIGNUP');
       
       const { error: updateError } = await supabase
         .from('usuarios')
         .update({
-          auth_user_id: authUserId,
           evolution_instance: evolutionResult.success ? evolutionResult.data?.instanceName : null,
           evolution_apikey: evolutionResult.success ? evolutionResult.data?.apiKey : null,
           evolution_url: evolutionResult.success ? evolutionResult.data?.evolutionUrl : null

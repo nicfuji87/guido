@@ -1,0 +1,473 @@
+[
+  {
+    "id": "TC001",
+    "title": "User Registration via Magic Link",
+    "description": "Verify that a user can successfully register by providing a valid email and receiving a magic link to authenticate, starting a 7-day trial.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to landing page"
+      },
+      {
+        "type": "action",
+        "description": "Input valid email address on registration form"
+      },
+      {
+        "type": "action",
+        "description": "Submit registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the magic link email is received within 2 minutes"
+      },
+      {
+        "type": "action",
+        "description": "Click on the magic link in the email"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user is authenticated and 7-day trial period starts automatically"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Login with Invalid Email",
+    "description": "Ensure that login fails when an invalid or unregistered email is used to request a magic link.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Input invalid or unregistered email address"
+      },
+      {
+        "type": "action",
+        "description": "Request magic link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify error notification is displayed indicating the email is not recognized"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Dashboard Load and Data Refresh",
+    "description": "Validate that the dashboard loads within 3 seconds and updates metrics and widgets in real-time for both roles: corretor and gestor.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as corretor"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to dashboard page"
+      },
+      {
+        "type": "assertion",
+        "description": "Dashboard loads completely in less than 3 seconds"
+      },
+      {
+        "type": "assertion",
+        "description": "Widgets display accurate and updated data in real-time"
+      },
+      {
+        "type": "action",
+        "description": "Logout and login as gestor"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to gestor dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Dashboard loads responsively and widgets customize as per gestor profile"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "WhatsApp Integration Sync Messages",
+    "description": "Check synchronization of WhatsApp messages happens within 5 seconds, preserving complete conversation history and updating notification badges accordingly.",
+    "category": "integration",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "User connects WhatsApp via QR code during onboarding"
+      },
+      {
+        "type": "action",
+        "description": "Send new message on WhatsApp to user"
+      },
+      {
+        "type": "assertion",
+        "description": "New message appears in conversation list within 5 seconds"
+      },
+      {
+        "type": "assertion",
+        "description": "Message history is complete and preserved after sync"
+      },
+      {
+        "type": "assertion",
+        "description": "Notification badge updates accurately on new messages"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Create and Notify Reminders",
+    "description": "Validate the creation of reminders, automatic WhatsApp notification sending, and marking reminders as complete with UI updates and repeat scheduling.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to reminders management page"
+      },
+      {
+        "type": "action",
+        "description": "Create a new reminder with a scheduled time and repeat option"
+      },
+      {
+        "type": "assertion",
+        "description": "Reminder is listed with correct details and repeats as set"
+      },
+      {
+        "type": "assertion",
+        "description": "WhatsApp notification is sent to user at scheduled time"
+      },
+      {
+        "type": "action",
+        "description": "Mark reminder as completed"
+      },
+      {
+        "type": "assertion",
+        "description": "UI updates reminder status correctly and notification badge decreases accordingly"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Kanban Drag and Drop Client Between Funnel Stages",
+    "description": "Check that dragging a client card between different sales funnel stages updates the status and metrics immediately and persists after page reload.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access Kanban board for sales funnel"
+      },
+      {
+        "type": "action",
+        "description": "Drag a client card from one stage to another"
+      },
+      {
+        "type": "assertion",
+        "description": "Client stage updates in backend and reflects new metrics on screen immediately"
+      },
+      {
+        "type": "action",
+        "description": "Reload the page"
+      },
+      {
+        "type": "assertion",
+        "description": "Client remains in the new funnel stage and metrics remain consistent"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Subscription and Payment Processing",
+    "description": "Verify that subscription status updates correctly based on payments through Asaas gateway and cancelation requests update status and UI notifications accordingly.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Subscribe to a paid plan and complete payment via Asaas"
+      },
+      {
+        "type": "assertion",
+        "description": "Subscription status changes to active and UI reflects payment success"
+      },
+      {
+        "type": "action",
+        "description": "Cancel subscription via user interface"
+      },
+      {
+        "type": "assertion",
+        "description": "Subscription status changes to canceled and notification is shown"
+      },
+      {
+        "type": "action",
+        "description": "Trigger webhook simulating payment failure"
+      },
+      {
+        "type": "assertion",
+        "description": "User is notified of payment failure and subscription status updates accordingly"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "User Role Management and Access Control",
+    "description": "Ensure that gestores can invite, edit permissions and manage corretores with correct access control and data isolation implemented via row-level security.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as gestor"
+      },
+      {
+        "type": "action",
+        "description": "Invite a new corretor to the team"
+      },
+      {
+        "type": "assertion",
+        "description": "Invitation is sent and new corretor can accept and register"
+      },
+      {
+        "type": "action",
+        "description": "Gestor edits permissions of a corretor"
+      },
+      {
+        "type": "assertion",
+        "description": "Correct permissions are applied and enforced in UI and API"
+      },
+      {
+        "type": "action",
+        "description": "Login as corretor and access data"
+      },
+      {
+        "type": "assertion",
+        "description": "Corretor can only access allowed data and cannot see other tenants' information"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Real-Time Notifications and Toast Messages",
+    "description": "Validate that system-generated notifications appear as toasts with badges in real time across various modules such as conversations, reminders and payment status updates.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger a new message in WhatsApp conversation"
+      },
+      {
+        "type": "assertion",
+        "description": "Notification toast and badge update appear immediately"
+      },
+      {
+        "type": "action",
+        "description": "Create a reminder notification event"
+      },
+      {
+        "type": "assertion",
+        "description": "Toast message and badge on reminders update correctly"
+      },
+      {
+        "type": "action",
+        "description": "Trigger payment status change to failed"
+      },
+      {
+        "type": "assertion",
+        "description": "Payment failure notification appears with toast and badge updates"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Onboarding Flow Completion Under 30 Minutes",
+    "description": "Confirm that a new user can complete onboarding, including WhatsApp connection via QR code, profile setup, and initial tour in less than 30 minutes.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Register and login as new user"
+      },
+      {
+        "type": "action",
+        "description": "Complete WhatsApp QR code connection"
+      },
+      {
+        "type": "action",
+        "description": "Complete profile setup and accept any prompts"
+      },
+      {
+        "type": "action",
+        "description": "Navigate through onboarding modal/tour steps"
+      },
+      {
+        "type": "assertion",
+        "description": "Onboarding completes without errors and total time is under 30 minutes"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Responsive UI on Multiple Devices",
+    "description": "Verify that all pages and key components render correctly and remain fully functional on desktop, tablet, and mobile screen sizes.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the platform on desktop screen size"
+      },
+      {
+        "type": "assertion",
+        "description": "Layout and functionality are stable and visually correct"
+      },
+      {
+        "type": "action",
+        "description": "Resize or access on tablet screen size"
+      },
+      {
+        "type": "assertion",
+        "description": "UI components adjust fluidly, navigation remains clear and usable"
+      },
+      {
+        "type": "action",
+        "description": "Access on mobile screen size"
+      },
+      {
+        "type": "assertion",
+        "description": "All user flows are accessible and no content is clipped or broken"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Error Handling for External API Failures",
+    "description": "Ensure the system gracefully handles failures from external services such as Evolution API, Asaas, and n8n, showing user-friendly error messages and retry options.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Simulate Evolution API downtime during WhatsApp message sync"
+      },
+      {
+        "type": "assertion",
+        "description": "User is informed of sync error and retry mechanism is available"
+      },
+      {
+        "type": "action",
+        "description": "Simulate Asaas payment service timeout during subscription payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Payment failure message with retry option is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Simulate n8n webhook failure during automation processing"
+      },
+      {
+        "type": "assertion",
+        "description": "System logs error and user receives notification without blocking usage"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Conversion Tracking from Trial to Paid Subscription",
+    "description": "Verify that conversion from trial users to paid subscribers is tracked correctly and that trial expiry triggers email/banner notifications to users.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Complete registration and start free trial"
+      },
+      {
+        "type": "action",
+        "description": "Simulate trial expiry"
+      },
+      {
+        "type": "assertion",
+        "description": "User receives notification/banner about trial expiry and subscription options"
+      },
+      {
+        "type": "action",
+        "description": "User subscribes to paid plan"
+      },
+      {
+        "type": "assertion",
+        "description": "Conversion is logged in analytics and user status updates accordingly"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Client Memory Functionality: History, Preferences, Notes",
+    "description": "Ensure client's smart memory features correctly load and update stored history, preferences, and notes across sessions and users with proper synchronization.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a client detail page"
+      },
+      {
+        "type": "assertion",
+        "description": "Client history, preferences, and notes are displayed accurately"
+      },
+      {
+        "type": "action",
+        "description": "Add new note and update preferences"
+      },
+      {
+        "type": "assertion",
+        "description": "Changes are saved and reflected immediately"
+      },
+      {
+        "type": "action",
+        "description": "Reload the client detail page"
+      },
+      {
+        "type": "assertion",
+        "description": "Updates persist and are synced across other logged-in users with permissions"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Multi-Tenant Data Isolation and Security",
+    "description": "Verify that different tenant data is strictly isolated using Row Level Security and that users cannot access data of other tenants under any circumstances.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as user in tenant A and try to access tenant B data via API endpoints and UI navigation"
+      },
+      {
+        "type": "assertion",
+        "description": "Access is denied both on frontend and API with appropriate errors"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to manipulate client IDs or tenant rows"
+      },
+      {
+        "type": "assertion",
+        "description": "System enforces Row Level Security and blocks unauthorized data access"
+      }
+    ]
+  }
+]

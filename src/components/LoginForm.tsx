@@ -26,18 +26,43 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
       return;
     }
 
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setMessage({ type: 'error', text: 'Por favor, insira um email válido' });
+      return;
+    }
+
     setIsLoading(true);
     setMessage(null);
 
     try {
-      // AI dev note: Enviar magic link diretamente - o Supabase gerencia a verificação
-      // Se o usuário não existir em auth.users, o Supabase retornará erro apropriado
-      
-      // Na v1.x, usar signIn para magic link  
-      // AI dev note: Usar VITE_APP_URL para produção ao invés de window.location.origin
+      // PASSO 1: Verificar se o corretor existe no sistema
+      const { data: corretor, error: corretorError } = await supabase
+        .from('corretores')
+        .select('id, nome, deleted_at')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
+
+      // Se houver erro na consulta (diferente de "não encontrado")
+      if (corretorError && corretorError.code !== 'PGRST116') {
+        console.error('[LOGIN] Erro ao verificar corretor:', corretorError);
+        // Continuar mesmo assim - deixar o Supabase Auth tratar
+      }
+
+      // Se o corretor não existe ou foi deletado
+      if (!corretor || corretor.deleted_at) {
+        setMessage({ 
+          type: 'error', 
+          text: 'Email não encontrado. Você precisa criar uma conta primeiro.' 
+        });
+        return;
+      }
+
+      // PASSO 2: Enviar magic link (corretor existe e está ativo)
       const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { error } = await supabase.auth.signIn({
-        email: email.trim()
+        email: email.trim().toLowerCase()
       }, {
         redirectTo: `${baseUrl}/app`
       });
@@ -66,7 +91,7 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       setMessage({ 
         type: 'error', 
-        text: errorMessage 
+        text: `Erro ao fazer login: ${errorMessage}` 
       });
     } finally {
       setIsLoading(false);
