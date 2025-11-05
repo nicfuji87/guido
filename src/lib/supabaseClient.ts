@@ -13,6 +13,16 @@ if (!supabaseAnonKey) {
   throw new Error('Missing env var: VITE_SUPABASE_ANON_KEY')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Configuração otimizada do cliente Supabase
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  autoRefreshToken: true,
+  persistSession: true,
+  detectSessionInUrl: true,
+  localStorage: localStorage,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  },
+})
 
 
