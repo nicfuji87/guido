@@ -1,7 +1,23 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { LoginForm } from '@/components/LoginForm'
+import { useSearchParams } from 'react-router-dom'
+import { CheckCircle } from 'lucide-react'
 
 export default function Login() {
+  const [searchParams] = useSearchParams()
+  const [showConfirmMessage, setShowConfirmMessage] = useState(false)
+  
+  useEffect(() => {
+    // Mostrar mensagem se vier do email de confirmação
+    if (searchParams.get('confirmacao') === 'true') {
+      setShowConfirmMessage(true)
+      // Remover o parâmetro da URL após 5 segundos
+      setTimeout(() => {
+        window.history.replaceState({}, '', '/login')
+      }, 5000)
+    }
+  }, [searchParams])
+  
   const handleLoginSuccess = () => {
     // Optional: redirect logic or additional actions after successful email sent
     // Login link sent successfully
@@ -19,6 +35,18 @@ export default function Login() {
     <>
       <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
         <div className="w-full max-w-sm">
+          {/* Mensagem de confirmação de email */}
+          {showConfirmMessage && (
+            <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-4 animate-fadeIn">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <p className="text-sm font-medium text-green-800">
+                  Email confirmado com sucesso! Faça login para continuar.
+                </p>
+              </div>
+            </div>
+          )}
+          
           <LoginForm onSuccess={handleLoginSuccess} />
         </div>
       </div>
