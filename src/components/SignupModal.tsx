@@ -368,14 +368,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       
       if (result.success) {
         setStep('success');
-        
-        // Auto-close after success and redirect to login
-        setTimeout(() => {
-          onClose();
-          onSuccess?.();
-          // Redirecionar para tela de login após cadastro bem-sucedido
-          window.location.href = '/login';
-        }, 2500);
+        // Modal permanece aberto - usuário fecha manualmente após ler as instruções
       } else {
         setStep('error');
       }
@@ -438,19 +431,19 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                   {step === 'plan' && 'Escolha seu Plano'}
                   {step === 'form' && 'Criar Conta'}
                   {step === 'loading' && 'Criando sua conta...'}
-                  {step === 'success' && 'Bem-vindo!'}
+                  {step === 'success' && 'Confirme seu email'}
                   {step === 'error' && 'Ops! Algo deu errado'}
                 </h2>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   {step === 'plan' && 'Teste grátis por 7 dias, sem cartão'}
                   {step === 'form' && '7 dias grátis + acesso imediato'}
                   {step === 'loading' && 'Preparando sua experiência...'}
-                  {step === 'success' && 'Conta criada com sucesso!'}
+                  {step === 'success' && 'Falta apenas um passo!'}
                   {step === 'error' && 'Vamos tentar novamente'}
                 </p>
               </div>
               
-              {step !== 'loading' && step !== 'success' && (
+              {step !== 'loading' && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -945,18 +938,35 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                   >
                     <div className="flex justify-center mb-4">
                       <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-8 h-8 text-green-500" />
+                        <Mail className="w-8 h-8 text-green-500" />
                       </div>
                     </div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Conta criada com sucesso!
+                      Verifique seu email!
                     </h3>
                     <p className="text-muted-foreground mb-4">
-                      Seu teste grátis de 7 dias começou agora. Faça login para acessar sua conta.
+                      Enviamos um email de confirmação para <strong className="text-foreground">{formData.email}</strong>
                     </p>
-                    <Badge variant="secondary" className="bg-green-500/10 text-green-500">
-                      Redirecionando para o login...
-                    </Badge>
+                    <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4 space-y-2">
+                      <p className="text-sm text-foreground font-medium flex items-center justify-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-primary" />
+                        Próximos passos:
+                      </p>
+                      <ol className="text-sm text-muted-foreground text-left space-y-2 pl-6">
+                        <li className="list-decimal">Abra sua caixa de entrada</li>
+                        <li className="list-decimal">Clique no link de confirmação</li>
+                        <li className="list-decimal">Faça login para acessar o Guido</li>
+                      </ol>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Não recebeu o email? Verifique a pasta de spam ou lixo eletrônico.
+                    </p>
+                    <Button
+                      onClick={onClose}
+                      className="w-full"
+                    >
+                      Entendi
+                    </Button>
                   </motion.div>
                 )}
 
