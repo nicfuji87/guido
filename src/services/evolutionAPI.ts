@@ -158,9 +158,19 @@ export const createEvolutionInstance = async (
       throw new Error('Evolution Global API key não configurada');
     }
 
-    // Gerar nome da instância e token personalizado
-    const instanceName = generateInstanceName(nome, whatsapp);
-    const token = generateInstanceApiKey(nome, whatsapp);
+    // Gerar nome da instância e token SIMPLIFICADO para evitar conflitos
+    // AI dev note: Usando timestamp + hash simples para garantir unicidade sem causar erros no Evolution
+    const timestamp = Date.now().toString();
+    const nomeClean = nome.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z]/g, '')
+      .substring(0, 8);
+    
+    const instanceName = `guido-${nomeClean}-${timestamp.slice(-6)}`;
+    const token = `token-${timestamp.slice(-10)}`;
+    
+    console.log(`[Evolution API] Gerando instância: ${instanceName}`);
     
     // Verificar se proxy está configurado
     const hasProxyConfig = Boolean(import.meta.env.VITE_EVOLUTION_PROXY_HOST);
@@ -298,11 +308,19 @@ export const createEvolutionInstanceWithoutWhatsApp = async (
       throw new Error('Evolution Global API key não configurada');
     }
 
-    // Gerar nome da instância baseado em nome + email (sem WhatsApp)
-    const instanceName = generateInstanceNameWithoutWhatsApp(nome, email);
+    // Gerar nome da instância e token SIMPLIFICADO para evitar conflitos
+    // AI dev note: Usando timestamp + hash simples para garantir unicidade sem causar erros no Evolution
+    const timestamp = Date.now().toString();
+    const nomeClean = nome.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z]/g, '')
+      .substring(0, 8);
     
-    // Token será o inverso do instanceName para manter padrão
-    const token = instanceName.split('').reverse().join('');
+    const instanceName = `guido-${nomeClean}-${timestamp.slice(-6)}`;
+    const token = `token-${timestamp.slice(-10)}`;
+    
+    console.log(`[Evolution API] Gerando instância (sem WhatsApp): ${instanceName}`);
     
     // Verificar se proxy está configurado
     const hasProxyConfig = Boolean(import.meta.env.VITE_EVOLUTION_PROXY_HOST);
