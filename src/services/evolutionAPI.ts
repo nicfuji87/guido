@@ -249,6 +249,8 @@ export const createEvolutionInstance = async (
 
     // TENTATIVA 2: Sem proxy (sempre executada se não tem proxy OU se falhou com proxy)
     console.log('[Evolution API] Tentando criar instância SEM proxy...');
+    console.log('[Evolution API] URL:', createInstanceUrl);
+    console.log('[Evolution API] Payload:', JSON.stringify(baseInstanceData, null, 2));
     
     const response = await fetch(createInstanceUrl, {
       method: 'POST',
@@ -261,13 +263,20 @@ export const createEvolutionInstance = async (
       body: JSON.stringify(baseInstanceData)
     });
 
+    console.log('[Evolution API] Response status:', response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
+      console.log('[Evolution API] Error response:', errorText);
       throw new Error(`Erro ${response.status}: ${response.statusText} - ${errorText}`);
     }
+    
+    const responseData = await response.text();
+    console.log('[Evolution API] Success response:', responseData);
 
-    const result: EvolutionInstanceResponse = await response.json();
+    const result: EvolutionInstanceResponse = JSON.parse(responseData);
     console.log('[Evolution API] Instância criada COM SUCESSO sem proxy');
+    console.log('[Evolution API] Instance details:', result);
     
     return {
       success: true,
