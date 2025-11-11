@@ -4,6 +4,7 @@ import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 // Pages
 import Landing from '@/pages/Landing'
 import Login from '@/pages/Login'
+import AuthCallback from '@/pages/AuthCallback'
 import Dashboard from '@/pages/Dashboard'
 import Integrations from '@/pages/Integrations'
 import Conversas from '@/pages/Conversas'
@@ -54,6 +55,7 @@ function AppRoutes() {
       <Switch>
         <Route exact path="/" component={Landing} />
         <Route path="/login" component={Login} />
+        <Route path="/auth/callback" component={AuthCallback} />
         <Route path="/payment-success" component={PaymentSuccess} />
         <PrivateRoute exact path="/app">
           <Dashboard />
