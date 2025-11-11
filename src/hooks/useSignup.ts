@@ -177,13 +177,38 @@ export const useSignup = () => {
         assinatura_id 
       });
 
-      // === PASSO 5: CRIAR INSTÂNCIA EVOLUTION ===
-      log.info('PASSO 5: Criando instância Evolution', 'SIGNUP');
+      // === PASSO 5: CRIAR INSTÂNCIA EVOLUTION VIA EDGE FUNCTION ===
+      // AI dev note: Mudado para Edge Function para evitar problemas de CORS e headers do browser
+      // A Edge Function roda no servidor do Supabase (igual ao curl que funciona)
+      log.info('PASSO 5: Criando instância Evolution via Edge Function', 'SIGNUP');
       
-      const evolutionResult = await createEvolutionInstance(data.nome, data.whatsapp);
+      const { data: evolutionResultRaw, error: evolutionError } = await supabase.functions.invoke(
+        'create-evolution-instance',
+        {
+          body: {
+            nome: data.nome,
+            whatsapp: data.whatsapp
+          }
+        }
+      );
 
-      if (!evolutionResult.success) {
-        log.warn('Falha ao criar instância Evolution', 'SIGNUP', evolutionResult.error);
+      let evolutionResult = {
+        success: false,
+        data: undefined as any,
+        error: ''
+      };
+
+      if (evolutionError) {
+        log.warn('Erro ao chamar Edge Function Evolution', 'SIGNUP', evolutionError);
+        evolutionResult = {
+          success: false,
+          error: evolutionError.message
+        };
+      } else if (evolutionResultRaw) {
+        evolutionResult = evolutionResultRaw;
+        if (!evolutionResult.success) {
+          log.warn('Falha ao criar instância Evolution', 'SIGNUP', evolutionResult.error);
+        }
       }
 
       // === PASSO 6: ATUALIZAR USUÁRIO COM DADOS DA EVOLUTION ===
