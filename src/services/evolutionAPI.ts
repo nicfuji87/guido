@@ -166,44 +166,18 @@ export const createEvolutionInstance = async (
     const hasProxyConfig = Boolean(import.meta.env.VITE_EVOLUTION_PROXY_HOST);
     
     // Preparar dados base da instância (sem proxy)
+    // AI dev note: Payload simplificado - campos complexos como webhook removidos para evitar erros
     const baseInstanceData = {
       instanceName,
       token,
       qrcode: true,
-      number: whatsapp.replace(/\D/g, ''), // Apenas números
       integration: 'WHATSAPP-BAILEYS' as const,
       rejectCall: false,
-      msgCall: 'Olá! Esta é uma chamada automatizada. Por favor, envie uma mensagem.',
       groupsIgnore: true,
       alwaysOnline: false,
       readMessages: false,
       readStatus: false,
-      syncFullHistory: true,
-      webhook: {
-        url: `${import.meta.env.VITE_APP_URL || 'https://app.guido.net.br'}/webhook/evolution/${instanceName}`,
-        byEvents: true,
-        base64: true,
-        headers: {
-          authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        events: [
-          'APPLICATION_STARTUP',
-          'QRCODE_UPDATED',
-          'CONNECTION_UPDATE',
-          'MESSAGES_UPSERT',
-          'MESSAGES_UPDATE',
-          'SEND_MESSAGE'
-        ]
-      },
-      rabbitmq: {
-        enabled: false,
-        events: []
-      },
-      sqs: {
-        enabled: false,
-        events: []
-      }
+      syncFullHistory: true
     };
 
     const createInstanceUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}instance/create`;
@@ -334,45 +308,19 @@ export const createEvolutionInstanceWithoutWhatsApp = async (
     const hasProxyConfig = Boolean(import.meta.env.VITE_EVOLUTION_PROXY_HOST);
     
     // Preparar dados base da instância (SEM número de WhatsApp e sem proxy)
+    // AI dev note: Payload simplificado - campos complexos como webhook removidos para evitar erros
+    // O número será vinculado quando usuário escanear QR Code
     const baseInstanceData = {
       instanceName,
       token,
       qrcode: true,
-      // AI dev note: number é opcional - não passar quando não temos WhatsApp
-      // O número será vinculado quando usuário escanear QR Code
       integration: 'WHATSAPP-BAILEYS' as const,
       rejectCall: false,
-      msgCall: 'Olá! Esta é uma chamada automatizada. Por favor, envie uma mensagem.',
       groupsIgnore: true,
       alwaysOnline: false,
       readMessages: false,
       readStatus: false,
-      syncFullHistory: true,
-      webhook: {
-        url: `${import.meta.env.VITE_APP_URL || 'https://app.guido.net.br'}/webhook/evolution/${instanceName}`,
-        byEvents: true,
-        base64: true,
-        headers: {
-          authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        events: [
-          'APPLICATION_STARTUP',
-          'QRCODE_UPDATED',
-          'CONNECTION_UPDATE',
-          'MESSAGES_UPSERT',
-          'MESSAGES_UPDATE',
-          'SEND_MESSAGE'
-        ]
-      },
-      rabbitmq: {
-        enabled: false,
-        events: []
-      },
-      sqs: {
-        enabled: false,
-        events: []
-      }
+      syncFullHistory: true
     };
 
     const createInstanceUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}instance/create`;
