@@ -175,11 +175,15 @@ export const createEvolutionInstance = async (
       readMessages: false,
       readStatus: false,
       syncFullHistory: true,
-      proxyHost: 'p.webshare.io',
-      proxyPort: '80',
-      proxyProtocol: 'http',
-      proxyUsername: 'dbcnwkxu-rotate',
-      proxyPassword: 'm8gnsoxw553d',
+      // AI dev note: Proxy removido - causava erro 400 "Invalid proxy"
+      // Se necessário, adicionar via variáveis de ambiente
+      ...(import.meta.env.VITE_EVOLUTION_PROXY_HOST && {
+        proxyHost: import.meta.env.VITE_EVOLUTION_PROXY_HOST,
+        proxyPort: import.meta.env.VITE_EVOLUTION_PROXY_PORT,
+        proxyProtocol: import.meta.env.VITE_EVOLUTION_PROXY_PROTOCOL,
+        proxyUsername: import.meta.env.VITE_EVOLUTION_PROXY_USERNAME,
+        proxyPassword: import.meta.env.VITE_EVOLUTION_PROXY_PASSWORD,
+      }),
       webhook: {
         url: `${import.meta.env.VITE_APP_URL || 'https://app.guido.net.br'}/webhook/evolution/${instanceName}`,
         byEvents: true,
@@ -291,11 +295,15 @@ export const createEvolutionInstanceWithoutWhatsApp = async (
       readMessages: false,
       readStatus: false,
       syncFullHistory: true,
-      proxyHost: 'p.webshare.io',
-      proxyPort: '80',
-      proxyProtocol: 'http',
-      proxyUsername: 'dbcnwkxu-rotate',
-      proxyPassword: 'm8gnsoxw553d',
+      // AI dev note: Proxy removido - causava erro 400 "Invalid proxy"
+      // Se necessário, adicionar via variáveis de ambiente
+      ...(import.meta.env.VITE_EVOLUTION_PROXY_HOST && {
+        proxyHost: import.meta.env.VITE_EVOLUTION_PROXY_HOST,
+        proxyPort: import.meta.env.VITE_EVOLUTION_PROXY_PORT,
+        proxyProtocol: import.meta.env.VITE_EVOLUTION_PROXY_PROTOCOL,
+        proxyUsername: import.meta.env.VITE_EVOLUTION_PROXY_USERNAME,
+        proxyPassword: import.meta.env.VITE_EVOLUTION_PROXY_PASSWORD,
+      }),
       webhook: {
         url: `${import.meta.env.VITE_APP_URL || 'https://app.guido.net.br'}/webhook/evolution/${instanceName}`,
         byEvents: true,

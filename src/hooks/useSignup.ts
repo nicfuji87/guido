@@ -187,20 +187,26 @@ export const useSignup = () => {
       }
 
       // === PASSO 6: ATUALIZAR USUÁRIO COM DADOS DA EVOLUTION ===
+      // AI dev note: Usando função RPC com SECURITY DEFINER para bypassar RLS
+      // O usuário acabou de ser criado mas não está autenticado, então RLS normal bloquearia
       log.info('PASSO 6: Atualizando usuário com dados de Evolution', 'SIGNUP');
       
-      const { error: updateError } = await supabase
-        .from('usuarios')
-        .update({
-          evolution_instance: evolutionResult.success ? evolutionResult.data?.instanceName : null,
-          evolution_apikey: evolutionResult.success ? evolutionResult.data?.apiKey : null,
-          evolution_url: evolutionResult.success ? evolutionResult.data?.evolutionUrl : null
-        })
-        .eq('id', usuario_id);
+      if (evolutionResult.success && evolutionResult.data) {
+        const { error: updateError } = await supabase.rpc('update_evolution_data_after_signup', {
+          p_usuario_id: usuario_id,
+          p_evolution_instance: evolutionResult.data.instanceName,
+          p_evolution_apikey: evolutionResult.data.apiKey,
+          p_evolution_url: evolutionResult.data.evolutionUrl
+        });
 
-      if (updateError) {
-        log.warn('Erro ao atualizar usuário com dados Evolution', 'SIGNUP', updateError);
-        // Não bloqueia o signup, apenas registra o warning
+        if (updateError) {
+          log.warn('Erro ao atualizar usuário com dados Evolution', 'SIGNUP', updateError);
+          // Não bloqueia o signup, apenas registra o warning
+        } else {
+          log.info('Dados Evolution salvos com sucesso', 'SIGNUP', {
+            instance: evolutionResult.data.instanceName
+          });
+        }
       }
 
       // === SUCESSO TOTAL ===
