@@ -142,6 +142,7 @@ export const generateInstanceApiKey = (nome: string, whatsapp: string): string =
 };
 
 // Função para criar instância na Evolution API
+// AI dev note: Implementa fallback automático - tenta com proxy, se falhar tenta sem proxy
 export const createEvolutionInstance = async (
   nome: string, 
   whatsapp: string,
@@ -161,13 +162,16 @@ export const createEvolutionInstance = async (
     const instanceName = generateInstanceName(nome, whatsapp);
     const token = generateInstanceApiKey(nome, whatsapp);
     
-    // Preparar dados da instância
-    const instanceData: EvolutionInstanceData = {
+    // Verificar se proxy está configurado
+    const hasProxyConfig = Boolean(import.meta.env.VITE_EVOLUTION_PROXY_HOST);
+    
+    // Preparar dados base da instância (sem proxy)
+    const baseInstanceData = {
       instanceName,
       token,
       qrcode: true,
       number: whatsapp.replace(/\D/g, ''), // Apenas números
-      integration: 'WHATSAPP-BAILEYS',
+      integration: 'WHATSAPP-BAILEYS' as const,
       rejectCall: false,
       msgCall: 'Olá! Esta é uma chamada automatizada. Por favor, envie uma mensagem.',
       groupsIgnore: true,
@@ -175,15 +179,6 @@ export const createEvolutionInstance = async (
       readMessages: false,
       readStatus: false,
       syncFullHistory: true,
-      // AI dev note: Proxy removido - causava erro 400 "Invalid proxy"
-      // Se necessário, adicionar via variáveis de ambiente
-      ...(import.meta.env.VITE_EVOLUTION_PROXY_HOST && {
-        proxyHost: import.meta.env.VITE_EVOLUTION_PROXY_HOST,
-        proxyPort: import.meta.env.VITE_EVOLUTION_PROXY_PORT,
-        proxyProtocol: import.meta.env.VITE_EVOLUTION_PROXY_PROTOCOL,
-        proxyUsername: import.meta.env.VITE_EVOLUTION_PROXY_USERNAME,
-        proxyPassword: import.meta.env.VITE_EVOLUTION_PROXY_PASSWORD,
-      }),
       webhook: {
         url: `${import.meta.env.VITE_APP_URL || 'https://app.guido.net.br'}/webhook/evolution/${instanceName}`,
         byEvents: true,
@@ -211,19 +206,75 @@ export const createEvolutionInstance = async (
       }
     };
 
-    // Construir URL de criação dinamicamente  
     const createInstanceUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}instance/create`;
 
-    // Fazer requisição para criar instância
+    // TENTATIVA 1: Com proxy (se configurado)
+    if (hasProxyConfig) {
+      console.log('[Evolution API] Tentando criar instância COM proxy...');
+      
+      const instanceDataWithProxy: EvolutionInstanceData = {
+        ...baseInstanceData,
+        proxyHost: import.meta.env.VITE_EVOLUTION_PROXY_HOST,
+        proxyPort: import.meta.env.VITE_EVOLUTION_PROXY_PORT,
+        proxyProtocol: import.meta.env.VITE_EVOLUTION_PROXY_PROTOCOL,
+        proxyUsername: import.meta.env.VITE_EVOLUTION_PROXY_USERNAME,
+        proxyPassword: import.meta.env.VITE_EVOLUTION_PROXY_PASSWORD,
+      };
+
+      try {
+        const responseWithProxy = await fetch(createInstanceUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': apiKey,
+            'Authorization': `Bearer ${apiKey}`,
+            'x-api-key': apiKey
+          },
+          body: JSON.stringify(instanceDataWithProxy)
+        });
+
+        if (responseWithProxy.ok) {
+          const result: EvolutionInstanceResponse = await responseWithProxy.json();
+          console.log('[Evolution API] Instância criada COM SUCESSO usando proxy');
+          
+          return {
+            success: true,
+            data: {
+              instanceName: result.instance.instanceName,
+              apiKey: token,
+              evolutionUrl: baseUrl
+            }
+          };
+        }
+
+        // Se chegou aqui, houve erro - vamos verificar se é erro de proxy
+        const errorText = await responseWithProxy.text();
+        
+        if (errorText.includes('Invalid proxy') || errorText.includes('proxy')) {
+          console.warn('[Evolution API] Falha com proxy, tentando sem proxy...');
+          // Continua para tentativa sem proxy
+        } else {
+          // Erro diferente de proxy - propaga o erro
+          throw new Error(`Erro ${responseWithProxy.status}: ${responseWithProxy.statusText} - ${errorText}`);
+        }
+      } catch (fetchError) {
+        console.warn('[Evolution API] Erro ao tentar com proxy, tentando sem proxy...', fetchError);
+        // Continua para tentativa sem proxy
+      }
+    }
+
+    // TENTATIVA 2: Sem proxy (sempre executada se não tem proxy OU se falhou com proxy)
+    console.log('[Evolution API] Tentando criar instância SEM proxy...');
+    
     const response = await fetch(createInstanceUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': apiKey,
-        'Authorization': `Bearer ${apiKey}`, // Tentar Bearer também
-        'x-api-key': apiKey // Tentar x-api-key também
+        'Authorization': `Bearer ${apiKey}`,
+        'x-api-key': apiKey
       },
-      body: JSON.stringify(instanceData)
+      body: JSON.stringify(baseInstanceData)
     });
 
     if (!response.ok) {
@@ -232,15 +283,13 @@ export const createEvolutionInstance = async (
     }
 
     const result: EvolutionInstanceResponse = await response.json();
-    
-    // Usar nosso token personalizado como API key
-    const instanceApiKey = token;
+    console.log('[Evolution API] Instância criada COM SUCESSO sem proxy');
     
     return {
       success: true,
       data: {
         instanceName: result.instance.instanceName,
-        apiKey: instanceApiKey,
+        apiKey: token,
         evolutionUrl: baseUrl
       }
     };
@@ -259,6 +308,7 @@ export const createEvolutionInstance = async (
 
 // AI dev note: Função para criar instância SEM número de WhatsApp
 // Usada quando usuário ainda não cadastrou WhatsApp mas precisa conectar
+// Implementa fallback automático - tenta com proxy, se falhar tenta sem proxy
 export const createEvolutionInstanceWithoutWhatsApp = async (
   nome: string,
   email: string,
@@ -280,14 +330,17 @@ export const createEvolutionInstanceWithoutWhatsApp = async (
     // Token será o inverso do instanceName para manter padrão
     const token = instanceName.split('').reverse().join('');
     
-    // Preparar dados da instância (SEM número de WhatsApp)
-    const instanceData: EvolutionInstanceData = {
+    // Verificar se proxy está configurado
+    const hasProxyConfig = Boolean(import.meta.env.VITE_EVOLUTION_PROXY_HOST);
+    
+    // Preparar dados base da instância (SEM número de WhatsApp e sem proxy)
+    const baseInstanceData = {
       instanceName,
       token,
       qrcode: true,
       // AI dev note: number é opcional - não passar quando não temos WhatsApp
       // O número será vinculado quando usuário escanear QR Code
-      integration: 'WHATSAPP-BAILEYS',
+      integration: 'WHATSAPP-BAILEYS' as const,
       rejectCall: false,
       msgCall: 'Olá! Esta é uma chamada automatizada. Por favor, envie uma mensagem.',
       groupsIgnore: true,
@@ -295,15 +348,6 @@ export const createEvolutionInstanceWithoutWhatsApp = async (
       readMessages: false,
       readStatus: false,
       syncFullHistory: true,
-      // AI dev note: Proxy removido - causava erro 400 "Invalid proxy"
-      // Se necessário, adicionar via variáveis de ambiente
-      ...(import.meta.env.VITE_EVOLUTION_PROXY_HOST && {
-        proxyHost: import.meta.env.VITE_EVOLUTION_PROXY_HOST,
-        proxyPort: import.meta.env.VITE_EVOLUTION_PROXY_PORT,
-        proxyProtocol: import.meta.env.VITE_EVOLUTION_PROXY_PROTOCOL,
-        proxyUsername: import.meta.env.VITE_EVOLUTION_PROXY_USERNAME,
-        proxyPassword: import.meta.env.VITE_EVOLUTION_PROXY_PASSWORD,
-      }),
       webhook: {
         url: `${import.meta.env.VITE_APP_URL || 'https://app.guido.net.br'}/webhook/evolution/${instanceName}`,
         byEvents: true,
@@ -331,10 +375,66 @@ export const createEvolutionInstanceWithoutWhatsApp = async (
       }
     };
 
-    // Construir URL de criação dinamicamente  
     const createInstanceUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}instance/create`;
 
-    // Fazer requisição para criar instância
+    // TENTATIVA 1: Com proxy (se configurado)
+    if (hasProxyConfig) {
+      console.log('[Evolution API] Tentando criar instância COM proxy (sem WhatsApp)...');
+      
+      const instanceDataWithProxy: EvolutionInstanceData = {
+        ...baseInstanceData,
+        proxyHost: import.meta.env.VITE_EVOLUTION_PROXY_HOST,
+        proxyPort: import.meta.env.VITE_EVOLUTION_PROXY_PORT,
+        proxyProtocol: import.meta.env.VITE_EVOLUTION_PROXY_PROTOCOL,
+        proxyUsername: import.meta.env.VITE_EVOLUTION_PROXY_USERNAME,
+        proxyPassword: import.meta.env.VITE_EVOLUTION_PROXY_PASSWORD,
+      };
+
+      try {
+        const responseWithProxy = await fetch(createInstanceUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': apiKey,
+            'Authorization': `Bearer ${apiKey}`,
+            'x-api-key': apiKey
+          },
+          body: JSON.stringify(instanceDataWithProxy)
+        });
+
+        if (responseWithProxy.ok) {
+          const result: EvolutionInstanceResponse = await responseWithProxy.json();
+          console.log('[Evolution API] Instância criada COM SUCESSO usando proxy (sem WhatsApp)');
+          
+          return {
+            success: true,
+            data: {
+              instanceName: result.instance.instanceName,
+              apiKey: token,
+              evolutionUrl: baseUrl
+            }
+          };
+        }
+
+        // Se chegou aqui, houve erro - vamos verificar se é erro de proxy
+        const errorText = await responseWithProxy.text();
+        
+        if (errorText.includes('Invalid proxy') || errorText.includes('proxy')) {
+          console.warn('[Evolution API] Falha com proxy, tentando sem proxy (sem WhatsApp)...');
+          // Continua para tentativa sem proxy
+        } else {
+          // Erro diferente de proxy - propaga o erro
+          throw new Error(`Erro ${responseWithProxy.status}: ${responseWithProxy.statusText} - ${errorText}`);
+        }
+      } catch (fetchError) {
+        console.warn('[Evolution API] Erro ao tentar com proxy, tentando sem proxy (sem WhatsApp)...', fetchError);
+        // Continua para tentativa sem proxy
+      }
+    }
+
+    // TENTATIVA 2: Sem proxy (sempre executada se não tem proxy OU se falhou com proxy)
+    console.log('[Evolution API] Tentando criar instância SEM proxy (sem WhatsApp)...');
+    
     const response = await fetch(createInstanceUrl, {
       method: 'POST',
       headers: {
@@ -343,7 +443,7 @@ export const createEvolutionInstanceWithoutWhatsApp = async (
         'Authorization': `Bearer ${apiKey}`,
         'x-api-key': apiKey
       },
-      body: JSON.stringify(instanceData)
+      body: JSON.stringify(baseInstanceData)
     });
 
     if (!response.ok) {
@@ -352,6 +452,7 @@ export const createEvolutionInstanceWithoutWhatsApp = async (
     }
 
     const result: EvolutionInstanceResponse = await response.json();
+    console.log('[Evolution API] Instância criada COM SUCESSO sem proxy (sem WhatsApp)');
     
     return {
       success: true,
