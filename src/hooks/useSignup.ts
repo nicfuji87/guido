@@ -181,19 +181,27 @@ export const useSignup = () => {
       // A Edge Function roda no servidor do Supabase (igual ao curl que funciona)
       log.info('PASSO 5: Criando instância Evolution via Edge Function', 'SIGNUP');
       
-      const { data: evolutionResultRaw, error: evolutionError } = await supabase.functions.invoke(
+      const { data: evolutionResultRaw, error: evolutionError } = await supabase.functions.invoke<{
+        success: boolean;
+        data?: { instanceName: string; apiKey: string; evolutionUrl: string };
+        error?: string;
+      }>(
         'create-evolution-instance',
         {
-          body: {
+          body: JSON.stringify({
             nome: data.nome,
             whatsapp: data.whatsapp
-          }
+          })
         }
       );
 
-      let evolutionResult = {
+      let evolutionResult: {
+        success: boolean;
+        data?: { instanceName: string; apiKey: string; evolutionUrl: string };
+        error?: string;
+      } = {
         success: false,
-        data: undefined as any,
+        data: undefined,
         error: ''
       };
 
