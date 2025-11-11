@@ -64,10 +64,16 @@ export const useSignup = () => {
       // === PASSO 2: CRIAR USUÁRIO NO AUTH.USERS PRIMEIRO (SEGURANÇA) ===
       log.info('PASSO 2: Criando usuário no sistema de autenticação', 'SIGNUP');
       
-      const signUpResponse = await supabase.auth.signUp({
-        email: data.email.trim().toLowerCase(),
-        password: crypto.randomUUID() // Senha temporária - usuário usará magic link
-      });
+      const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const signUpResponse = await supabase.auth.signUp(
+        {
+          email: data.email.trim().toLowerCase(),
+          password: crypto.randomUUID() // Senha temporária - usuário usará magic link
+        },
+        {
+          redirectTo: `${baseUrl}/auth/callback`
+        }
+      );
 
       const authUser = signUpResponse.user;
       const authError = signUpResponse.error;
