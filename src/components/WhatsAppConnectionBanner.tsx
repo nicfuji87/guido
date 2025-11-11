@@ -1,89 +1,120 @@
-import React from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import { AlertCircle, Smartphone, X } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus';
-import { cn } from '@/lib/utils';
+import { evolutionApi } from '@/lib/evolutionApi';
+import { useViewContext } from '@/hooks/useViewContext';
 
-// AI dev note: Banner persistente que aparece quando WhatsApp não está conectado
-// Fica no topo de todas as páginas (exceto página de Integrações)
-// Não é intrusivo, mas sempre visível para lembrar o usuário
+// Banner de aviso para conectar WhatsApp
+// Aparece em todas as páginas até que o corretor conecte o WhatsApp
 
 export const WhatsAppConnectionBanner = () => {
   const history = useHistory();
-  const location = useLocation();
-  const { systemStatus } = useWhatsAppStatus();
-  const [isDismissed, setIsDismissed] = React.useState(false);
+  const { currentCorretor } = useViewContext();
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDismissed, setIsDismissed] = useState(false);
 
-  // Não mostrar na página de integrações
-  const isIntegrationsPage = location.pathname.includes('/integrations');
-  
-  // Não mostrar se WhatsApp está conectado
-  const isConnected = systemStatus.isOnline && systemStatus.status === 'connected';
-  
-  // Não mostrar se foi dispensado (apenas nesta sessão)
-  if (isConnected || isIntegrationsPage || isDismissed) {
+  const instanceName = currentCorretor?.evolution_instance;
+  const userApiKey = currentCorretor?.evolution_apikey;
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (!instanceName) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const status = await evolutionApi.getInstanceStatus(instanceName, userApiKey);
+        setIsConnected(status.state === 'open');
+      } catch (error) {
+        console.error('[WhatsApp Banner] Erro ao verificar conexão:', error);
+        setIsConnected(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkConnection();
+
+    // Verificar a cada 30 segundos
+    const interval = setInterval(checkConnection, 30000);
+
+    return () => clearInterval(interval);
+  }, [instanceName, userApiKey]);
+
+  const handleGoToIntegrations = () => {
+    history.push('/integrations');
+  };
+
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    // Salvar no localStorage para não mostrar novamente nesta sessão
+    sessionStorage.setItem('whatsapp_banner_dismissed', 'true');
+  };
+
+  // Não mostrar se:
+  // 1. Está carregando
+  // 2. WhatsApp já está conectado
+  // 3. Usuário dispensou o banner nesta sessão
+  // 4. Não tem instância Evolution
+  if (
+    isLoading || 
+    isConnected || 
+    isDismissed || 
+    !instanceName ||
+    sessionStorage.getItem('whatsapp_banner_dismissed') === 'true'
+  ) {
     return null;
   }
 
-  // Determinar estilo baseado no status
-  const isConnecting = systemStatus.status === 'connecting';
-  const bannerColor = isConnecting 
-    ? 'bg-yellow-900/20 border-yellow-700/50' 
-    : 'bg-orange-900/20 border-orange-700/50';
-  
-  const textColor = isConnecting ? 'text-yellow-200' : 'text-orange-200';
-  const subtextColor = isConnecting ? 'text-yellow-400/80' : 'text-orange-400/80';
-  const iconColor = isConnecting ? 'text-yellow-400' : 'text-orange-400';
-  const buttonColor = isConnecting 
-    ? 'bg-yellow-600 hover:bg-yellow-700 border-yellow-500' 
-    : 'bg-orange-600 hover:bg-orange-700 border-orange-500';
-
   return (
-    <div className={cn(
-      'border-b px-4 py-3 animate-in slide-in-from-top duration-300',
-      bannerColor
-    )}>
-      <div className="flex items-center justify-between max-w-7xl mx-auto gap-4">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <AlertCircle className={cn('w-5 h-5 flex-shrink-0', iconColor)} />
-          <div className="flex-1 min-w-0">
-            <p className={cn('text-sm font-medium', textColor)}>
-              {isConnecting ? 'WhatsApp conectando...' : 'WhatsApp não conectado'}
-            </p>
-            <p className={cn('text-xs', subtextColor)}>
-              {isConnecting 
-                ? 'Aguarde enquanto estabelecemos a conexão com seu WhatsApp'
-                : 'Conecte seu WhatsApp para usar todas as funcionalidades do Guido'
-              }
-            </p>
+    <div className="bg-gradient-to-r from-amber-500 to-orange-600 border-b border-orange-700 shadow-lg">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          {/* Ícone + Mensagem */}
+          <div className="flex items-center gap-3 flex-1">
+            <div className="flex-shrink-0">
+              <div className="bg-white/20 rounded-full p-2">
+                <AlertCircle className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Smartphone className="w-4 h-4 text-white" />
+                <h3 className="text-white font-semibold text-sm">
+                  WhatsApp não conectado
+                </h3>
+              </div>
+              <p className="text-white/90 text-xs">
+                Conecte seu WhatsApp Business para começar a receber e gerenciar conversas com seus clientes
+              </p>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {!isConnecting && (
+
+          {/* Botões */}
+          <div className="flex items-center gap-2">
             <Button
+              onClick={handleGoToIntegrations}
               size="sm"
-              onClick={() => history.push('/integrations')}
-              className={cn('text-white font-medium', buttonColor)}
+              className="bg-white text-orange-600 hover:bg-white/90 font-semibold shadow-md"
             >
               <Smartphone className="w-4 h-4 mr-2" />
               Conectar Agora
             </Button>
-          )}
-          
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsDismissed(true)}
-            className="text-gray-400 hover:text-white hover:bg-gray-800/50"
-            title="Dispensar (até recarregar a página)"
-          >
-            <X className="w-4 h-4" />
-          </Button>
+
+            <button
+              onClick={handleDismiss}
+              className="text-white/80 hover:text-white transition-colors p-2 rounded-md hover:bg-white/10"
+              title="Dispensar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-

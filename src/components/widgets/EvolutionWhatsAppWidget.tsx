@@ -7,7 +7,6 @@ import { useViewContext } from '@/hooks/useViewContext';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabaseClient';
 import { prepareWebhookData } from '@/utils/webhookDataHelper';
-import { createEvolutionInstanceWithoutWhatsApp } from '@/services/evolutionAPI';
 
 // AI dev note: Widget para conectar WhatsApp via Evolution API
 // Permite gerar QR code e monitorar status da conexão
@@ -142,81 +141,8 @@ export const EvolutionWhatsAppWidget = () => {
     }
   }, [currentCorretor, instanceName]);
 
-  // AI dev note: Função para garantir que usuário tem instância Evolution
-  // Se não tiver, cria automaticamente
-  const ensureInstanceExists = useCallback(async (): Promise<{instanceName: string, apiKey: string} | null> => {
-    try {
-      // Se já tem evolution_instance salva, usar ela
-      if (currentCorretor?.evolution_instance && currentCorretor?.evolution_apikey) {
-        return {
-          instanceName: currentCorretor.evolution_instance,
-          apiKey: currentCorretor.evolution_apikey
-        };
-      }
-
-      // Buscar dados do usuário para criar instância
-      const user = supabase.auth.user();
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const { data: userData, error: userError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (userError || !userData) {
-        throw new Error('Dados do usuário não encontrados');
-      }
-
-      // Já tem instância salva no banco?
-      if (userData.evolution_instance && userData.evolution_apikey) {
-        return {
-          instanceName: userData.evolution_instance,
-          apiKey: userData.evolution_apikey
-        };
-      }
-
-      // NÃO TEM INSTÂNCIA - CRIAR AGORA!
-      console.log('🔧 Criando instância Evolution automaticamente...');
-      
-      const result = await createEvolutionInstanceWithoutWhatsApp(
-        userData.name || currentCorretor?.nome || 'Usuario',
-        userData.email
-      );
-
-      if (!result.success || !result.data) {
-        throw new Error(result.error || 'Falha ao criar instância');
-      }
-
-      // Salvar dados da instância no banco
-      const { error: updateError } = await supabase
-        .from('usuarios')
-        .update({
-          evolution_instance: result.data.instanceName,
-          evolution_apikey: result.data.apiKey,
-          evolution_url: result.data.evolutionUrl
-        })
-        .eq('id', userData.id);
-
-      if (updateError) {
-        console.error('⚠️ Erro ao salvar dados da instância:', updateError);
-        // Não falhar - a instância foi criada, apenas não foi salva
-      }
-
-      console.log('✅ Instância Evolution criada com sucesso:', result.data.instanceName);
-
-      return {
-        instanceName: result.data.instanceName,
-        apiKey: result.data.apiKey
-      };
-
-    } catch (error) {
-      console.error('❌ Erro ao garantir instância Evolution:', error);
-      return null;
-    }
-  }, [currentCorretor]);
+  // AI dev note: Função removida - instância já é criada no signup
+  // Não precisamos mais criar automaticamente aqui
 
   const loadInstanceStatus = useCallback(async (showLoading = true, isInitialCheck = false) => {
     if (!instanceName) {
@@ -279,31 +205,32 @@ export const EvolutionWhatsAppWidget = () => {
     }
   };
 
-  // AI dev note: Função modificada para criar instância automaticamente se não existir
+  // AI dev note: Função para gerar QR Code sem tentar criar instância (já existe do signup)
   const generateQRCode = async () => {
-    if (!instanceName) return;
+    if (!instanceName) {
+      setError('Nome da instância não encontrado. Por favor, verifique sua conta.');
+      return;
+    }
     
     try {
       setIsLoading(true);
       setError(null);
       
-      // NOVO: Garantir que a instância existe antes de tentar conectar
-      const instanceData = await ensureInstanceExists();
-      
-      if (!instanceData) {
-        throw new Error('Não foi possível criar ou obter instância Evolution');
-      }
+      console.log('[QR Code] Gerando QR Code para instância:', instanceName);
+      console.log('[QR Code] Usando API Key:', userApiKey ? 'Sim' : 'Não');
 
-      // Usar dados da instância (pode ser diferente do instanceName se foi criada agora)
-      const qr = await evolutionApi.connectInstance(instanceData.instanceName, instanceData.apiKey);
+      // Conectar instância existente (não criar novamente)
+      const qr = await evolutionApi.connectInstance(instanceName, userApiKey);
+      
+      console.log('[QR Code] QR Code gerado com sucesso:', qr);
       setQrCode(qr);
       
       // Atualizar status - ação manual, pode disparar webhook se conectar
       await loadInstanceStatus(false, true);
     } catch (err) {
-      console.error('Erro ao gerar QR code:', err);
+      console.error('[QR Code] Erro ao gerar QR code:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar QR code';
-      setError(errorMessage);
+      setError(`Erro ao gerar QR Code: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
