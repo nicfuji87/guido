@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { log } from '@/utils/logger';
 import { unformatCPF, formatCPF } from '@/utils/cpfUtils';
-import { createEvolutionInstance } from '@/services/evolutionAPI';
 
 // AI dev note: Hook crítico para onboarding - implementa fluxo completo de signup
 // Inclui logs estratégicos e validações de segurança para debug de problemas
