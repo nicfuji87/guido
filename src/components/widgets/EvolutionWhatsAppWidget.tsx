@@ -7,6 +7,7 @@ import { useViewContext } from '@/hooks/useViewContext';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabaseClient';
 import { prepareWebhookData } from '@/utils/webhookDataHelper';
+import { WhatsAppImportModal } from '@/components/WhatsAppImportModal';
 
 // AI dev note: Widget para conectar WhatsApp via Evolution API
 // Permite gerar QR code e monitorar status da conexão
@@ -20,6 +21,8 @@ export const EvolutionWhatsAppWidget = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastStatusCheck, setLastStatusCheck] = useState<Date | null>(null);
   const [hasTriggeredConnectedWebhook, setHasTriggeredConnectedWebhook] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [previousState, setPreviousState] = useState<string | null>(null);
   
   const pollIntervalRef = useRef<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -144,6 +147,70 @@ export const EvolutionWhatsAppWidget = () => {
   // AI dev note: Função removida - instância já é criada no signup
   // Não precisamos mais criar automaticamente aqui
 
+  // Detectar primeira conexão e disparar importação
+  useEffect(() => {
+    const handleFirstConnection = async () => {
+      // Apenas se acabou de conectar (mudou de outro estado para 'open')
+      if (instance?.state === 'open' && previousState && previousState !== 'open') {
+        console.log('🎯 Primeira conexão detectada! Verificando se precisa importar conversas...');
+        
+        try {
+          const user = supabase.auth.user();
+          if (!user) return;
+
+          // Verificar se já solicitou importação
+          const { data: userData } = await supabase
+            .from('usuarios')
+            .select('primeira_importacao_solicitada')
+            .eq('auth_user_id', user.id)
+            .single();
+
+          if (!userData?.primeira_importacao_solicitada) {
+            console.log('📥 Disparando importação de conversas...');
+            
+            // Buscar WhatsApp do usuário
+            const { data: userWhatsApp } = await supabase
+              .from('usuarios')
+              .select('whatsapp')
+              .eq('auth_user_id', user.id)
+              .single();
+            
+            // Disparar Edge Function
+            const { data: result, error } = await supabase.functions.invoke('trigger-import-conversations', {
+              body: JSON.stringify({
+                corretor_id: currentCorretor?.id,
+                instanceName,
+                whatsapp: userWhatsApp?.whatsapp || ''
+              })
+            });
+
+            if (error) {
+              console.error('❌ Erro ao disparar importação:', error);
+            } else {
+              console.log('✅ Importação disparada com sucesso:', result);
+              
+              // Marcar flag no banco
+              await supabase
+                .from('usuarios')
+                .update({ 
+                  primeira_importacao_solicitada: true,
+                  data_primeira_importacao: new Date().toISOString()
+                })
+                .eq('auth_user_id', user.id);
+
+              // Exibir modal
+              setShowImportModal(true);
+            }
+          }
+        } catch (error) {
+          console.error('❌ Erro ao processar primeira conexão:', error);
+        }
+      }
+    };
+
+    handleFirstConnection();
+  }, [instance?.state, previousState, instanceName, currentCorretor]);
+
   const loadInstanceStatus = useCallback(async (showLoading = true, isInitialCheck = false) => {
     if (!instanceName) {
       return;
@@ -153,8 +220,12 @@ export const EvolutionWhatsAppWidget = () => {
       if (showLoading) setIsLoading(true);
       setError(null);
       
-      const previousState = instance?.state;
       const status = await evolutionApi.getInstanceStatus(instanceName, userApiKey);
+      
+      // Salvar estado anterior antes de atualizar
+      if (instance?.state) {
+        setPreviousState(instance.state);
+      }
       
       setInstance(status);
       setLastStatusCheck(new Date());
@@ -184,7 +255,7 @@ export const EvolutionWhatsAppWidget = () => {
     } finally {
       if (showLoading) setIsLoading(false);
     }
-  }, [instanceName, userApiKey, instance?.state, hasTriggeredConnectedWebhook, triggerConnectedWebhook]);
+  }, [instanceName, userApiKey, instance?.state, previousState, hasTriggeredConnectedWebhook, triggerConnectedWebhook]);
 
   const createInstance = async () => {
     try {
@@ -340,15 +411,26 @@ export const EvolutionWhatsAppWidget = () => {
   };
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-900 rounded-lg flex items-center justify-center">
-              <Smartphone className="w-5 h-5 text-green-400" />
-            </div>
-            <div>
-              <CardTitle className="text-white">WhatsApp Business</CardTitle>
+    <>
+      {/* Modal de importação de conversas */}
+      {currentCorretor && (
+        <WhatsAppImportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          corretorNome={currentCorretor.nome}
+          whatsappNumero={''}
+        />
+      )}
+
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-900 rounded-lg flex items-center justify-center">
+                <Smartphone className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <CardTitle className="text-white">WhatsApp Business</CardTitle>
               <div className="flex items-center gap-2 mt-1">
                 {getStatusIcon()}
                 <span className={cn('text-sm font-medium', getStatusColor())}>
@@ -495,5 +577,6 @@ export const EvolutionWhatsAppWidget = () => {
 
       </CardContent>
     </Card>
+    </>
   );
 };
