@@ -412,7 +412,7 @@ export const EvolutionWhatsAppWidget = () => {
               <div className="text-center space-y-4">
                 <div className="inline-block p-4 bg-white rounded-lg">
                   <img 
-                    src={`data:image/png;base64,${qrCode.base64}`}
+                    src={qrCode.base64}
                     alt="QR Code WhatsApp"
                     className="w-48 h-48 mx-auto"
                   />
