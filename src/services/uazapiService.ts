@@ -47,12 +47,14 @@ export async function validateWhatsAppNumber(
   try {
     console.log('[UAZapi] Iniciando validação de WhatsApp:', phone);
     
-    const url = import.meta.env.VITE_UAZAPI_VALIDATE_NUMBER_URL;
+    // Construir URL a partir da URL base do Supabase
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const url = `${baseUrl}/functions/v1/uazapi-validate-number`;
     console.log('[UAZapi] URL da Edge Function:', url);
     
-    if (!url) {
-      console.error('[UAZapi] ERRO: URL não configurada. Verifique VITE_UAZAPI_VALIDATE_NUMBER_URL no .env');
-      throw new Error('URL da Edge Function de validação não configurada');
+    if (!baseUrl) {
+      console.error('[UAZapi] ERRO: VITE_SUPABASE_URL não configurada');
+      throw new Error('URL base do Supabase não configurada');
     }
 
     const authUser = supabase.auth.user();
@@ -111,12 +113,14 @@ export async function createUAZapiInstance(
   try {
     console.log('[UAZapi] Iniciando criação de instância:', { nome, whatsapp, userId });
     
-    const url = import.meta.env.VITE_UAZAPI_INIT_INSTANCE_URL;
+    // Construir URL a partir da URL base do Supabase
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const url = `${baseUrl}/functions/v1/uazapi-init-instance`;
     console.log('[UAZapi] URL da Edge Function (init):', url);
     
-    if (!url) {
-      console.error('[UAZapi] ERRO: URL não configurada. Verifique VITE_UAZAPI_INIT_INSTANCE_URL no .env');
-      throw new Error('URL da Edge Function de criação não configurada');
+    if (!baseUrl) {
+      console.error('[UAZapi] ERRO: VITE_SUPABASE_URL não configurada');
+      throw new Error('URL base do Supabase não configurada');
     }
 
     const authUser = supabase.auth.user();
@@ -178,12 +182,14 @@ export async function connectWhatsApp(
   try {
     console.log('[UAZapi] Iniciando conexão WhatsApp:', { userId, options });
     
-    const url = import.meta.env.VITE_UAZAPI_CONNECT_INSTANCE_URL;
+    // Construir URL a partir da URL base do Supabase
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const url = `${baseUrl}/functions/v1/uazapi-connect-instance`;
     console.log('[UAZapi] URL da Edge Function (connect):', url);
     
-    if (!url) {
-      console.error('[UAZapi] ERRO: URL não configurada. Verifique VITE_UAZAPI_CONNECT_INSTANCE_URL no .env');
-      throw new Error('URL da Edge Function de conexão não configurada');
+    if (!baseUrl) {
+      console.error('[UAZapi] ERRO: VITE_SUPABASE_URL não configurada');
+      throw new Error('URL base do Supabase não configurada');
     }
 
     const authUser = supabase.auth.user();
@@ -241,12 +247,14 @@ export async function checkInstanceStatus(
   try {
     console.log('[UAZapi] Verificando status da instância:', userId);
     
-    const url = import.meta.env.VITE_UAZAPI_CHECK_STATUS_URL;
+    // Construir URL a partir da URL base do Supabase
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const url = `${baseUrl}/functions/v1/uazapi-check-status`;
     console.log('[UAZapi] URL da Edge Function (status):', url);
     
-    if (!url) {
-      console.error('[UAZapi] ERRO: URL não configurada. Verifique VITE_UAZAPI_CHECK_STATUS_URL no .env');
-      throw new Error('URL da Edge Function de status não configurada');
+    if (!baseUrl) {
+      console.error('[UAZapi] ERRO: VITE_SUPABASE_URL não configurada');
+      throw new Error('URL base do Supabase não configurada');
     }
 
     const authUser = supabase.auth.user();
