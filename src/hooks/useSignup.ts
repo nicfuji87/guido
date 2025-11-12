@@ -65,13 +65,16 @@ export const useSignup = () => {
       log.info('PASSO 2: Criando usuário no sistema de autenticação', 'SIGNUP');
       
       const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      
+      log.debug('Configurando redirectTo', 'SIGNUP', { baseUrl, redirectTo: `${baseUrl}/app` });
+      
       const signUpResponse = await supabase.auth.signUp(
         {
           email: data.email.trim().toLowerCase(),
           password: crypto.randomUUID() // Senha temporária - usuário usará magic link
         },
         {
-          redirectTo: `${baseUrl}/auth/callback`
+          redirectTo: `${baseUrl}/app` // Redirecionar direto para o dashboard
         }
       );
 
