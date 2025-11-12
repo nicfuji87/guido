@@ -80,15 +80,23 @@ export const useSignup = () => {
 
       log.debug('Resultado signUp', 'SIGNUP', { 
         authUser: authUser ? { id: authUser.id, email: authUser.email } : null, 
-        authError 
+        authError,
+        fullResponse: signUpResponse
       });
 
       if (authError) {
         log.error('Erro no signUp', 'SIGNUP', authError);
+        log.error('Detalhes completos do erro', 'SIGNUP', { 
+          message: authError.message,
+          status: authError.status
+        });
+        
         // Tratar erros específicos em português
         let mensagemErro = authError.message;
         
-        if (authError.message === 'User already registered') {
+        if (authError.message === 'User already registered' || 
+            authError.message.includes('already been registered') ||
+            authError.status === 400) {
           mensagemErro = 'Este email já possui uma conta. Faça login ou use outro email.';
         } else if (authError.message.includes('Invalid email')) {
           mensagemErro = 'Email inválido. Verifique o formato do email.';
@@ -155,7 +163,27 @@ export const useSignup = () => {
 
       if (signupError) {
         log.error('Erro no complete_signup', 'SIGNUP', signupError);
-        throw new Error(signupError.message);
+        
+        // Tratar erros do banco de forma amigável
+        let mensagemErro = 'Erro ao criar sua conta. Tente novamente.';
+        
+        if (signupError.message.includes('usuarios_auth_user_id_fkey')) {
+          mensagemErro = 'Erro ao vincular sua conta. Por favor, tente novamente.';
+        } else if (signupError.message.includes('duplicate key') || signupError.code === '23505') {
+          if (signupError.message.includes('email')) {
+            mensagemErro = 'Este email já está cadastrado. Faça login ou use outro email.';
+          } else if (signupError.message.includes('cpf')) {
+            mensagemErro = 'Este CPF já está cadastrado. Entre em contato se precisar de ajuda.';
+          } else if (signupError.message.includes('whatsapp')) {
+            mensagemErro = 'Este número do WhatsApp já está cadastrado.';
+          } else {
+            mensagemErro = 'Estes dados já estão cadastrados. Faça login ou use outros dados.';
+          }
+        } else if (signupError.message.includes('violates foreign key')) {
+          mensagemErro = 'Erro ao processar seu cadastro. Por favor, aguarde alguns segundos e tente novamente.';
+        }
+        
+        throw new Error(mensagemErro);
       }
 
       // Tipar corretamente o resultado (função retorna JSON)
