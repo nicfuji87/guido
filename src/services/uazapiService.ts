@@ -57,14 +57,8 @@ export async function validateWhatsAppNumber(
       throw new Error('URL base do Supabase não configurada');
     }
 
-    const authUser = supabase.auth.user();
-    console.log('[UAZapi] Usuário autenticado:', authUser ? 'Sim' : 'Não');
-    
-    if (!authUser) {
-      console.error('[UAZapi] ERRO: Usuário não autenticado');
-      throw new Error('Usuário não autenticado');
-    }
-
+    // AI dev note: Validação de WhatsApp é PÚBLICA - não exige autenticação
+    // Acontece no modal de cadastro, antes do usuário estar logado
     console.log('[UAZapi] Fazendo requisição para:', url);
     console.log('[UAZapi] Número formatado:', phone);
     
@@ -72,8 +66,8 @@ export async function validateWhatsAppNumber(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+        // Não envia Authorization - esta é uma chamada pública
       },
       body: JSON.stringify({
         numbers: [phone]
