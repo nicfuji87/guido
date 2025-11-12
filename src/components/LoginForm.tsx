@@ -37,12 +37,16 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
     setMessage(null);
 
     try {
+      console.log('[LOGIN] Iniciando login para:', email.trim().toLowerCase());
+      
       // PASSO 1: Verificar se o corretor existe no sistema
       const { data: corretor, error: corretorError } = await supabase
         .from('corretores')
         .select('id, nome, deleted_at')
         .eq('email', email.trim().toLowerCase())
         .maybeSingle();
+
+      console.log('[LOGIN] Resultado da busca:', { corretor, corretorError });
 
       // Se houver erro na consulta (diferente de "não encontrado")
       if (corretorError && corretorError.code !== 'PGRST116') {
@@ -52,22 +56,31 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
 
       // Se o corretor não existe ou foi deletado
       if (!corretor || corretor.deleted_at) {
+        console.warn('[LOGIN] Corretor não encontrado ou deletado');
         setMessage({ 
           type: 'error', 
           text: 'Email não encontrado. Você precisa criar uma conta primeiro.' 
         });
         return;
       }
+      
+      console.log('[LOGIN] Corretor encontrado:', corretor.nome);
 
       // PASSO 2: Enviar magic link (corretor existe e está ativo)
       const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      console.log('[LOGIN] Enviando magic link para:', email.trim().toLowerCase());
+      console.log('[LOGIN] RedirectTo:', `${baseUrl}/app`);
+      
       const { error } = await supabase.auth.signIn({
         email: email.trim().toLowerCase()
       }, {
         redirectTo: `${baseUrl}/app`
       });
 
+      console.log('[LOGIN] Resposta do signIn:', { error });
+
       if (error) {
+        console.error('[LOGIN] Erro ao enviar magic link:', error);
         // Tratar erros específicos do Supabase
         if (error.message.includes('Invalid login credentials') || error.message.includes('User not found')) {
           setMessage({ 
@@ -79,6 +92,7 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
         throw error;
       }
 
+      console.log('[LOGIN] Magic link enviado com sucesso!');
       setMessage({ 
         type: 'success', 
         text: 'Link de acesso enviado! Verifique seu email.' 
