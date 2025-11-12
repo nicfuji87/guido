@@ -12,6 +12,11 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log('[AuthCallback] Iniciando processamento');
+        console.log('[AuthCallback] URL completa:', window.location.href);
+        console.log('[AuthCallback] Hash:', window.location.hash);
+        console.log('[AuthCallback] Search:', window.location.search);
+        
         log.info('Processando callback de autenticação', 'AuthCallback')
         
         // Aguardar um pouco para garantir que o Supabase processou o token
@@ -19,6 +24,10 @@ export default function AuthCallback() {
         
         // Verificar se há uma sessão ativa
         const user = supabase.auth.user()
+        const session = supabase.auth.session()
+        
+        console.log('[AuthCallback] User:', user ? { id: user.id, email: user.email } : null);
+        console.log('[AuthCallback] Session:', session ? 'Existe' : 'Não existe');
         
         if (user) {
           log.info('Usuário autenticado com sucesso após confirmação', 'AuthCallback', { 
@@ -31,14 +40,19 @@ export default function AuthCallback() {
           
           // Redirecionar para o dashboard após 1.5 segundos
           setTimeout(() => {
+            console.log('[AuthCallback] Redirecionando para /app');
             history.push('/app')
           }, 1500)
         } else {
+          console.log('[AuthCallback] Sem usuário - verificando hash...');
           // Sem sessão - verificar hash da URL (Supabase v1 pode passar token no hash)
           const hashParams = new URLSearchParams(window.location.hash.substring(1))
           const accessToken = hashParams.get('access_token')
           
+          console.log('[AuthCallback] Access token no hash:', accessToken ? 'Sim' : 'Não');
+          
           if (accessToken) {
+            console.log('[AuthCallback] Token encontrado! Aguardando processamento...');
             log.info('Token encontrado no hash, processando...', 'AuthCallback')
             setMessage('Autenticando...')
             
@@ -47,7 +61,10 @@ export default function AuthCallback() {
             
             // Tentar novamente
             const userAfterWait = supabase.auth.user()
+            console.log('[AuthCallback] Usuário após espera:', userAfterWait ? 'Encontrado' : 'Não encontrado');
+            
             if (userAfterWait) {
+              console.log('[AuthCallback] Usuário autenticado! Redirecionando...');
               setStatus('success')
               setMessage('Email confirmado! Redirecionando...')
               setTimeout(() => {
@@ -55,6 +72,7 @@ export default function AuthCallback() {
               }, 1000)
             } else {
               // Se ainda não tem sessão, redirecionar para login
+              console.warn('[AuthCallback] Nenhuma sessão após wait - indo para login');
               log.warn('Nenhuma sessão encontrada após callback', 'AuthCallback')
               setStatus('error')
               setMessage('Redirecionando para o login...')
@@ -64,6 +82,7 @@ export default function AuthCallback() {
             }
           } else {
             // Sem token e sem sessão - redirecionar para login
+            console.warn('[AuthCallback] Sem token no hash - indo para login');
             log.warn('Callback sem token ou sessão', 'AuthCallback')
             setStatus('error')
             setMessage('Redirecionando para o login...')
