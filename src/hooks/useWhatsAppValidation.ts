@@ -1,10 +1,12 @@
+// AI dev note: Hook atualizado para usar UAZapi via Supabase Edge Functions
 import { useState, useCallback, useRef } from 'react';
+import { validateWhatsAppNumber, formatPhoneForAPI } from '@/services/uazapiService';
 
 interface WhatsAppValidationResult {
   jid: string;
-  exists: boolean;
-  number: string;
-  name: string;
+  isInWhatsapp: boolean;
+  query: string;
+  verifiedName: string;
 }
 
 interface ValidationResult {
@@ -17,55 +19,8 @@ export const useWhatsAppValidation = () => {
   const [isValidating, setIsValidating] = useState(false);
   const validationCache = useRef<Record<string, ValidationResult>>({});
 
-  // Obter configurações da Evolution API das variáveis de ambiente
-  const evolutionBaseUrl = import.meta.env.VITE_EVOLUTION_API_URL;
-  const evolutionApiKey = import.meta.env.VITE_EVOLUTION_API_KEY;
-  const evolutionInstanceName = import.meta.env.VITE_EVOLUTION_INSTANCE_NAME;
-
-  // Construir URL de validação dinamicamente
-  const validationUrl = evolutionBaseUrl && evolutionInstanceName 
-    ? `${evolutionBaseUrl}chat/whatsappNumbers/${evolutionInstanceName}`
-    : null;
-
-  // Validar se as variáveis estão definidas
-  if (!validationUrl || !evolutionApiKey) {
-    // Evolution API não configurada - variáveis de ambiente necessárias
-  }
-
-  const formatPhoneForAPI = (phone: string): string => {
-    // Remove tudo que não é número
-    const numbers = phone.replace(/\D/g, '');
-    
-    // Se já tem 13 dígitos (55 + DDD + número), retorna como está
-    if (numbers.length === 13) {
-      return numbers;
-    }
-    
-    // Se tem 11 dígitos (DDD + número), adiciona o 55
-    if (numbers.length === 11) {
-      return '55' + numbers;
-    }
-    
-    // Se tem 10 dígitos (DDD + número sem 9), adiciona 55 e o 9
-    if (numbers.length === 10) {
-      return '55' + numbers.slice(0, 2) + '9' + numbers.slice(2);
-    }
-    
-    return numbers;
-  };
-
   const validateWhatsApp = useCallback(async (phone: string): Promise<ValidationResult> => {
     const formattedPhone = formatPhoneForAPI(phone);
-    
-    // Verificar se a API está configurada
-    if (!validationUrl || !evolutionApiKey) {
-      const result: ValidationResult = {
-        isValid: false,
-        error: 'Validação de WhatsApp não disponível'
-      };
-      validationCache.current[formattedPhone] = result;
-      return result;
-    }
     
     // Verificar cache primeiro
     if (validationCache.current[formattedPhone]) {
@@ -85,36 +40,22 @@ export const useWhatsAppValidation = () => {
     setIsValidating(true);
 
     try {
-      const response = await fetch(validationUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': evolutionApiKey
-        },
-        body: JSON.stringify({
-          numbers: [formattedPhone]
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data: WhatsAppValidationResult[] = await response.json();
+      // Chamar Edge Function via serviço UAZapi
+      const response = await validateWhatsAppNumber(formattedPhone);
       
-      if (!data || data.length === 0) {
+      if (!response.success || !response.data || response.data.length === 0) {
         const result: ValidationResult = {
           isValid: false,
-          error: 'Não foi possível validar o número'
+          error: response.error || 'Não foi possível validar o número'
         };
         validationCache.current[formattedPhone] = result;
         return result;
       }
 
-      const validationData = data[0];
+      const validationData = response.data[0];
       const result: ValidationResult = {
-        isValid: validationData.exists,
-        error: validationData.exists ? undefined : 'Número do WhatsApp não encontrado',
+        isValid: validationData.isInWhatsapp,
+        error: validationData.isInWhatsapp ? undefined : 'Número do WhatsApp não encontrado',
         data: validationData
       };
 
@@ -124,7 +65,7 @@ export const useWhatsAppValidation = () => {
       return result;
 
     } catch (error: unknown) {
-      // Erro na validação do WhatsApp
+      console.error('[useWhatsAppValidation] Erro:', error);
       
       const result: ValidationResult = {
         isValid: false,
@@ -136,7 +77,7 @@ export const useWhatsAppValidation = () => {
     } finally {
       setIsValidating(false);
     }
-  }, [validationUrl, evolutionApiKey]);
+  }, []);
 
   const clearCache = useCallback(() => {
     validationCache.current = {};

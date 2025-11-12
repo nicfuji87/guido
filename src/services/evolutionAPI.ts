@@ -1,4 +1,5 @@
-// AI dev note: Serviço para integração com Evolution API
+// AI dev note: DEPRECATED - Migrado para UAZapi (ver uazapiService.ts)
+// Mantido para compatibilidade temporária
 // Responsável por criar e gerenciar instâncias do WhatsApp para usuários
 
 export interface EvolutionInstanceData {
