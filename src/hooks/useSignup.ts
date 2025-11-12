@@ -210,28 +210,29 @@ export const useSignup = () => {
         assinatura_id 
       });
 
-      // === PASSO 5: CRIAR INSTÂNCIA EVOLUTION VIA EDGE FUNCTION ===
-      // AI dev note: Mudado para Edge Function para evitar problemas de CORS e headers do browser
-      // A Edge Function roda no servidor do Supabase (igual ao curl que funciona)
-      log.info('PASSO 5: Criando instância Evolution via Edge Function', 'SIGNUP');
+      // === PASSO 5: CRIAR INSTÂNCIA UAZAPI VIA EDGE FUNCTION ===
+      // AI dev note: Migrado de Evolution para UAZapi via Edge Function
+      // Credenciais sensíveis ficam no Supabase Secrets (server-side)
+      log.info('PASSO 5: Criando instância UAZapi via Edge Function', 'SIGNUP');
       
-      const { data: evolutionResultRaw, error: evolutionError } = await supabase.functions.invoke<{
+      const { data: uazapiResultRaw, error: uazapiError } = await supabase.functions.invoke<{
         success: boolean;
-        data?: { instanceName: string; apiKey: string; evolutionUrl: string };
+        data?: { instanceName: string; instanceId: string; token: string; status: string };
         error?: string;
       }>(
-        'create-evolution-instance',
+        'uazapi-init-instance',
         {
           body: JSON.stringify({
             nome: data.nome,
-            whatsapp: data.whatsapp
+            whatsapp: data.whatsapp,
+            userId: authUserId
           })
         }
       );
 
-      let evolutionResult: {
+      let uazapiResult: {
         success: boolean;
-        data?: { instanceName: string; apiKey: string; evolutionUrl: string };
+        data?: { instanceName: string; instanceId: string; token: string; status: string };
         error?: string;
       } = {
         success: false,
@@ -239,40 +240,36 @@ export const useSignup = () => {
         error: ''
       };
 
-      if (evolutionError) {
-        log.warn('Erro ao chamar Edge Function Evolution', 'SIGNUP', evolutionError);
-        evolutionResult = {
+      if (uazapiError) {
+        log.warn('Erro ao chamar Edge Function UAZapi', 'SIGNUP', uazapiError);
+        uazapiResult = {
           success: false,
-          error: evolutionError.message
+          error: uazapiError.message
         };
-      } else if (evolutionResultRaw) {
-        evolutionResult = evolutionResultRaw;
-        if (!evolutionResult.success) {
-          log.warn('Falha ao criar instância Evolution', 'SIGNUP', evolutionResult.error);
+      } else if (uazapiResultRaw) {
+        uazapiResult = uazapiResultRaw;
+        if (!uazapiResult.success) {
+          log.warn('Falha ao criar instância UAZapi', 'SIGNUP', uazapiResult.error);
+        } else {
+          log.info('Instância UAZapi criada com sucesso', 'SIGNUP', uazapiResult.data);
         }
       }
 
-      // === PASSO 6: ATUALIZAR USUÁRIO COM DADOS DA EVOLUTION ===
-      // AI dev note: Usando função RPC com SECURITY DEFINER para bypassar RLS
-      // O usuário acabou de ser criado mas não está autenticado, então RLS normal bloquearia
-      log.info('PASSO 6: Atualizando usuário com dados de Evolution', 'SIGNUP');
+      // === PASSO 6: VERIFICAR DADOS UAZAPI ===
+      // AI dev note: Dados UAZapi já são salvos automaticamente pela Edge Function uazapi-init-instance
+      // Apenas logar sucesso ou falha
+      log.info('PASSO 6: Verificando dados UAZapi salvos', 'SIGNUP');
       
-      if (evolutionResult.success && evolutionResult.data) {
-        const { error: updateError } = await supabase.rpc('update_evolution_data_after_signup', {
-          p_usuario_id: usuario_id,
-          p_evolution_instance: evolutionResult.data.instanceName,
-          p_evolution_apikey: evolutionResult.data.apiKey,
-          p_evolution_url: evolutionResult.data.evolutionUrl
+      if (uazapiResult.success && uazapiResult.data) {
+        log.info('Dados UAZapi salvos com sucesso', 'SIGNUP', {
+          instanceName: uazapiResult.data.instanceName,
+          instanceId: uazapiResult.data.instanceId,
+          status: uazapiResult.data.status
         });
-
-        if (updateError) {
-          log.warn('Erro ao atualizar usuário com dados Evolution', 'SIGNUP', updateError);
-          // Não bloqueia o signup, apenas registra o warning
-        } else {
-          log.info('Dados Evolution salvos com sucesso', 'SIGNUP', {
-            instance: evolutionResult.data.instanceName
-          });
-        }
+      } else {
+        log.warn('UAZapi não foi criado - usuário precisará conectar manualmente', 'SIGNUP', {
+          error: uazapiResult.error
+        });
       }
 
       // === SUCESSO TOTAL ===
