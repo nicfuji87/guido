@@ -1,20 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { evolutionApi } from '@/lib/evolutionApi';
-import { EvolutionInstance } from '@/types/evolution';
-import { useViewContext } from '@/hooks/useViewContext';
+import { supabase } from '@/lib/supabaseClient';
+import { checkInstanceStatus } from '@/services/uazapiService';
 
-// AI dev note: Hook para monitorar status da instância WhatsApp
-// Usado no sidebar para mostrar status real do sistema
+// AI dev note: Hook para verificar status do WhatsApp via UAZapi (migrado de Evolution)
+// Usado na sidebar para mostrar status da conexão
+// Usa auth_user_id do usuário logado (não mais evolution_instance)
 
 export interface WhatsAppSystemStatus {
   isOnline: boolean;
-  status: 'connected' | 'disconnected' | 'connecting' | 'unknown';
+  status: 'connected' | 'connecting' | 'disconnected' | 'unknown';
   statusText: string;
   lastCheck: Date | null;
 }
 
 export const useWhatsAppStatus = () => {
-  const { currentCorretor } = useViewContext();
   const [systemStatus, setSystemStatus] = useState<WhatsAppSystemStatus>({
     isOnline: false,
     status: 'unknown',
@@ -22,33 +21,44 @@ export const useWhatsAppStatus = () => {
     lastCheck: null
   });
 
-  const instanceName = currentCorretor?.evolution_instance;
-  const userApiKey = currentCorretor?.evolution_apikey;
+  // Pegar auth_user_id do usuário logado
+  const authUser = supabase.auth.user();
+  const authUserId = authUser?.id;
 
   const checkWhatsAppStatus = useCallback(async () => {
-    if (!instanceName) {
+    if (!authUserId) {
       setSystemStatus({
         isOnline: false,
         status: 'unknown',
-        statusText: 'WhatsApp não configurado',
+        statusText: 'Aguardando autenticação...',
         lastCheck: new Date()
       });
       return;
     }
 
     try {
-      const instance: EvolutionInstance = await evolutionApi.getInstanceStatus(instanceName, userApiKey);
+      const result = await checkInstanceStatus(authUserId);
       
-      const isConnected = instance.state === 'open';
-      const isConnecting = instance.state === 'connecting';
-      
-      setSystemStatus({
-        isOnline: isConnected,
-        status: isConnected ? 'connected' : isConnecting ? 'connecting' : 'disconnected',
-        statusText: isConnected ? 'Tudo funcionando' : isConnecting ? 'Conectando...' : 'WhatsApp desconectado',
-        lastCheck: new Date()
-      });
+      if (result.success && result.data) {
+        const isConnected = result.data.status === 'connected' && result.data.loggedIn;
+        const isConnecting = result.data.status === 'connecting';
+        
+        setSystemStatus({
+          isOnline: isConnected,
+          status: isConnected ? 'connected' : isConnecting ? 'connecting' : 'disconnected',
+          statusText: isConnected ? 'Tudo funcionando' : isConnecting ? 'Conectando...' : 'WhatsApp desconectado',
+          lastCheck: new Date()
+        });
+      } else {
+        setSystemStatus({
+          isOnline: false,
+          status: 'disconnected',
+          statusText: 'WhatsApp não configurado',
+          lastCheck: new Date()
+        });
+      }
     } catch (error) {
+      console.error('[WhatsApp Status] Erro ao verificar:', error);
       setSystemStatus({
         isOnline: false,
         status: 'unknown',
@@ -56,11 +66,11 @@ export const useWhatsAppStatus = () => {
         lastCheck: new Date()
       });
     }
-  }, [instanceName, userApiKey]);
+  }, [authUserId]);
 
   // Verificar status a cada 30 segundos
   useEffect(() => {
-    if (!currentCorretor?.evolution_instance) {
+    if (!authUserId) {
       return;
     }
 
@@ -71,7 +81,7 @@ export const useWhatsAppStatus = () => {
     const interval = setInterval(checkWhatsAppStatus, 30000);
 
     return () => clearInterval(interval);
-  }, [checkWhatsAppStatus, currentCorretor?.evolution_instance]);
+  }, [checkWhatsAppStatus, authUserId]);
 
   return {
     systemStatus,
