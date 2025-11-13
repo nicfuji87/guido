@@ -4,10 +4,12 @@ import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from '@/co
 import { cn } from '@/lib/utils';
 import { connectWhatsApp, checkInstanceStatus, detectMobileDevice } from '@/services/uazapiService';
 import { supabase } from '@/lib/supabaseClient';
+import { ProcessingConversationsModal } from '@/components/ProcessingConversationsModal';
 
 // AI dev note: Widget para conectar WhatsApp via UAZapi Edge Functions
 // Migrado de Evolution API para UAZapi
 // Usa auth_user_id do usuário logado (não corretor_id)
+// Exibe modal de processamento após primeira conexão bem-sucedida
 
 export const EvolutionWhatsAppWidget = () => {
   // Pegar auth_user_id do usuário logado
@@ -21,8 +23,11 @@ export const EvolutionWhatsAppWidget = () => {
   const [profileName, setProfileName] = useState<string | null>(null);
   const [profilePicUrl, setProfilePicUrl] = useState<string | null>(null);
   const [lastStatusCheck, setLastStatusCheck] = useState<Date | null>(null);
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [primeiroAcessoAnterior, setPrimeiroAcessoAnterior] = useState<boolean | null>(null);
   
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const previousStatusRef = useRef<string>('disconnected');
 
   // Cleanup ao desmontar
   useEffect(() => {
@@ -44,23 +49,64 @@ export const EvolutionWhatsAppWidget = () => {
       if (showLoading) setIsLoading(true);
       setError(null);
       
+      // Buscar primeiro_acesso ANTES de chamar checkInstanceStatus
+      const { data: usuarioAntes } = await supabase
+        .from('usuarios')
+        .select('primeiro_acesso')
+        .eq('auth_user_id', authUserId)
+        .single();
+      
+      const primeiroAcessoAntes = usuarioAntes?.primeiro_acesso ?? null;
+      
+      // Se é a primeira vez que carrega, guardar o valor inicial
+      if (primeiroAcessoAnterior === null && primeiroAcessoAntes !== null) {
+        setPrimeiroAcessoAnterior(primeiroAcessoAntes);
+      }
+      
       const result = await checkInstanceStatus(authUserId);
       
       if (result.success && result.data) {
-        setStatus(result.data.status);
+        const newStatus = result.data.status;
+        
+        setStatus(newStatus);
         setProfileName(result.data.profileName || null);
         setProfilePicUrl(result.data.profilePicUrl || null);
         setQrCode(result.data.qrcode || null);
         setPairCode(result.data.paircode || null);
-      setLastStatusCheck(new Date());
+        setLastStatusCheck(new Date());
+
+        // Buscar primeiro_acesso DEPOIS de chamar checkInstanceStatus
+        const { data: usuarioDepois } = await supabase
+          .from('usuarios')
+          .select('primeiro_acesso')
+          .eq('auth_user_id', authUserId)
+          .single();
+        
+        const primeiroAcessoDepois = usuarioDepois?.primeiro_acesso ?? null;
+
+        // AI dev note: Modal aparece APENAS quando primeiro_acesso muda de FALSE → TRUE
+        // Isso acontece apenas na primeira conexão do WhatsApp
+        // Depois sempre fica TRUE, mesmo se a instância desconectar
+        if (
+          primeiroAcessoAnterior === false && 
+          primeiroAcessoDepois === true &&
+          newStatus === 'connected'
+        ) {
+          console.log('[Widget] 🎉 PRIMEIRA CONEXÃO detectada! primeiro_acesso mudou de FALSE → TRUE');
+          setShowProcessingModal(true);
+          setPrimeiroAcessoAnterior(true); // Atualizar para não mostrar novamente
+        }
+
+        // Atualizar status anterior para próxima verificação
+        previousStatusRef.current = newStatus;
 
         // Se conectou, parar polling
-        if (result.data.status === 'connected' && result.data.loggedIn) {
+        if (newStatus === 'connected' && result.data.loggedIn) {
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = null;
           }
-      }
+        }
       }
     } catch (err) {
       console.error('[Widget] Erro ao verificar status:', err);
@@ -68,7 +114,7 @@ export const EvolutionWhatsAppWidget = () => {
     } finally {
       if (showLoading) setIsLoading(false);
     }
-  }, [authUserId]);
+  }, [authUserId, primeiroAcessoAnterior]);
 
   // Carregar status inicial
   useEffect(() => {
@@ -160,19 +206,26 @@ export const EvolutionWhatsAppWidget = () => {
   };
 
   return (
-    <Card>
+    <>
+      {/* Modal de Processamento - aparece após primeira conexão */}
+      <ProcessingConversationsModal 
+        isOpen={showProcessingModal}
+        onClose={() => setShowProcessingModal(false)}
+      />
+
+      <Card>
         <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Smartphone className="w-5 h-5" />
-            WhatsApp
-          </div>
-          <div className={cn("flex items-center gap-2", getStatusColor())}>
-            <StatusIcon />
-            <span className="text-sm font-normal capitalize">{status}</span>
-          </div>
-        </CardTitle>
-      </CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5" />
+              WhatsApp
+            </div>
+            <div className={cn("flex items-center gap-2", getStatusColor())}>
+              <StatusIcon />
+              <span className="text-sm font-normal capitalize">{status}</span>
+            </div>
+          </CardTitle>
+        </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="space-y-3">
@@ -298,6 +351,7 @@ export const EvolutionWhatsAppWidget = () => {
           </div>
         )}
       </CardContent>
-    </Card>
+      </Card>
+    </>
   );
 };
