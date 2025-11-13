@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Smartphone, CheckCircle, AlertCircle, Wifi, WifiOff, RotateCcw } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from '@/components/ui';
-import { useViewContext } from '@/hooks/useViewContext';
 import { cn } from '@/lib/utils';
 import { connectWhatsApp, checkInstanceStatus, detectMobileDevice } from '@/services/uazapiService';
+import { supabase } from '@/lib/supabaseClient';
 
 // AI dev note: Widget para conectar WhatsApp via UAZapi Edge Functions
 // Migrado de Evolution API para UAZapi
+// Usa auth_user_id do usuário logado (não corretor_id)
 
 export const EvolutionWhatsAppWidget = () => {
-  const { currentCorretor } = useViewContext();
+  // Pegar auth_user_id do usuário logado
+  const authUser = supabase.auth.user();
+  const authUserId = authUser?.id;
   const [status, setStatus] = useState<string>('disconnected');
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [pairCode, setPairCode] = useState<string | null>(null);
@@ -32,13 +35,16 @@ export const EvolutionWhatsAppWidget = () => {
 
   // Verificar status inicial
   const loadInstanceStatus = useCallback(async (showLoading = true) => {
-    if (!currentCorretor?.id) return;
+    if (!authUserId) {
+      console.warn('[Widget] Aguardando autenticação...');
+      return;
+    }
     
     try {
       if (showLoading) setIsLoading(true);
       setError(null);
       
-      const result = await checkInstanceStatus(currentCorretor.id);
+      const result = await checkInstanceStatus(authUserId);
       
       if (result.success && result.data) {
         setStatus(result.data.status);
@@ -62,18 +68,21 @@ export const EvolutionWhatsAppWidget = () => {
     } finally {
       if (showLoading) setIsLoading(false);
     }
-  }, [currentCorretor?.id]);
+  }, [authUserId]);
 
   // Carregar status inicial
   useEffect(() => {
-    if (currentCorretor?.id) {
+    if (authUserId) {
       loadInstanceStatus();
     }
-  }, [currentCorretor?.id, loadInstanceStatus]);
+  }, [authUserId, loadInstanceStatus]);
 
   // Conectar WhatsApp
   const handleConnect = async () => {
-    if (!currentCorretor?.id) return;
+    if (!authUserId) {
+      setError('Usuário não autenticado');
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -81,7 +90,7 @@ export const EvolutionWhatsAppWidget = () => {
       
       const isMobile = detectMobileDevice();
       
-      const result = await connectWhatsApp(currentCorretor.id, {
+      const result = await connectWhatsApp(authUserId, {
         isMobile,
         phone: undefined // Edge Function pega do banco
       });
