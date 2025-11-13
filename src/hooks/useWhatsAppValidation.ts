@@ -42,7 +42,7 @@ export const useWhatsAppValidation = () => {
     try {
       // Chamar Edge Function via serviço UAZapi
       const response = await validateWhatsAppNumber(formattedPhone);
-      
+
       if (!response.success || !response.data || response.data.length === 0) {
         const result: ValidationResult = {
           isValid: false,

@@ -52,7 +52,7 @@ export const EvolutionWhatsAppWidget = () => {
         setProfilePicUrl(result.data.profilePicUrl || null);
         setQrCode(result.data.qrcode || null);
         setPairCode(result.data.paircode || null);
-        setLastStatusCheck(new Date());
+      setLastStatusCheck(new Date());
 
         // Se conectou, parar polling
         if (result.data.status === 'connected' && result.data.loggedIn) {
@@ -60,7 +60,7 @@ export const EvolutionWhatsAppWidget = () => {
             clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = null;
           }
-        }
+      }
       }
     } catch (err) {
       console.error('[Widget] Erro ao verificar status:', err);
@@ -161,7 +161,7 @@ export const EvolutionWhatsAppWidget = () => {
 
   return (
     <Card>
-      <CardHeader>
+        <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Smartphone className="w-5 h-5" />
@@ -277,8 +277,8 @@ export const EvolutionWhatsAppWidget = () => {
                         <p className="text-xs text-muted-foreground mt-1">
                           {profileName}
                         </p>
-                      )}
-                    </div>
+            )}
+          </div>
                     {profilePicUrl && (
                       <img
                         src={profilePicUrl}
@@ -287,13 +287,13 @@ export const EvolutionWhatsAppWidget = () => {
                       />
                     )}
                   </div>
-                </div>
+            </div>
                 {lastStatusCheck && (
                   <p className="text-xs text-center text-muted-foreground">
                     Verificado em: {lastStatusCheck.toLocaleTimeString()}
-                  </p>
-                )}
-              </div>
+                </p>
+              )}
+            </div>
             )}
           </div>
         )}

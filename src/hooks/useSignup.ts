@@ -270,10 +270,10 @@ export const useSignup = () => {
           instanceId: uazapiResult.data.instanceId,
           status: uazapiResult.data.status
         });
-      } else {
+        } else {
         log.warn('UAZapi não foi criado - usuário precisará conectar manualmente', 'SIGNUP', {
           error: uazapiResult.error
-        });
+          });
       }
 
       // === SUCESSO TOTAL ===

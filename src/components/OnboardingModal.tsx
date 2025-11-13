@@ -36,13 +36,6 @@ export const OnboardingModal = ({ onClose }: OnboardingModalProps) => {
         return;
       }
 
-      // Verificar se já conectou WhatsApp antes
-      if (currentCorretor.evolution_instance) {
-        log.info('Usuário já tem instância Evolution, não mostrar onboarding', 'ONBOARDING');
-        setIsOpen(false);
-        return;
-      }
-
       // Verificar no banco se é primeiro acesso
       const user = supabase.auth.user();
       if (!user) {
@@ -52,7 +45,7 @@ export const OnboardingModal = ({ onClose }: OnboardingModalProps) => {
 
       const { data: userData, error } = await supabase
         .from('usuarios')
-        .select('primeiro_acesso, evolution_instance')
+        .select('primeiro_acesso, uazapi_status, jid')
         .eq('auth_user_id', user.id)
         .single();
 
@@ -62,15 +55,23 @@ export const OnboardingModal = ({ onClose }: OnboardingModalProps) => {
         return;
       }
 
-      // Mostrar modal se:
-      // 1. É primeiro acesso (null ou true) OU
-      // 2. Não tem evolution_instance (nunca conectou WhatsApp)
-      const shouldShow = (userData.primeiro_acesso !== false) || !userData.evolution_instance;
+      // AI dev note: Lógica corrigida do onboarding
+      // primeiro_acesso: false = ainda não conectou (mostrar modal)
+      // primeiro_acesso: true = já conectou (não mostrar mais)
+      // uazapi_status: 'connected' = WhatsApp conectado
+      
+      // Mostrar modal APENAS se:
+      // - primeiro_acesso === false (ainda não conectou)
+      // - E status não é 'connected' (ainda não está conectado)
+      const jaConectou = userData.primeiro_acesso === true || userData.uazapi_status === 'connected';
+      const shouldShow = !jaConectou;
       
       log.info('Verificação de onboarding', 'ONBOARDING', { 
         shouldShow, 
         primeiro_acesso: userData.primeiro_acesso,
-        has_evolution: !!userData.evolution_instance
+        uazapi_status: userData.uazapi_status,
+        jid: !!userData.jid,
+        jaConectou
       });
 
       setIsOpen(shouldShow);
@@ -85,19 +86,14 @@ export const OnboardingModal = ({ onClose }: OnboardingModalProps) => {
 
   const handleDismiss = async () => {
     try {
-      // Marcar que não é mais primeiro acesso
-      const user = supabase.auth.user();
-      if (user) {
-        await supabase
-          .from('usuarios')
-          .update({ primeiro_acesso: false })
-          .eq('auth_user_id', user.id);
-      }
-
+      // AI dev note: Ao dispensar, NÃO altera primeiro_acesso
+      // primeiro_acesso só muda para true quando WhatsApp conecta
+      // Assim o modal aparecerá novamente se não conectar
+      
       setIsOpen(false);
       onClose?.();
     } catch (error) {
-      log.error('Erro ao marcar primeiro acesso como falso', 'ONBOARDING', { error });
+      log.error('Erro ao fechar onboarding', 'ONBOARDING', { error });
       setIsOpen(false);
       onClose?.();
     }
