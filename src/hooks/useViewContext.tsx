@@ -116,7 +116,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
               // Buscar dados Evolution do usuário
               const { data: userData } = await supabase
                 .from('usuarios')
-                .select('evolution_instance, evolution_apikey')
+                .select('uazapi_instance_name, uazapi_token, uazapi_status, jid')
                 .eq('email', user.email)
                 .single();
 
@@ -125,8 +125,10 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
               setUserRole(corretor.funcao as UserRole);
               setCurrentCorretor({
                 ...corretor,
-                evolution_instance: userData?.evolution_instance,
-                evolution_apikey: userData?.evolution_apikey
+                uazapi_instance_name: userData?.uazapi_instance_name,
+                uazapi_token: userData?.uazapi_token,
+                uazapi_status: userData?.uazapi_status,
+                jid: userData?.jid
               });
 
               if (!['DONO', 'ADMIN'].includes(corretor.funcao)) {
@@ -143,7 +145,7 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
           // Buscar dados Evolution do usuário
           const { data: userData } = await supabase
             .from('usuarios')
-            .select('evolution_instance, evolution_apikey')
+            .select('uazapi_instance_name, uazapi_token, uazapi_status, jid')
             .eq('email', user.email)
             .single();
 
@@ -152,8 +154,10 @@ export const ViewContextProvider = ({ children }: ViewContextProviderProps) => {
           setUserRole(corretor.funcao as UserRole);
           setCurrentCorretor({
             ...corretor,
-            evolution_instance: userData?.evolution_instance,
-            evolution_apikey: userData?.evolution_apikey
+            uazapi_instance_name: userData?.uazapi_instance_name,
+            uazapi_token: userData?.uazapi_token,
+            uazapi_status: userData?.uazapi_status,
+            jid: userData?.jid
           });
 
           // Se não pode gerenciar equipe, forçar modo 'self'
