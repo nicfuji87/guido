@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import { 
   Home, 
   Users, 
@@ -19,12 +19,13 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui';
-import { Button, Avatar, AvatarFallback, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui';
+import { Button, Avatar, AvatarFallback, AvatarImage } from '@/components/ui';
 import { useViewContext } from '@/hooks/useViewContext';
 import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus';
 // import { useConversasBadge } from '@/hooks/useConversasBadge'; // Removido temporariamente - funcionalidade kanban não disponível
 import { useLembretesBadge } from '@/hooks/useLembretesBadge';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabaseClient';
 
 // AI dev note: Sidebar principal do dashboard
 // Adapta itens de menu baseado no papel do usuário (DONO/ADMIN vs AGENTE)
@@ -43,11 +44,13 @@ interface SidebarItem {
 
 export const AppSidebar = () => {
   const { expanded, toggle } = useSidebar();
-  const { userRole } = useViewContext();
+  const { userRole, currentCorretor } = useViewContext();
   const { systemStatus } = useWhatsAppStatus();
   const location = useLocation();
+  const history = useHistory();
   // const pendingConversations = useConversasBadge(); // Removido temporariamente - funcionalidade kanban não disponível
   const urgentReminders = useLembretesBadge();
+  const [profilePicUrl, setProfilePicUrl] = React.useState<string | null>(null);
 
   // Detectar se é mobile
   const [isMobile, setIsMobile] = React.useState(false);
@@ -60,6 +63,26 @@ export const AppSidebar = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Buscar foto do WhatsApp do usuário
+  React.useEffect(() => {
+    const fetchProfilePic = async () => {
+      const authUser = supabase.auth.user();
+      if (!authUser?.id) return;
+
+      const { data } = await supabase
+        .from('usuarios')
+        .select('uazapi_profile_pic_url')
+        .eq('auth_user_id', authUser.id)
+        .single();
+
+      if (data?.uazapi_profile_pic_url) {
+        setProfilePicUrl(data.uazapi_profile_pic_url);
+      }
+    };
+
+    fetchProfilePic();
   }, []);
 
   // Handler para fechar sidebar no mobile ao clicar em um item
@@ -89,6 +112,12 @@ export const AppSidebar = () => {
     }
     
     return false;
+  };
+
+  // Handler para logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    history.push('/login');
   };
 
   const sidebarItems: SidebarItem[] = [
@@ -280,71 +309,55 @@ export const AppSidebar = () => {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-gray-700/30">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className={cn(
-              "w-full transition-all duration-200 rounded-xl p-3",
-              "bg-gradient-to-r from-gray-800/50 to-gray-700/50",
-              "border border-gray-600/30 hover:border-blue-500/30",
-              "hover:bg-gradient-to-r hover:from-blue-600/10 hover:to-purple-600/10",
-              "text-gray-300 hover:text-white",
-              "shadow-lg hover:shadow-blue-500/10"
-            )}>
-              <Avatar className="h-10 w-10 ring-2 ring-gray-600/50 ring-offset-2 ring-offset-gray-800">
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-sm">
-                  NF
-                </AvatarFallback>
-              </Avatar>
-              {expanded && (
-                <div className="flex flex-col items-start flex-1 min-w-0 ml-3">
-                  <span className="text-sm font-semibold truncate text-white">Nicolas Fujimoto</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-xs text-gray-400 truncate">
-                      {userRole === 'DONO' ? 'Proprietário' : 
-                       userRole === 'ADMIN' ? 'Administrador' : 'Corretor'}
-                    </span>
-                  </div>
-                </div>
+      <SidebarFooter className="p-4 border-t border-gray-700/30 space-y-2">
+        {/* Botão Sair do Sistema */}
+        <SidebarMenuButton
+          onClick={handleLogout}
+          className={cn(
+            "w-full transition-all duration-200 rounded-xl p-3",
+            "bg-gradient-to-r from-red-900/20 to-rose-900/20",
+            "border border-red-700/30 hover:border-red-500/50",
+            "hover:bg-gradient-to-r hover:from-red-600/20 hover:to-rose-600/20",
+            "text-red-400 hover:text-red-300",
+            "shadow-lg hover:shadow-red-500/10"
+          )}
+        >
+          <LogOut className="h-5 w-5" />
+          {expanded && <span className="ml-3 font-medium">Sair do Sistema</span>}
+        </SidebarMenuButton>
+
+        {/* Componente de Nome (não-clicável) */}
+        <div className={cn(
+          "w-full transition-all duration-200 rounded-xl p-3",
+          "bg-gradient-to-r from-gray-800/50 to-gray-700/50",
+          "border border-gray-600/30",
+          "shadow-lg"
+        )}>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 ring-2 ring-gray-600/50 ring-offset-2 ring-offset-gray-800">
+              {profilePicUrl && (
+                <AvatarImage src={profilePicUrl} alt={currentCorretor?.nome || 'Usuário'} />
               )}
-              {expanded && (
-                <div className="flex flex-col gap-1 ml-auto">
-                  <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-                  <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-                  <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-                </div>
-              )}
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            className="w-64 bg-gray-800 border-gray-700 shadow-2xl"
-            sideOffset={8}
-          >
-            <div className="px-4 py-3 border-b border-gray-700">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 ring-2 ring-blue-500/30">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
-                    NF
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-white">Nicolas Fujimoto</span>
-                  <span className="text-xs text-gray-400">fujimoto.nicolas@gmail.com</span>
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-sm">
+                {currentCorretor?.nome?.substring(0, 2).toUpperCase() || 'NF'}
+              </AvatarFallback>
+            </Avatar>
+            {expanded && (
+              <div className="flex flex-col items-start flex-1 min-w-0">
+                <span className="text-sm font-semibold truncate text-white">
+                  {currentCorretor?.nome || 'Usuário'}
+                </span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-xs text-gray-400 truncate">
+                    {userRole === 'DONO' ? 'Proprietário' : 
+                     userRole === 'ADMIN' ? 'Administrador' : 'Corretor'}
+                  </span>
                 </div>
               </div>
-            </div>
-            <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors">
-              <Settings className="mr-3 h-4 w-4" />
-              Configurações da Conta
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors">
-              <LogOut className="mr-3 h-4 w-4" />
-              Sair do Sistema
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            )}
+          </div>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
