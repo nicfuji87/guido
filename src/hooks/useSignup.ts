@@ -66,7 +66,8 @@ export const useSignup = () => {
       
       const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       
-      log.debug('Configurando redirectTo', 'SIGNUP', { baseUrl, redirectTo: `${baseUrl}/app` });
+      // AI dev note: redirectTo DEVE ir para /auth/callback para processar o token ANTES de ir para /app
+      log.debug('Configurando redirectTo', 'SIGNUP', { baseUrl, redirectTo: `${baseUrl}/auth/callback` });
       
       const signUpResponse = await supabase.auth.signUp(
         {
@@ -74,7 +75,7 @@ export const useSignup = () => {
           password: crypto.randomUUID() // Senha temporária - usuário usará magic link
         },
         {
-          redirectTo: `${baseUrl}/app` // Redirecionar direto para o dashboard
+          redirectTo: `${baseUrl}/auth/callback` // Processar token e então ir para dashboard
         }
       );
 

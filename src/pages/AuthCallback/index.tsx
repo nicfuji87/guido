@@ -19,85 +19,100 @@ export default function AuthCallback() {
         
         log.info('Processando callback de autenticação', 'AuthCallback')
         
-        // Aguardar um pouco para garantir que o Supabase processou o token
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // AI dev note: Verificar PRIMEIRO se há token no hash (confirmação de email)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const accessToken = hashParams.get('access_token')
+        const type = hashParams.get('type')
         
-        // Verificar se há uma sessão ativa
-        const user = supabase.auth.user()
-        const session = supabase.auth.session()
+        console.log('[AuthCallback] Token no hash:', accessToken ? 'Sim' : 'Não');
+        console.log('[AuthCallback] Type:', type);
         
-        console.log('[AuthCallback] User:', user ? { id: user.id, email: user.email } : null);
-        console.log('[AuthCallback] Session:', session ? 'Existe' : 'Não existe');
-        
-        if (user) {
-          log.info('Usuário autenticado com sucesso após confirmação', 'AuthCallback', { 
-            email: user.email,
-            confirmed: user.email_confirmed_at 
-          })
+        if (accessToken && type === 'signup') {
+          // É confirmação de email do signup - Supabase v1 já processa automaticamente
+          console.log('[AuthCallback] Confirmação de email detectada! Aguardando processamento...');
+          log.info('Confirmação de email via signup - aguardando processamento', 'AuthCallback')
+          setMessage('Confirmando email e autenticando...')
           
-          setStatus('success')
-          setMessage('Email confirmado! Redirecionando para o dashboard...')
+          // Aguardar o Supabase processar o token (v1 faz isso automaticamente)
+          await new Promise(resolve => setTimeout(resolve, 1500))
           
-          // Redirecionar para o dashboard após 1.5 segundos
-          setTimeout(() => {
-            console.log('[AuthCallback] Redirecionando para /app');
-            history.push('/app')
-          }, 1500)
-        } else {
-          console.log('[AuthCallback] Sem usuário - verificando hash...');
-          // Sem sessão - verificar hash da URL (Supabase v1 pode passar token no hash)
-          const hashParams = new URLSearchParams(window.location.hash.substring(1))
-          const accessToken = hashParams.get('access_token')
+          // Verificar sessão
+          const user = supabase.auth.user()
+          const session = supabase.auth.session()
           
-          console.log('[AuthCallback] Access token no hash:', accessToken ? 'Sim' : 'Não');
+          console.log('[AuthCallback] Após processamento - User:', user ? { id: user.id, email: user.email, confirmed: user.email_confirmed_at } : null);
+          console.log('[AuthCallback] Após processamento - Session:', session ? 'Existe' : 'Não existe');
           
-          if (accessToken) {
-            console.log('[AuthCallback] Token encontrado! Aguardando processamento...');
-            log.info('Token encontrado no hash, processando...', 'AuthCallback')
-            setMessage('Autenticando...')
+          if (user && session) {
+            console.log('[AuthCallback] ✅ Usuário autenticado! Redirecionando para dashboard...');
+            log.info('Email confirmado e sessão estabelecida com sucesso', 'AuthCallback', {
+              email: user.email,
+              confirmed: user.email_confirmed_at
+            })
             
-            // Aguardar o Supabase processar
+            setStatus('success')
+            setMessage('Email confirmado! Entrando no Guido...')
+            
+            // Redirecionar para o dashboard
+            setTimeout(() => {
+              console.log('[AuthCallback] Redirecionando para /app');
+              history.push('/app')
+            }, 1000)
+          } else {
+            // Token presente mas sem sessão - pode ser erro temporário
+            console.warn('[AuthCallback] Token presente mas sem sessão - tentando novamente...');
             await new Promise(resolve => setTimeout(resolve, 1000))
             
-            // Tentar novamente
-            const userAfterWait = supabase.auth.user()
-            console.log('[AuthCallback] Usuário após espera:', userAfterWait ? 'Encontrado' : 'Não encontrado');
-            
-            if (userAfterWait) {
-              console.log('[AuthCallback] Usuário autenticado! Redirecionando...');
+            const retryUser = supabase.auth.user()
+            if (retryUser) {
+              console.log('[AuthCallback] ✅ Sessão estabelecida na retry!');
               setStatus('success')
-              setMessage('Email confirmado! Redirecionando...')
-              setTimeout(() => {
-                history.push('/app')
-              }, 1000)
+              setMessage('Email confirmado! Entrando no Guido...')
+              setTimeout(() => history.push('/app'), 1000)
             } else {
-              // Se ainda não tem sessão, redirecionar para login
-              console.warn('[AuthCallback] Nenhuma sessão após wait - indo para login');
-              log.warn('Nenhuma sessão encontrada após callback', 'AuthCallback')
+              console.error('[AuthCallback] Falha ao estabelecer sessão');
+              log.error('Falha ao estabelecer sessão após confirmação', 'AuthCallback')
               setStatus('error')
-              setMessage('Redirecionando para o login...')
-              setTimeout(() => {
-                history.push('/login?confirmacao=true')
-              }, 2000)
+              setMessage('Erro ao processar confirmação. Por favor, faça login.')
+              setTimeout(() => history.push('/login?confirmacao=erro'), 2000)
             }
+          }
+        } else if (accessToken && type === 'recovery') {
+          // Recovery de senha (magic link para resetar senha)
+          console.log('[AuthCallback] Recovery detectado');
+          log.info('Recovery de senha detectado', 'AuthCallback')
+          setStatus('success')
+          setMessage('Autenticando...')
+          setTimeout(() => history.push('/app'), 1000)
+        } else {
+          // Verificar se já tem sessão ativa (usuário já autenticado)
+          const user = supabase.auth.user()
+          const session = supabase.auth.session()
+          
+          console.log('[AuthCallback] Sem token especial - User:', user ? 'Sim' : 'Não');
+          console.log('[AuthCallback] Sem token especial - Session:', session ? 'Sim' : 'Não');
+          
+          if (user && session) {
+            console.log('[AuthCallback] Sessão ativa detectada - redirecionando');
+            log.info('Sessão ativa detectada', 'AuthCallback', { email: user.email })
+            setStatus('success')
+            setMessage('Redirecionando...')
+            setTimeout(() => history.push('/app'), 500)
           } else {
-            // Sem token e sem sessão - redirecionar para login
-            console.warn('[AuthCallback] Sem token no hash - indo para login');
+            // Sem token e sem sessão - ir para login
+            console.warn('[AuthCallback] Sem token e sem sessão - indo para login');
             log.warn('Callback sem token ou sessão', 'AuthCallback')
             setStatus('error')
             setMessage('Redirecionando para o login...')
-            setTimeout(() => {
-              history.push('/login?confirmacao=true')
-            }, 2000)
+            setTimeout(() => history.push('/login'), 1500)
           }
         }
       } catch (error) {
         log.error('Erro ao processar callback de autenticação', 'AuthCallback', error)
+        console.error('[AuthCallback] Erro:', error);
         setStatus('error')
         setMessage('Erro ao processar autenticação. Redirecionando...')
-        setTimeout(() => {
-          history.push('/login')
-        }, 2000)
+        setTimeout(() => history.push('/login'), 2000)
       }
     }
 
