@@ -120,14 +120,14 @@ export const OnboardingModal = ({ onClose }: OnboardingModalProps) => {
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
         <div 
-          className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-2xl w-full pointer-events-auto animate-in zoom-in-95 duration-300"
+          className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-2xl w-full pointer-events-auto animate-in zoom-in-95 duration-300 max-h-[85vh] flex flex-col overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header com botão fechar */}
-          <div className="relative p-6 pb-0">
+          <div className="relative p-4 pb-0 sm:p-6 sm:pb-0 flex-shrink-0">
             <button
               onClick={handleDismiss}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg z-10"
               title="Fechar"
             >
               <X className="w-5 h-5" />
@@ -135,73 +135,73 @@ export const OnboardingModal = ({ onClose }: OnboardingModalProps) => {
           </div>
 
           {/* Content */}
-          <div className="px-6 pb-6 pt-2 space-y-6">
+          <div className="p-4 pt-2 sm:p-6 sm:pt-2 space-y-4 sm:space-y-6 overflow-y-auto flex-1 custom-scrollbar">
             {/* Icon + Title */}
             <div className="text-center space-y-3">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-900/50">
-                <Sparkles className="w-10 h-10 text-white" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-900/50">
+                <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
               
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
                   Bem-vindo ao Guido! 🎉
                 </h2>
-                <p className="text-gray-400 text-lg">
+                <p className="text-gray-400 text-base sm:text-lg">
                   Você tem <strong className="text-green-400 font-semibold">7 dias grátis</strong> para testar todas as funcionalidades
                 </p>
               </div>
             </div>
 
             {/* Steps */}
-            <div className="bg-gray-800/50 rounded-xl p-6 space-y-4 border border-gray-700/50">
+            <div className="bg-gray-800/50 rounded-xl p-4 sm:p-6 space-y-4 border border-gray-700/50">
               <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400" />
                 Como começar:
               </h3>
               
               {/* Step 1 - Conectar WhatsApp (destacado) */}
-              <div className="flex items-start gap-4 p-4 rounded-lg bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700/30">
-                <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-green-900/50">
-                  <span className="text-white font-bold text-lg">1</span>
+              <div className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700/30">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg shadow-green-900/50">
+                  <span className="text-white font-bold text-base sm:text-lg">1</span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Smartphone className="w-4 h-4 text-green-400" />
-                    <p className="font-semibold text-white">Conecte seu WhatsApp</p>
+                    <p className="font-semibold text-white text-sm sm:text-base">Conecte seu WhatsApp</p>
                   </div>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-xs sm:text-sm text-gray-300">
                     Escaneie o QR Code em segundos e comece a usar
                   </p>
                 </div>
               </div>
 
               {/* Step 2 */}
-              <div className="flex items-start gap-4 p-3 rounded-lg">
-                <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-gray-300 font-bold text-lg">2</span>
+              <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-gray-300 font-bold text-base sm:text-lg">2</span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <MessageSquare className="w-4 h-4 text-gray-400" />
-                    <p className="font-medium text-gray-200">Suas conversas serão analisadas</p>
+                    <p className="font-medium text-gray-200 text-sm sm:text-base">Suas conversas serão analisadas</p>
                   </div>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-xs sm:text-sm text-gray-400">
                     Nossa IA identifica automaticamente leads e oportunidades
                   </p>
                 </div>
               </div>
 
               {/* Step 3 */}
-              <div className="flex items-start gap-4 p-3 rounded-lg">
-                <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-gray-300 font-bold text-lg">3</span>
+              <div className="flex items-start gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-gray-300 font-bold text-base sm:text-lg">3</span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Zap className="w-4 h-4 text-gray-400" />
-                    <p className="font-medium text-gray-200">Receba insights automáticos</p>
+                    <p className="font-medium text-gray-200 text-sm sm:text-base">Receba insights automáticos</p>
                   </div>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-xs sm:text-sm text-gray-400">
                     Lembretes inteligentes, follow-ups e análises detalhadas
                   </p>
                 </div>
@@ -209,7 +209,7 @@ export const OnboardingModal = ({ onClose }: OnboardingModalProps) => {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex gap-3">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
               <Button
                 variant="outline"
                 onClick={handleDismiss}
