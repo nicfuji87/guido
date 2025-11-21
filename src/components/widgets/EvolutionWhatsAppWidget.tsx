@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Smartphone, CheckCircle, AlertCircle, Wifi, WifiOff, RotateCcw } from 'lucide-react';
+import { Smartphone, CheckCircle, AlertCircle, Wifi, WifiOff, RotateCcw, Copy, Check } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { connectWhatsApp, checkInstanceStatus, detectMobileDevice, resetInstanceData } from '@/services/uazapiService';
@@ -331,24 +331,67 @@ export const EvolutionWhatsAppWidget = () => {
               <div className="space-y-4">
                 <div className="text-center">
                   <p className="text-sm font-medium mb-2">Código de Pareamento</p>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Abra o WhatsApp no seu celular e digite este código
-                  </p>
+                  
+                  {/* Instruções passo a passo para mobile */}
+                  <div className="text-left bg-muted/50 p-3 rounded-lg mb-4 text-xs text-muted-foreground space-y-2">
+                    <p className="font-medium text-foreground">Como conectar:</p>
+                    <ol className="list-decimal pl-4 space-y-1">
+                      <li>Abra o WhatsApp e vá em <strong>Configurações</strong> (ou 3 pontinhos)</li>
+                      <li>Toque em <strong>Aparelhos conectados</strong> &gt; <strong>Conectar dispositivo</strong></li>
+                      <li>Na tela do QR Code, toque em <strong>Conectar com número de telefone</strong></li>
+                    </ol>
+                  </div>
                 </div>
-                <div className="bg-muted p-6 rounded-lg text-center">
-                  <p className="text-3xl font-mono font-bold tracking-wider">{pairCode}</p>
+
+                <div className="relative">
+                  <div className="bg-muted p-6 rounded-lg text-center cursor-pointer hover:bg-muted/80 transition-colors group"
+                       onClick={() => {
+                         navigator.clipboard.writeText(pairCode);
+                         // Feedback visual poderia ser adicionado aqui
+                       }}>
+                    <p className="text-3xl font-mono font-bold tracking-wider break-all">{pairCode}</p>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Copy className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
                 </div>
+
                 <Button
-                  onClick={handleRefresh}
-                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(pairCode);
+                    // Opcional: feedback visual temporário
+                  }}
+                  variant="secondary"
                   className="w-full"
-                  disabled={isLoading}
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Gerar Novo Código
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copiar Código
                 </Button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={handleRefresh}
+                    variant="outline"
+                    className="w-full text-xs"
+                    disabled={isLoading}
+                  >
+                    <RotateCcw className="w-3 h-3 mr-2" />
+                    Gerar Novo
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-xs text-destructive hover:bg-destructive/10 border-destructive/30"
+                    onClick={handleReset}
+                    disabled={isLoading}
+                  >
+                    <RotateCcw className="w-3 h-3 mr-2" />
+                    Resetar
+                  </Button>
+                </div>
+
                 {lastStatusCheck && (
-                  <p className="text-xs text-center text-muted-foreground">
+                  <p className="text-[10px] text-center text-muted-foreground">
                     Última atualização: {lastStatusCheck.toLocaleTimeString()}
                   </p>
                 )}
