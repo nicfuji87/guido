@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Smartphone, CheckCircle, AlertCircle, Wifi, WifiOff, RotateCcw, Copy, Check } from 'lucide-react';
+import { Smartphone, CheckCircle, AlertCircle, Wifi, WifiOff, RotateCcw, Copy } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { connectWhatsApp, checkInstanceStatus, detectMobileDevice, resetInstanceData } from '@/services/uazapiService';
