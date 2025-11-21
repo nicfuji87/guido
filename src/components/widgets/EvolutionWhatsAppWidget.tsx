@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Smartphone, CheckCircle, AlertCircle, Wifi, WifiOff, RotateCcw } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { connectWhatsApp, checkInstanceStatus, detectMobileDevice } from '@/services/uazapiService';
+import { connectWhatsApp, checkInstanceStatus, detectMobileDevice, resetInstanceData } from '@/services/uazapiService';
 import { supabase } from '@/lib/supabaseClient';
 import { ProcessingConversationsModal } from '@/components/ProcessingConversationsModal';
 
@@ -179,6 +179,32 @@ export const EvolutionWhatsAppWidget = () => {
     loadInstanceStatus();
   };
 
+  // Resetar conexão (em caso de erro)
+  const handleReset = async () => {
+    if (!authUserId) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      await resetInstanceData(authUserId);
+      
+      // Tentar carregar status novamente (vai vir como disconnected)
+      setStatus('disconnected');
+      setQrCode(null);
+      setPairCode(null);
+      
+      // Forçar refresh
+      loadInstanceStatus();
+      
+    } catch (err) {
+      console.error('[Widget] Erro ao resetar:', err);
+      setError('Erro ao restaurar conexão');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Determinar cor do status
   const getStatusColor = () => {
     switch (status) {
@@ -236,12 +262,25 @@ export const EvolutionWhatsAppWidget = () => {
           <div className="space-y-4">
             {/* Error Message */}
             {error && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-destructive font-medium">Erro</p>
-                  <p className="text-sm text-muted-foreground">{error}</p>
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex flex-col gap-2">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-destructive font-medium">Erro</p>
+                    <p className="text-sm text-muted-foreground break-words">{error}</p>
+                  </div>
                 </div>
+                
+                {/* Botão de Reset se for erro de autenticação ou outro erro persistente */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleReset}
+                  className="self-end text-xs border-destructive/30 hover:bg-destructive/10 text-destructive"
+                >
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  Restaurar Conexão
+                </Button>
               </div>
             )}
 

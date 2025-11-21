@@ -295,6 +295,47 @@ export async function checkInstanceStatus(
 }
 
 // ============================================
+// RESETAR DADOS DA INSTÂNCIA (QUANDO OCORRER ERRO 401)
+// ============================================
+
+export async function resetInstanceData(
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('[UAZapi] Resetando dados da instância para usuário:', userId);
+    
+    // Limpar dados da instância no banco via Supabase Client
+    // O usuário deve ter permissão RLS para atualizar seu próprio registro
+    const { error } = await supabase
+      .from('usuarios')
+      .update({
+        uazapi_status: 'disconnected',
+        uazapi_token: null,
+        uazapi_instance_id: null,
+        // Não limpamos o nome da instância para tentar reutilizar se possível, 
+        // mas se for necessário recriar do zero, a Edge Function deve tratar
+        uazapi_last_disconnect: new Date().toISOString(),
+        uazapi_last_disconnect_reason: 'User Manual Reset / Error 401'
+      })
+      .eq('auth_user_id', userId);
+
+    if (error) {
+      console.error('[UAZapi] Erro ao resetar dados no banco:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('[UAZapi] Dados resetados com sucesso');
+    return { success: true };
+  } catch (error) {
+    console.error('[UAZapi] Erro ao resetar instância:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    };
+  }
+}
+
+// ============================================
 // UTILIDADES
 // ============================================
 

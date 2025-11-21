@@ -17,14 +17,22 @@ interface OnboardingModalProps {
 
 export const OnboardingModal = ({ onClose }: OnboardingModalProps) => {
   const history = useHistory();
+  const { location } = history; // useHistory já tem location no v5, ou usar useLocation
   const { currentCorretor } = useViewContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Se estiver na página de integrações, não mostrar o modal
+    if (location.pathname.includes('/integrations')) {
+      setIsOpen(false);
+      setIsLoading(false);
+      return;
+    }
+    
     checkIfShouldShow();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCorretor]);
+  }, [currentCorretor, location.pathname]);
 
   const checkIfShouldShow = async () => {
     try {
