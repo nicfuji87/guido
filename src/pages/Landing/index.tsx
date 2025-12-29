@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Zap, Target, Users, Home, Clock, AlertTriangle, MessageSquare, MessageCircle, Settings, CheckCircle, Brain, Star, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
+import { ArrowRight, Zap, Target, Users, Home, Clock, AlertTriangle, MessageSquare, MessageCircle, Settings, CheckCircle, Brain, Star, ChevronDown, HelpCircle } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { NavBar } from '@/components/NavBar'
 import { VideoPlayer } from '@/components/VideoPlayer'
