@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { ArrowRight, Zap, Target, Users, Home, Clock, AlertTriangle, MessageSquare, MessageCircle, Settings, CheckCircle, Brain, Star, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { NavBar } from '@/components/NavBar'
@@ -6,8 +7,6 @@ import { VideoPlayer } from '@/components/VideoPlayer'
 import { AnimatedSection } from '@/components/AnimatedSection'
 import { BeamsBackground } from '@/components/BeamsBackground'
 import { SignupModal } from '@/components/SignupModal'
-
-import { AnimatedText } from '@/components/AnimatedText'
 import { GradientText } from '@/components/GradientText'
 import { FloatingCard } from '@/components/FloatingCard'
 import { PremiumButton } from '@/components/PremiumButton'
@@ -16,29 +15,27 @@ import { ParticleBackground } from '@/components/ParticleBackground'
 // FAQ Component
 const FAQItem = ({ question, answer, index }: { question: string; answer: string; index: number }) => {
   const [isOpen, setIsOpen] = useState(false)
-  
+
   return (
-    <AnimatedSection delay={index * 100}>
-      <FloatingCard className="overflow-hidden">
+    <AnimatedSection delay={Math.min(index * 50, 300)}>
+      <div className={`rounded-xl border transition-all duration-300 ${isOpen ? 'bg-white/[0.03] border-[#00F6FF]/30 shadow-[0_0_20px_rgba(0,246,255,0.08)]' : 'bg-white/[0.02] border-white/[0.06] hover:border-white/10 hover:bg-white/[0.04]'}`}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full text-left p-6 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
+          className="w-full text-left px-4 py-3.5 sm:px-5 sm:py-4 flex items-center justify-between gap-3"
         >
-          <h3 className="text-lg font-semibold pr-4">{question}</h3>
-          {isOpen ? (
-            <ChevronUp className="h-5 w-5 text-[#00F6FF] flex-shrink-0" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" />
-          )}
+          <h3 className={`text-sm sm:text-base font-medium transition-colors ${isOpen ? 'text-white' : 'text-gray-200'}`}>{question}</h3>
+          <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-[#00F6FF]/20 rotate-180' : 'bg-white/5'}`}>
+            <ChevronDown className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-colors ${isOpen ? 'text-[#00F6FF]' : 'text-gray-400'}`} />
+          </div>
         </button>
-        {isOpen && (
-          <div className="px-6 pb-6 border-t border-gray-700/50">
-            <div className="pt-4 text-gray-300 leading-relaxed whitespace-pre-line">
+        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="px-4 pb-4 sm:px-5 sm:pb-5 border-t border-white/5">
+            <div className="pt-3 sm:pt-4 text-gray-400 text-xs sm:text-sm leading-relaxed whitespace-pre-line">
               {answer}
             </div>
           </div>
-        )}
-      </FloatingCard>
+        </div>
+      </div>
     </AnimatedSection>
   )
 }
@@ -47,6 +44,19 @@ export default function Landing() {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false)
   const [skipPlanSelection, setSkipPlanSelection] = useState(false)
   const [defaultPlan, setDefaultPlan] = useState<'INDIVIDUAL' | 'IMOBILIARIA'>('INDIVIDUAL')
+  const [showStickyCTA, setShowStickyCTA] = useState(false)
+
+  // Detectar scroll para mostrar CTA sticky no mobile
+  useEffect(() => {
+    const handleScroll = () => {
+      // Mostrar CTA após scroll de 60% da viewport
+      const scrollThreshold = window.innerHeight * 0.6
+      setShowStickyCTA(window.scrollY > scrollThreshold)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleSignupSuccess = () => {
     // TODO: Redirect to dashboard or onboarding
@@ -89,133 +99,149 @@ export default function Landing() {
       />
 
       {/* Hero Section */}
-      <section id="hero" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden pt-20 lg:pt-0">
-        <ParticleBackground className="opacity-40" particleCount={30} />
+      <section id="hero" className="relative min-h-[100dvh] flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden pt-20 pb-8 lg:pt-0 lg:pb-0">
+        <ParticleBackground className="opacity-20 lg:opacity-30" particleCount={15} />
         <BeamsBackground className="absolute inset-0" intensity="subtle" />
-        
+
+        {/* Gradient orb decorations */}
+        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#00F6FF]/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#0EA5E9]/10 rounded-full blur-[120px] pointer-events-none" />
+
         <div className="relative z-10 max-w-7xl mx-auto w-full">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* Content Column */}
-            <div className="text-center lg:text-left space-y-4 lg:space-y-6">
+            <div className="text-center lg:text-left space-y-4 sm:space-y-5 lg:space-y-8">
               {/* Logo */}
               <AnimatedSection delay={0}>
-                <img 
-                  src="/images/guido/guido logo dark - sem fundo.png" 
-                  alt="Guido Logo" 
-                  className="h-10 sm:h-12 md:h-14 lg:h-16 xl:h-18 w-auto object-contain mx-auto lg:mx-0"
+                <img
+                  src="/images/guido/guido logo dark - sem fundo.png"
+                  alt="Guido Logo"
+                  className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain mx-auto lg:mx-0"
                 />
               </AnimatedSection>
-              
-              {/* Main Headline */}
-              <div className="space-y-3">
-                <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-5xl font-bold leading-tight">
-                  <div className="mb-1">
-                    <AnimatedText 
-                      text="Nunca mais perca"
-                      className=""
-                      delay={200}
-                    />
-                  </div>
-                  <div className="mb-1">
-                    <AnimatedText 
-                      text="dinheiro com seus"
-                      className=""
-                      delay={400}
-                    />
-                  </div>
-                  <div>
-                    <GradientText gradient="primary">
-                      leads esquecidos no <span className="text-[#25D366]">WhatsApp</span>
-                    </GradientText>
-                  </div>
+
+              {/* Badge - Hidden on smallest mobile */}
+              <AnimatedSection delay={100}>
+                <div className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/10 backdrop-blur-sm">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00F6FF] opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00F6FF]"></span>
+                  </span>
+                  <span className="text-sm text-gray-300">IA para Corretores de Imóveis</span>
+                </div>
+              </AnimatedSection>
+
+              {/* Main Headline - Completa e impactante */}
+              <AnimatedSection delay={150}>
+                <h1 className="text-[1.6rem] sm:text-3xl md:text-4xl lg:text-6xl font-bold leading-[1.2] tracking-tight">
+                  <span className="text-white">Nunca mais perca dinheiro com </span>
+                  <span className="bg-gradient-to-r from-[#00F6FF] via-[#00D4FF] to-[#0EA5E9] bg-clip-text text-transparent">leads esquecidos</span>
+                  <span className="text-white"> no </span>
+                  <span className="text-[#25D366]">WhatsApp</span>
                 </h1>
+              </AnimatedSection>
+
+              {/* Video - Mobile Only - Logo após headline */}
+              <div className="lg:hidden">
+                <AnimatedSection delay={200}>
+                  <div className="relative">
+                    <div className="absolute -inset-2 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-2xl blur-xl" />
+                    <div className="relative bg-white/[0.03] rounded-xl border border-white/10 p-1">
+                      <VideoPlayer
+                        thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
+                        videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                        title="▶ Veja como funciona"
+                        description=""
+                        className="rounded-lg"
+                      />
+                    </div>
+                  </div>
+                </AnimatedSection>
               </div>
 
-              {/* Subheadline */}
-              <AnimatedSection delay={800}>
-                <p className="text-sm sm:text-lg md:text-xl lg:text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                  Guido é uma{' '}
-                  <span className="relative inline-block">
-                    <span className="bg-[rgba(0,246,255,0.10)] text-[#00F6FF] px-3 py-1 rounded-lg border border-[rgba(0,246,255,0.20)]">
-                      IA para corretores de imóveis
-                    </span>
-                  </span>{' '}
-                  que identifica oportunidades nas suas conversas, te lembra quem responder e sugere as melhores respostas para você vender mais imóveis.
-                </p>
-              </AnimatedSection>
-
-              {/* Trust Badge - Mobile Only */}
-              <AnimatedSection delay={900} className="lg:hidden">
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                  <span className="flex items-center gap-1">
-                    <span className="text-green-400">✓</span> 7 dias grátis
-                  </span>
-                  <span className="text-gray-600">•</span>
-                  <span className="flex items-center gap-1">
-                    <span className="text-green-400">✓</span> Sem cartão
-                  </span>
-                </div>
-              </AnimatedSection>
-
-              {/* Video - Mobile Only */}
-              <AnimatedSection delay={1000} className="lg:hidden">
-                <div className="relative">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-2xl blur-xl" />
-                  <VideoPlayer
-                    thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
-                    videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                    title="▶ Ver como funciona (2 min)"
-                    description="Descubra como revolucionar sua rotina"
-                    className="relative z-10 rounded-xl shadow-xl"
-                  />
-                </div>
-              </AnimatedSection>
-
-              {/* CTA Button */}
-              <AnimatedSection delay={1200}>
+              {/* CTA - Mobile: logo abaixo do vídeo */}
+              <AnimatedSection delay={300}>
                 <div className="flex flex-col items-center lg:items-start gap-3">
-                  <PremiumButton 
-                    size="lg" 
-                    shimmer 
-                    className="group w-full sm:w-auto"
+                  <PremiumButton
+                    size="lg"
+                    shimmer
+                    className="group w-full sm:w-auto text-base"
                     onClick={() => {
                       const pricingSection = document.getElementById('pricing');
                       pricingSection?.scrollIntoView({ behavior: 'smooth' });
                     }}
                   >
-                    Começar Agora - GRÁTIS
+                    Começar Grátis por 7 Dias
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </PremiumButton>
-                  
-                  {/* Scroll Indicator - Mobile Only */}
-                  <div className="lg:hidden flex flex-col items-center gap-1 text-xs text-gray-500 animate-bounce">
-                    <span>Role para ver mais</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+
+                  {/* Trust badges inline with CTA */}
+                  <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3 text-green-500" /> Sem cartão
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3 text-green-500" /> 7 dias grátis
+                    </span>
                   </div>
                 </div>
               </AnimatedSection>
 
-              {/* Social Proof */}
-              <AnimatedSection delay={1400}>
-                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-center lg:justify-start">
-                  <div className="flex items-center gap-3">
-                    <div className="flex -space-x-2">
-                      {[1,2,3,4,5].map(i => (
-                        <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-[#00F6FF] to-[#0EA5E9] border-2 border-[#0D1117] flex items-center justify-center">
-                          <span className="text-xs font-bold text-[#0D1117]">{i}</span>
+              {/* Subheadline - Desktop only */}
+              <AnimatedSection delay={400} className="hidden lg:block">
+                <p className="text-lg lg:text-xl text-gray-400 leading-relaxed max-w-xl">
+                  O Guido identifica oportunidades, lembra quem responder e sugere as melhores respostas para <span className="text-white font-medium">vender mais imóveis</span>.
+                </p>
+              </AnimatedSection>
+
+              {/* Secondary CTA - Desktop only */}
+              <AnimatedSection delay={500} className="hidden lg:block">
+                <button
+                  onClick={() => {
+                    const featuresSection = document.getElementById('features');
+                    featuresSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-[#00F6FF]/50 hover:bg-white/5 transition-all">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  Ver como funciona
+                </button>
+              </AnimatedSection>
+
+              {/* Social Proof - Mobile: mais compacto */}
+              <AnimatedSection delay={400}>
+                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 pt-3 sm:pt-4 border-t border-white/5">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex -space-x-1.5 sm:-space-x-2">
+                      {[
+                        'bg-gradient-to-br from-blue-400 to-blue-600',
+                        'bg-gradient-to-br from-purple-400 to-purple-600',
+                        'bg-gradient-to-br from-pink-400 to-pink-600',
+                        'bg-gradient-to-br from-orange-400 to-orange-600',
+                        'bg-gradient-to-br from-green-400 to-green-600'
+                      ].map((bg, i) => (
+                        <div key={i} className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full ${bg} border-2 border-[#0D1117] flex items-center justify-center shadow-lg`}>
+                          <span className="text-[10px] sm:text-xs font-medium text-white/90">👤</span>
                         </div>
                       ))}
                     </div>
-                    <div className="text-sm sm:text-sm text-gray-300 font-semibold">
-                      <span className="text-[#00F6FF]">+2.000</span> corretores já usam
+                    <div className="text-xs sm:text-sm">
+                      <span className="text-[#00F6FF] font-semibold">+2.000</span>
+                      <span className="text-gray-400"> corretores</span>
                     </div>
                   </div>
-                  <div className="flex">
-                    {[1,2,3,4,5].map(i => (
-                      <Star key={i} className="w-4 h-4 sm:w-4 sm:h-4 fill-yellow-500 text-yellow-500" />
-                    ))}
+
+                  <div className="flex items-center gap-1">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <span className="text-xs sm:text-sm text-gray-400">4.9/5</span>
                   </div>
                 </div>
               </AnimatedSection>
@@ -223,135 +249,267 @@ export default function Landing() {
 
             {/* Video Column - Desktop Only */}
             <div className="relative hidden lg:block">
-              <AnimatedSection delay={600}>
-                <div className="relative float">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-[#00F6FF]/20 to-[#0EA5E9]/20 rounded-2xl blur-xl" />
-                  <VideoPlayer
-                    thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
-                    videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                    title="Veja o Guido em Ação"
-                    description="Descubra como revolucionar sua rotina"
-                    className="relative z-10 rounded-xl shadow-xl max-w-md mx-auto"
-                  />
+              <AnimatedSection delay={400}>
+                <div className="relative">
+                  {/* Glow effect */}
+                  <div className="absolute -inset-4 bg-gradient-to-r from-[#00F6FF]/20 via-[#0EA5E9]/10 to-[#00F6FF]/20 rounded-3xl blur-2xl opacity-60" />
+
+                  {/* Video container */}
+                  <div className="relative bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-2xl border border-white/10 p-1.5 shadow-2xl">
+                    <VideoPlayer
+                      thumbnailUrl="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
+                      videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                      title="Veja o Guido em Ação"
+                      description="2 minutos para entender"
+                      className="rounded-xl overflow-hidden"
+                    />
+                  </div>
+
+                  {/* Floating badge */}
+                  <div className="absolute -bottom-4 -left-4 bg-[#0D1117] border border-white/10 rounded-xl px-4 py-3 shadow-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00F6FF]/20 to-[#00F6FF]/5 border border-[#00F6FF]/30 flex items-center justify-center">
+                        <MessageCircle className="w-5 h-5 text-[#00F6FF]" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-white">Integração WhatsApp</div>
+                        <div className="text-xs text-gray-500">Funciona no seu número</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </AnimatedSection>
             </div>
+          </div>
+        </div>
+
+        {/* Scroll indicator - Desktop */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-gray-600">
+          <span className="text-xs">Scroll</span>
+          <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1">
+            <div className="w-1 h-2 bg-white/40 rounded-full animate-bounce" />
           </div>
         </div>
       </section>
 
       {/* Problem Section */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 relative">
+      <section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+            <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 lg:mb-6">
                 Sua rotina parece{' '}
                 <GradientText gradient="primary">familiar</GradientText>?
               </h2>
-              <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto px-4">
-                Descubra os principais desafios que impedem você de vender mais
+              <p className="text-base sm:text-lg lg:text-xl text-gray-400 max-w-3xl mx-auto">
+                Esses desafios estão custando vendas todos os dias
               </p>
             </div>
           </AnimatedSection>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             {[
               {
                 icon: Clock,
-                title: "Horas gastas atualizando CRM",
-                description: "Inserção manual de dados, atualizações constantes no CRM. Tempo que poderia ser usado no relacionamento com o cliente.",
+                title: "Horas gastas no CRM",
+                description: "Inserção manual de dados e atualizações constantes. Tempo que deveria ser usado vendendo.",
+                color: "from-orange-500/20 to-orange-500/5",
+                iconColor: "text-orange-400",
+                borderColor: "border-orange-500/20",
                 delay: 0
               },
               {
                 icon: AlertTriangle,
-                title: "Dificuldade de Acompanhamento",
-                description: "Falta de automação para facilitar agendamento de compromissos, visitas ou follow-ups. Oportunidades perdidas por falta de organização.",
-                delay: 200
+                title: "Oportunidades perdidas",
+                description: "Sem automação para follow-ups e lembretes. Clientes quentes esfriam enquanto você está ocupado.",
+                color: "from-red-500/20 to-red-500/5",
+                iconColor: "text-red-400",
+                borderColor: "border-red-500/20",
+                delay: 100
               },
               {
                 icon: MessageSquare,
-                title: "Perda de leads por falta de atenção",
-                description: "Múltiplos canais e dezenas de conversas para gerenciar? Você perde tempo alternando entre WhatsApp, e-mails e ligações.",
-                delay: 400
+                title: "Conversas esquecidas",
+                description: "Dezenas de chats para gerenciar. Você perde leads alternando entre WhatsApp, e-mails e ligações.",
+                color: "from-yellow-500/20 to-yellow-500/5",
+                iconColor: "text-yellow-400",
+                borderColor: "border-yellow-500/20",
+                delay: 200
               },
               {
                 icon: MessageCircle,
-                title: "Leads que \"somem\"",
-                description: "Conversas que esfriam por falta de timing e abordagem. Sem alertas ou estratégias de reengajamento, leads promissores desaparecem.",
-                delay: 600
+                title: 'Leads que "somem"',
+                description: "Conversas que esfriam por falta de timing. Sem estratégias de reengajamento, leads desaparecem.",
+                color: "from-purple-500/20 to-purple-500/5",
+                iconColor: "text-purple-400",
+                borderColor: "border-purple-500/20",
+                delay: 300
+              },
+              {
+                icon: Brain,
+                title: "Falta de contexto",
+                description: "Difícil lembrar detalhes de cada cliente. Sem histórico organizado, suas respostas perdem personalização.",
+                color: "from-pink-500/20 to-pink-500/5",
+                iconColor: "text-pink-400",
+                borderColor: "border-pink-500/20",
+                delay: 400
               },
               {
                 icon: Settings,
-                title: "Falta de argumentos",
-                description: "Receba sugestões de resposta no momento certo e transforme objeções em oportunidades de fechamento.",
-                delay: 800
+                title: "Sem argumentos na hora H",
+                description: "Precisa pensar nas respostas certas sob pressão. Objeções viram vendas perdidas.",
+                color: "from-blue-500/20 to-blue-500/5",
+                iconColor: "text-blue-400",
+                borderColor: "border-blue-500/20",
+                delay: 500
               }
             ].map((problem, index) => (
               <AnimatedSection key={index} delay={problem.delay}>
-                <FloatingCard className="h-full">
-                  <div className="space-y-3">
-                    <div className="w-fit rounded-lg bg-[#00F6FF]/10 border border-[#00F6FF]/20 p-2">
-                      <problem.icon className="h-6 w-6 text-[#00F6FF]" />
+                <div className={`group h-full rounded-xl bg-gradient-to-br ${problem.color} border ${problem.borderColor} p-3 sm:p-4 lg:p-6 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg`}>
+                  <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+                    <div className={`w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <problem.icon className={`h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 ${problem.iconColor}`} />
                     </div>
-                    <h3 className="text-base font-semibold">
-                      {problem.title}
-                    </h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      {problem.description}
-                    </p>
+                    <div>
+                      <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-white mb-1 sm:mb-2">
+                        {problem.title}
+                      </h3>
+                      <p className="text-gray-400 text-xs sm:text-sm leading-relaxed line-clamp-3 sm:line-clamp-none">
+                        {problem.description}
+                      </p>
+                    </div>
                   </div>
-                </FloatingCard>
+                </div>
               </AnimatedSection>
             ))}
           </div>
+
+          {/* CTA após problemas */}
+          <AnimatedSection delay={600}>
+            <div className="text-center mt-8 sm:mt-12 lg:mt-16">
+              <p className="text-gray-500 text-sm sm:text-base mb-3 sm:mb-4">Reconhece esses problemas?</p>
+              <button
+                onClick={() => {
+                  const featuresSection = document.getElementById('features');
+                  featuresSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="inline-flex items-center gap-2 text-[#00F6FF] hover:text-white transition-colors font-medium text-sm sm:text-base"
+              >
+                Veja como o Guido resolve
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
       {/* Solution Section */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#00F6FF]/5 to-transparent" />
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background gradients */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00F6FF]/[0.02] to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,_rgba(0,246,255,0.08)_0%,_transparent_70%)] pointer-events-none" />
+
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <AnimatedSection>
-              <div className="space-y-6">
+              <div className="space-y-8">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#00F6FF]/10 border border-[#00F6FF]/20">
+                  <Zap className="w-4 h-4 text-[#00F6FF]" />
+                  <span className="text-sm text-[#00F6FF] font-medium">Potencializado por IA</span>
+                </div>
+
+                {/* Headline */}
                 <div>
-                  <Badge className="mb-4 bg-[#00F6FF]/10 text-[#00F6FF] border-[#00F6FF]/20">
-                    🤖 Inteligência Artificial
-                  </Badge>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-                    O guia que trabalha por você.{' '}
-                    <GradientText gradient="primary">24/7</GradientText>
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                    Seu copiloto de vendas{' '}
+                    <span className="bg-gradient-to-r from-[#00F6FF] to-[#0EA5E9] bg-clip-text text-transparent">24/7</span>
                   </h2>
-                  <p className="text-lg sm:text-xl text-gray-300 leading-relaxed">
-                    Guido agiliza tarefas, lembra compromissos, dá sugestões de abordagem, auxilia em suas decisões, atualiza o CRM e te ajuda a fechar negócios.
-                    <br /><br />
-                    Tudo de forma simples e rápido direto do{' '}
-                    <span className="text-[#25D366] font-semibold">WhatsApp</span>.
+                  <p className="text-lg text-gray-400 leading-relaxed">
+                    O Guido trabalha junto com você no WhatsApp, automatizando tarefas e sugerindo as melhores ações para fechar mais negócios.
                   </p>
                 </div>
-                <PremiumButton 
-                  size="lg" 
-                  className="group"
-                  onClick={() => {
-                    const pricingSection = document.getElementById('pricing');
-                    pricingSection?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  Experimentar Grátis
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </PremiumButton>
+
+                {/* Benefits list */}
+                <ul className="space-y-4">
+                  {[
+                    { text: "Sugestões de resposta em tempo real", highlight: "IA contextual" },
+                    { text: "Atualização automática do CRM", highlight: "Zero trabalho manual" },
+                    { text: "Lembretes inteligentes de follow-up", highlight: "Nunca esqueça" },
+                    { text: "Resumo completo de cada cliente", highlight: "Contexto sempre" }
+                  ].map((benefit, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-[#00F6FF]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <CheckCircle className="w-3.5 h-3.5 text-[#00F6FF]" />
+                      </div>
+                      <div>
+                        <span className="text-white">{benefit.text}</span>
+                        <span className="text-gray-500 text-sm ml-2">— {benefit.highlight}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <PremiumButton
+                    size="lg"
+                    className="group"
+                    onClick={() => {
+                      const pricingSection = document.getElementById('pricing');
+                      pricingSection?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    Experimentar Grátis
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </PremiumButton>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Funciona no seu WhatsApp atual</span>
+                  </div>
+                </div>
               </div>
             </AnimatedSection>
-            
+
             <AnimatedSection delay={200}>
               <div className="relative">
-                <div className="absolute -inset-6 bg-gradient-to-r from-[#00F6FF]/20 via-transparent to-[#00F6FF]/20 rounded-3xl blur-3xl" />
-                <img
-                  src="/images/partners/whatsapp-hand-animation.jpg"
-                  alt="WhatsApp Hand Animation"
-                  className="relative z-10 w-full max-w-md mx-auto rounded-2xl shadow-2xl float"
-                />
+                {/* Decorative elements */}
+                <div className="absolute -inset-8 bg-gradient-to-r from-[#00F6FF]/10 via-transparent to-[#0EA5E9]/10 rounded-3xl blur-3xl" />
+
+                {/* Main image container */}
+                <div className="relative bg-gradient-to-br from-white/[0.05] to-white/[0.02] rounded-2xl border border-white/10 p-2 shadow-2xl">
+                  <img
+                    src="/images/partners/whatsapp-hand-animation.jpg"
+                    alt="Guido no WhatsApp"
+                    className="w-full rounded-xl"
+                  />
+                </div>
+
+                {/* Floating stats card */}
+                <div className="absolute -top-6 -right-6 bg-[#0D1117]/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                      <Target className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-white">+40%</div>
+                      <div className="text-xs text-gray-500">mais conversões</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating WhatsApp badge */}
+                <div className="absolute -bottom-4 -left-4 bg-[#0D1117]/95 backdrop-blur-xl border border-white/10 rounded-xl px-4 py-3 shadow-2xl">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center">
+                      <MessageCircle className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="text-sm">
+                      <span className="text-white font-medium">WhatsApp</span>
+                      <span className="text-gray-500 ml-1">conectado</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </AnimatedSection>
           </div>
@@ -359,72 +517,78 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-7xl mx-auto">
           <AnimatedSection>
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-                Transforme sua rotina com{' '}
-                <GradientText gradient="primary">inteligência artificial</GradientText>
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
+                <span className="text-sm text-gray-400">Funcionalidades</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+                Tudo que você precisa para{' '}
+                <span className="bg-gradient-to-r from-[#00F6FF] to-[#0EA5E9] bg-clip-text text-transparent">vender mais</span>
               </h2>
-              <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto px-4">
-                Recursos poderosos que automatizam seu trabalho e multiplicam seus resultados
+              <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                Recursos inteligentes que trabalham silenciosamente para maximizar cada oportunidade
               </p>
             </div>
           </AnimatedSection>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 icon: MessageCircle,
                 title: "Assistente de Vendas",
-                description: "Sugestões de respostas inteligentes e personalizadas para cada cliente, guiando você para a próxima etapa da negociação.",
-                badge: "IA Avançada"
+                description: "Sugestões de respostas personalizadas para cada cliente. A IA analisa o contexto e guia você para o fechamento.",
+                gradient: "from-cyan-500/20 to-cyan-500/5"
               },
               {
                 icon: Settings,
-                title: "CRM 100% Atualizado",
-                description: "Peça para o Guido e ele atualiza o status, adiciona notas e registra contatos no CRM da imobiliária.",
-                badge: "Automação"
+                title: "CRM Automatizado",
+                description: "Diga ao Guido e ele atualiza status, adiciona notas e registra contatos automaticamente no seu CRM.",
+                gradient: "from-blue-500/20 to-blue-500/5"
               },
               {
                 icon: Brain,
                 title: "Memória Inteligente",
-                description: "Guido resume históricos e lembra você dos detalhes importantes de cada cliente, como um guia que nunca esquece.",
-                badge: "Smart Memory"
+                description: "Resume históricos e lembra detalhes importantes de cada cliente. Como um assistente que nunca esquece.",
+                gradient: "from-purple-500/20 to-purple-500/5"
               },
               {
                 icon: Clock,
-                title: "Alertas e Lembretes",
-                description: "Guido lembra você sobre follow-up com leads sem retorno, alerta de visita agendada e notificação para renovação de anúncios.",
-                badge: "Proativo"
+                title: "Alertas Proativos",
+                description: "Lembretes de follow-up, alertas de visitas agendadas e notificações de renovação. Nunca perca timing.",
+                gradient: "from-orange-500/20 to-orange-500/5"
               },
               {
                 icon: CheckCircle,
-                title: "Assistência Pós-Venda",
-                description: "Guido gera mensagens para acompanhar o cliente após a compra. Nutra o relacionamento com o cliente.",
-                badge: "Relacionamento"
+                title: "Pós-Venda Inteligente",
+                description: "Mensagens automáticas para acompanhar clientes após a compra. Construa relacionamentos duradouros.",
+                gradient: "from-green-500/20 to-green-500/5"
+              },
+              {
+                icon: Zap,
+                title: "Insights de Performance",
+                description: "Métricas de conversão, tempo de resposta e pipeline. Entenda o que funciona e otimize seu processo.",
+                gradient: "from-yellow-500/20 to-yellow-500/5"
               }
             ].map((feature, index) => (
-              <AnimatedSection key={index} delay={index * 200}>
-                <FloatingCard className="h-full group">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="w-fit rounded-lg bg-[#00F6FF]/10 border border-[#00F6FF]/20 p-2 group-hover:bg-[#00F6FF]/20 transition-colors">
-                        <feature.icon className="h-6 w-6 text-[#00F6FF]" />
-                      </div>
-                      <Badge className="text-xs bg-[#00F6FF]/10 text-[#00F6FF] border-[#00F6FF]/20">
-                        {feature.badge}
-                      </Badge>
+              <AnimatedSection key={index} delay={index * 100}>
+                <div className={`group h-full rounded-2xl bg-gradient-to-br ${feature.gradient} border border-white/[0.06] p-6 hover:border-white/10 transition-all duration-300`}>
+                  <div className="space-y-4">
+                    <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/[0.08] transition-all">
+                      <feature.icon className="h-6 w-6 text-[#00F6FF]" />
                     </div>
-                    <h3 className="text-base font-semibold group-hover:text-[#00F6FF] transition-colors">
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      {feature.description}
-                    </p>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-[#00F6FF] transition-colors">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-400 text-sm leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
                   </div>
-                </FloatingCard>
+                </div>
               </AnimatedSection>
             ))}
           </div>
@@ -432,15 +596,18 @@ export default function Landing() {
       </section>
 
       {/* Mission & Integrations */}
-      <section id="mission" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 relative bg-white text-gray-900">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50" />
+      <section id="mission" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Gradient background para manter consistência com tema escuro */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0D1117] via-[#0a0f14] to-[#0D1117]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(0,246,255,0.08)_0%,_transparent_70%)]" />
+
         <div className="max-w-7xl mx-auto relative z-10 text-center">
           <AnimatedSection>
             <div className="space-y-4 sm:space-y-6 mb-10 sm:mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
                 Por Trás da <GradientText gradient="primary">Inteligência</GradientText>
               </h2>
-              <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
+              <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed px-4">
                 Guido foi criado para libertar o corretor da sobrecarga digital, permitindo foco total nas pessoas e negociações.
               </p>
             </div>
@@ -448,65 +615,71 @@ export default function Landing() {
 
           <AnimatedSection delay={200}>
             <div className="space-y-8">
-              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 px-4">
+              <h3 className="text-xl sm:text-2xl font-semibold text-white px-4">
                 Integrações Diretas com seu <GradientText gradient="primary">CRM Imobiliário</GradientText>
               </h3>
-              <p className="text-gray-600 max-w-2xl mx-auto px-4">
+              <p className="text-gray-400 max-w-2xl mx-auto px-4">
                 O Guido faz atualizações e consultas de forma autônoma no sistema que você usa na imobiliária.
               </p>
               <div className="flex items-center justify-center gap-6 sm:gap-8 lg:gap-12 flex-wrap px-4">
                 <div className="group cursor-pointer">
-                  <img 
-                    src="/images/partners/download.png" 
-                    alt="RD Station" 
-                    className="h-12 sm:h-14 lg:h-16 w-auto transition-all duration-300 group-hover:scale-110 shadow-lg rounded-lg bg-white p-2" 
-                  />
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 transition-all duration-300 group-hover:scale-105 group-hover:bg-white/15 group-hover:border-[#00F6FF]/30">
+                    <img
+                      src="/images/partners/download.png"
+                      alt="RD Station"
+                      className="h-10 sm:h-12 lg:h-14 w-auto"
+                    />
+                  </div>
                 </div>
                 <div className="group cursor-pointer">
-                  <img 
-                    src="/images/partners/download (1).png" 
-                    alt="iMoview" 
-                    className="h-10 sm:h-12 lg:h-14 w-auto transition-all duration-300 group-hover:scale-110 shadow-lg rounded-lg bg-white p-2" 
-                  />
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 transition-all duration-300 group-hover:scale-105 group-hover:bg-white/15 group-hover:border-[#00F6FF]/30">
+                    <img
+                      src="/images/partners/download (1).png"
+                      alt="iMoview"
+                      className="h-8 sm:h-10 lg:h-12 w-auto"
+                    />
+                  </div>
                 </div>
                 <div className="group cursor-pointer">
-                  <img 
-                    src="/images/partners/Logo-loft-23.png" 
-                    alt="Loft" 
-                    className="h-10 sm:h-12 lg:h-14 w-auto transition-all duration-300 group-hover:scale-110 shadow-lg rounded-lg bg-white p-2" 
-                  />
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10 transition-all duration-300 group-hover:scale-105 group-hover:bg-white/15 group-hover:border-[#00F6FF]/30">
+                    <img
+                      src="/images/partners/Logo-loft-23.png"
+                      alt="Loft"
+                      className="h-8 sm:h-10 lg:h-12 w-auto"
+                    />
+                  </div>
                 </div>
               </div>
-              
-              {/* Decorative elements for white section */}
+
+              {/* Decorative elements - ajustado para tema escuro */}
               <div className="relative mt-12">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full border-t border-gray-200"></div>
+                  <div className="w-full max-w-lg border-t border-white/10"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-6 bg-white text-gray-500">Conecte-se com facilidade</span>
+                  <span className="px-6 bg-[#0a0f14] text-gray-500">Conecte-se com facilidade</span>
                 </div>
               </div>
-              
-              {/* Additional visual element */}
+
+              {/* Steps visual element */}
               <div className="grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-md mx-auto mt-8 px-4">
                 <div className="flex flex-col items-center space-y-2">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#00F6FF]/10 border border-[#00F6FF]/20 rounded-full flex items-center justify-center">
-                    <span className="text-[#00F6FF] font-bold text-sm sm:text-base">1</span>
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-[#00F6FF]/20 to-[#00F6FF]/5 border border-[#00F6FF]/30 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,246,255,0.15)]">
+                    <span className="text-[#00F6FF] font-bold text-base sm:text-lg">1</span>
                   </div>
-                  <span className="text-xs sm:text-sm text-gray-600 text-center">Conectar</span>
+                  <span className="text-xs sm:text-sm text-gray-400 text-center font-medium">Conectar</span>
                 </div>
                 <div className="flex flex-col items-center space-y-2">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#00F6FF]/10 border border-[#00F6FF]/20 rounded-full flex items-center justify-center">
-                    <span className="text-[#00F6FF] font-bold text-sm sm:text-base">2</span>
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-[#00F6FF]/20 to-[#00F6FF]/5 border border-[#00F6FF]/30 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,246,255,0.15)]">
+                    <span className="text-[#00F6FF] font-bold text-base sm:text-lg">2</span>
                   </div>
-                  <span className="text-xs sm:text-sm text-gray-600 text-center">Sincronizar</span>
+                  <span className="text-xs sm:text-sm text-gray-400 text-center font-medium">Sincronizar</span>
                 </div>
                 <div className="flex flex-col items-center space-y-2">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#00F6FF]/10 border border-[#00F6FF]/20 rounded-full flex items-center justify-center">
-                    <span className="text-[#00F6FF] font-bold text-sm sm:text-base">3</span>
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-[#00F6FF]/20 to-[#00F6FF]/5 border border-[#00F6FF]/30 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,246,255,0.15)]">
+                    <span className="text-[#00F6FF] font-bold text-base sm:text-lg">3</span>
                   </div>
-                  <span className="text-xs sm:text-sm text-gray-600 text-center">Vender Mais</span>
+                  <span className="text-xs sm:text-sm text-gray-400 text-center font-medium">Vender Mais</span>
                 </div>
               </div>
             </div>
@@ -527,7 +700,7 @@ export default function Landing() {
               </p>
             </div>
           </AnimatedSection>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
             {/* Plano Corretor */}
             <AnimatedSection delay={200}>
@@ -540,13 +713,13 @@ export default function Landing() {
                     <h3 className="text-xl font-bold">Plano Corretor</h3>
                     <p className="text-gray-400 text-sm">Ideal para profissionais autônomos</p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="text-4xl font-extrabold">
                       <GradientText gradient="primary">R$ 149</GradientText>
                       <span className="text-lg font-normal text-gray-400">/mês</span>
                     </div>
-                    <p className="text-sm text-gray-500">ou R$ 1.490/ano (2 meses grátis)</p>
+                    <p className="text-sm text-gray-300">ou R$ 1.490/ano <span className="text-[#00F6FF] font-medium">(2 meses grátis)</span></p>
                   </div>
 
                   <ul className="space-y-3 text-left">
@@ -564,16 +737,16 @@ export default function Landing() {
                     ))}
                   </ul>
 
-                  <PremiumButton 
-                    size="lg" 
+                  <PremiumButton
+                    size="lg"
                     className="w-full group"
                     onClick={() => openSignupModal(true, 'INDIVIDUAL')}
                   >
                     Começar Agora
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </PremiumButton>
-                  
-                  <p className="text-xs text-gray-500">✅ 7 dias grátis • ✅ Cancele a qualquer momento</p>
+
+                  <p className="text-xs text-gray-400">✅ 7 dias grátis • ✅ Cancele a qualquer momento</p>
                 </div>
               </FloatingCard>
             </AnimatedSection>
@@ -586,19 +759,19 @@ export default function Landing() {
                     <h3 className="text-xl font-bold">Plano Imobiliária</h3>
                     <p className="text-gray-400 text-sm">Para equipes e imobiliárias</p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="text-4xl font-extrabold">
                       <GradientText gradient="primary">Consultar</GradientText>
                     </div>
-                    <p className="text-sm text-gray-500">Preço personalizado por usuário</p>
+                    <p className="text-sm text-gray-300">Preço personalizado por usuário</p>
                   </div>
 
                   <ul className="space-y-3 text-left">
                     {[
                       'Todas as funcionalidades do Plano Corretor',
                       'Múltiplos Usuários',
-                      'Integrações CRM Personalizadas', 
+                      'Integrações CRM Personalizadas',
                       'Dashboard Gerencial',
                       'Suporte Dedicado',
                       'Onboarding Personalizado'
@@ -610,17 +783,17 @@ export default function Landing() {
                     ))}
                   </ul>
 
-                  <PremiumButton 
-                    variant="outline" 
-                    size="lg" 
+                  <PremiumButton
+                    variant="outline"
+                    size="lg"
                     className="w-full group"
                     onClick={() => openWhatsApp('Olá, estou no site e gostaria de mais informações sobre o serviço do Guido para imobiliárias')}
                   >
                     <MessageCircle className="mr-2 h-5 w-5" />
                     Falar com Vendas
                   </PremiumButton>
-                  
-                  <p className="text-xs text-gray-500">📞 Resposta em até 2h • 🎯 Consultoria gratuita</p>
+
+                  <p className="text-xs text-gray-400">📞 Resposta em até 2h • 🎯 Consultoria gratuita</p>
                 </div>
               </FloatingCard>
             </AnimatedSection>
@@ -648,7 +821,7 @@ export default function Landing() {
               </p>
             </div>
           </AnimatedSection>
-          
+
           <div className="space-y-4">
             {[
               {
@@ -749,8 +922,8 @@ export default function Landing() {
           <AnimatedSection delay={400}>
             <div className="text-center mt-12 space-y-4">
               <p className="text-gray-400">Ainda tem dúvidas?</p>
-              <PremiumButton 
-                variant="outline" 
+              <PremiumButton
+                variant="outline"
                 size="lg"
                 onClick={() => openWhatsApp('Olá, estou no site e gostaria de mais informações sobre o Guido')}
               >
@@ -765,14 +938,14 @@ export default function Landing() {
       {/* Footer */}
       <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center space-y-6">
             {/* Um produto da Infuse */}
             <div className="flex flex-col items-center space-y-3">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">Um produto da</span>
-                <img 
-                  src="/images/infuse/Infuse comunicação inteligente logo.png" 
-                  alt="Infuse Comunicação Inteligente" 
+                <img
+                  src="/images/infuse/Infuse comunicação inteligente logo.png"
+                  alt="Infuse Comunicação Inteligente"
                   className="h-16 w-auto"
                 />
               </div>
@@ -780,7 +953,25 @@ export default function Landing() {
                 CNPJ: 32.739.249/0001-00
               </p>
             </div>
-            
+
+            {/* Links Legais */}
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm">
+              <Link to="/termos-de-uso" className="text-gray-400 hover:text-[#00F6FF] transition-colors">
+                Termos de Uso
+              </Link>
+              <span className="text-gray-600 hidden sm:inline">•</span>
+              <Link to="/politica-de-privacidade" className="text-gray-400 hover:text-[#00F6FF] transition-colors">
+                Política de Privacidade
+              </Link>
+              <span className="text-gray-600 hidden sm:inline">•</span>
+              <button
+                onClick={() => openWhatsApp('Olá, preciso de suporte')}
+                className="text-gray-400 hover:text-[#00F6FF] transition-colors"
+              >
+                Suporte
+              </button>
+            </div>
+
             <div className="flex flex-col items-center">
               <p className="text-gray-500 text-sm text-center">
                 © {new Date().getFullYear()} Guido. Transformando a vida dos corretores com inteligência artificial.
@@ -799,21 +990,45 @@ export default function Landing() {
         defaultPlan={defaultPlan}
       />
 
-      {/* Botão Flutuante do WhatsApp */}
-      <div 
-        className="fixed bottom-6 right-6 z-50 cursor-pointer group animate-bounce hover:animate-none transition-all duration-300"
+      {/* Mobile Sticky CTA - aparece após scroll */}
+      <div
+        className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ${showStickyCTA ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
+      >
+        {/* Gradient fade effect */}
+        <div className="absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-[#0D1117] to-transparent pointer-events-none" />
+
+        <div className="bg-[#0D1117]/95 backdrop-blur-xl border-t border-white/10 px-4 py-3 safe-area-bottom">
+          <button
+            onClick={() => {
+              const pricingSection = document.getElementById('pricing');
+              pricingSection?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#00F6FF] to-[#0EA5E9] text-black font-semibold py-3.5 px-6 rounded-xl shadow-[0_4px_20px_rgba(0,246,255,0.4)] active:scale-[0.98] transition-transform"
+          >
+            Começar Grátis por 7 Dias
+            <ArrowRight className="w-5 h-5" />
+          </button>
+          <p className="text-center text-xs text-gray-500 mt-2">
+            ✓ Sem cartão de crédito • ✓ Cancele quando quiser
+          </p>
+        </div>
+      </div>
+
+      {/* Botão Flutuante do WhatsApp - ajustado para mobile */}
+      <div
+        className={`fixed z-50 cursor-pointer group transition-all duration-300 ${showStickyCTA ? 'bottom-28 lg:bottom-6' : 'bottom-6'} right-4 lg:right-6`}
         onClick={() => openWhatsApp('Olá, estou no site e gostaria de mais informações')}
       >
         <div className="relative">
           {/* Shadow effect */}
           <div className="absolute inset-0 rounded-full blur-xl opacity-30 bg-black group-hover:opacity-50 transition-opacity" />
-          
+
           {/* Icon only */}
           <div className="relative hover:scale-110 transition-all duration-300">
             <img
               src="/images/partners/whatsapp-icon-message.png"
               alt="WhatsApp"
-              className="w-16 h-16 object-contain filter drop-shadow-2xl"
+              className="w-14 h-14 lg:w-16 lg:h-16 object-contain filter drop-shadow-2xl"
             />
           </div>
         </div>

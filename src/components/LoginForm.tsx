@@ -20,7 +20,7 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email.trim()) {
       setMessage({ type: 'error', text: 'Por favor, insira seu email' });
       return;
@@ -38,7 +38,7 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
 
     try {
       console.log('[LOGIN] Iniciando login para:', email.trim().toLowerCase());
-      
+
       // PASSO 1: Verificar se o corretor existe no sistema
       const { data: corretor, error: corretorError } = await supabase
         .from('corretores')
@@ -57,20 +57,20 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
       // Se o corretor não existe ou foi deletado
       if (!corretor || corretor.deleted_at) {
         console.warn('[LOGIN] Corretor não encontrado ou deletado');
-        setMessage({ 
-          type: 'error', 
-          text: 'Email não encontrado. Você precisa criar uma conta primeiro.' 
+        setMessage({
+          type: 'error',
+          text: 'Email não encontrado. Você precisa criar uma conta primeiro.'
         });
         return;
       }
-      
+
       console.log('[LOGIN] Corretor encontrado:', corretor.nome);
 
       // PASSO 2: Enviar magic link (corretor existe e está ativo)
       const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       console.log('[LOGIN] Enviando magic link para:', email.trim().toLowerCase());
       console.log('[LOGIN] RedirectTo:', `${baseUrl}/app`);
-      
+
       const { error } = await supabase.auth.signIn({
         email: email.trim().toLowerCase()
       }, {
@@ -83,9 +83,9 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
         console.error('[LOGIN] Erro ao enviar magic link:', error);
         // Tratar erros específicos do Supabase
         if (error.message.includes('Invalid login credentials') || error.message.includes('User not found')) {
-          setMessage({ 
-            type: 'error', 
-            text: 'Email não encontrado. Você precisa criar uma conta primeiro.' 
+          setMessage({
+            type: 'error',
+            text: 'Email não encontrado. Você precisa criar uma conta primeiro.'
           });
           return;
         }
@@ -93,19 +93,19 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
       }
 
       console.log('[LOGIN] Magic link enviado com sucesso!');
-      setMessage({ 
-        type: 'success', 
-        text: 'Link de acesso enviado! Verifique seu email.' 
+      setMessage({
+        type: 'success',
+        text: 'Link de acesso enviado! Verifique seu email.'
       });
-      
+
       // Call success callback if provided
       onSuccess?.();
-      
+
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      setMessage({ 
-        type: 'error', 
-        text: `Erro ao fazer login: ${errorMessage}` 
+      setMessage({
+        type: 'error',
+        text: `Erro ao fazer login: ${errorMessage}`
       });
     } finally {
       setIsLoading(false);
@@ -123,9 +123,9 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
               className="flex flex-col items-center gap-2 font-medium"
             >
               <div className="flex items-center justify-center rounded-md">
-                <img 
-                  src="/images/guido/guido%20logo%20dark%20-%20sem%20fundo.png" 
-                  alt="Guido" 
+                <img
+                  src="/images/guido/guido%20logo%20dark%20-%20sem%20fundo.png"
+                  alt="Guido"
                   className="h-10 w-auto max-w-[120px]"
                 />
               </div>
@@ -175,9 +175,9 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
               </div>
             )}
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={isLoading || !email.trim()}
             >
               {isLoading ? (
@@ -202,9 +202,9 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
 
           {/* Alternative Options */}
           <div className="grid gap-4 sm:grid-cols-1">
-            <Button 
-              variant="outline" 
-              type="button" 
+            <Button
+              variant="outline"
+              type="button"
               className="w-full"
               onClick={() => window.location.href = '/'}
             >
@@ -213,15 +213,15 @@ export function LoginForm({ className, onSuccess, ...props }: LoginFormProps & R
           </div>
         </div>
       </form>
-      
+
       {/* Terms */}
       <div className="text-muted-foreground text-center text-xs text-balance">
         Ao continuar, você concorda com nossos{" "}
-        <a href="#" className="underline underline-offset-4 hover:text-primary">
+        <a href="/termos-de-uso" className="underline underline-offset-4 hover:text-primary">
           Termos de Uso
         </a>{" "}
         e{" "}
-        <a href="#" className="underline underline-offset-4 hover:text-primary">
+        <a href="/politica-de-privacidade" className="underline underline-offset-4 hover:text-primary">
           Política de Privacidade
         </a>
         .

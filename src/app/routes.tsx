@@ -13,6 +13,8 @@ import ClienteDetail from '@/pages/ClienteDetail'
 import { Lembretes } from '@/pages/Lembretes'
 import { Configuracoes } from '@/pages/Configuracoes'
 import PaymentSuccess from '@/pages/PaymentSuccess'
+import TermosDeUso from '@/pages/TermosDeUso'
+import PoliticaDePrivacidade from '@/pages/PoliticaDePrivacidade'
 
 
 // Auth
@@ -21,9 +23,9 @@ import { AuthProvider, useAuth } from '@/hooks/useAuth'
 // Toast
 import { ToastProvider } from '@/contexts/ToastContext'
 
-function PrivateRoute({ children, ...rest }: { children: React.ReactNode; [k: string]: unknown }) {
+function PrivateRoute({ children, ...rest }: { children: React.ReactNode;[k: string]: unknown }) {
   const { isAuthenticated, isLoading } = useAuth()
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -34,7 +36,7 @@ function PrivateRoute({ children, ...rest }: { children: React.ReactNode; [k: st
       </div>
     )
   }
-  
+
   return (
     <Route
       {...rest}
@@ -78,6 +80,10 @@ function AppRoutes() {
         <PrivateRoute path="/configuracoes">
           <Configuracoes />
         </PrivateRoute>
+
+        {/* Páginas públicas legais */}
+        <Route path="/termos-de-uso" component={TermosDeUso} />
+        <Route path="/politica-de-privacidade" component={PoliticaDePrivacidade} />
 
         <Redirect to="/" />
       </Switch>

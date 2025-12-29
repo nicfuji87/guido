@@ -62,12 +62,12 @@ interface ValidationStates {
 
 // Planos são carregados dinamicamente via useAssinatura
 
-export const SignupModal: React.FC<SignupModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
-  skipPlanSelection = false, 
-  defaultPlan = 'INDIVIDUAL' 
+export const SignupModal: React.FC<SignupModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  skipPlanSelection = false,
+  defaultPlan = 'INDIVIDUAL'
 }) => {
   const [step, setStep] = useState<'plan' | 'form' | 'loading' | 'success' | 'error'>('plan');
   const [selectedPlan, setSelectedPlan] = useState<Plano | null>(null);
@@ -91,7 +91,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
     cpf: 'idle',
     cep: 'idle'
   });
-  
+
   const { signup, isLoading, error: signupError, clearError } = useSignup();
   const { validateWhatsApp } = useWhatsAppValidation();
   const { planos, isLoading: planosLoading } = useAssinatura();
@@ -101,12 +101,12 @@ export const SignupModal: React.FC<SignupModalProps> = ({
     if (isOpen) {
       const initialStep = skipPlanSelection ? 'form' : 'plan';
       setStep(initialStep);
-      
+
       // Selecionar plano padrão baseado no tipo
       const planosPorTipo = planos.filter(p => p.tipo_plano === defaultPlan);
       const planoDefault = planosPorTipo[0] || null;
       setSelectedPlan(planoDefault);
-      
+
       setFormData({
         nome: '',
         email: '',
@@ -205,7 +205,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
   const formatWhatsApp = (value: string) => {
     // Remove tudo que não é número
     const numbers = value.replace(/\D/g, '');
-    
+
     // Aplica a máscara (11) 99999-9999
     if (numbers.length <= 2) return `(${numbers}`;
     if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
@@ -221,14 +221,14 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       }
 
       setValidationStates(prev => ({ ...prev, whatsapp: 'validating' }));
-      
+
       try {
         const result = await validateWhatsApp(phone);
-        setValidationStates(prev => ({ 
-          ...prev, 
-          whatsapp: result.isValid ? 'valid' : 'invalid' 
+        setValidationStates(prev => ({
+          ...prev,
+          whatsapp: result.isValid ? 'valid' : 'invalid'
         }));
-        
+
         if (!result.isValid && result.error) {
           setErrors(prev => ({ ...prev, whatsapp: result.error }));
         }
@@ -254,11 +254,11 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       }
 
       setValidationStates(prev => ({ ...prev, cep: 'validating' }));
-      
+
       try {
         const endereco = await buscarEnderecoPorCEP(cep);
         setValidationStates(prev => ({ ...prev, cep: 'valid' }));
-        
+
         // Auto-completar campos de endereço
         setFormData(prev => ({
           ...prev,
@@ -267,7 +267,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
           localidade: endereco.localidade || '',
           uf: endereco.uf || ''
         }));
-        
+
         // Limpar erro se havia
         setErrors(prev => ({ ...prev, cep: undefined }));
       } catch (error) {
@@ -285,7 +285,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       const timer = setTimeout(() => {
         validateWhatsAppDebounced(formData.whatsapp);
       }, 1000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [formData.whatsapp, validateWhatsAppDebounced]);
@@ -296,7 +296,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       const timer = setTimeout(() => {
         validateCEPDebounced(formData.cep);
       }, 800);
-      
+
       return () => clearTimeout(timer);
     }
   }, [formData.cep, validateCEPDebounced]);
@@ -307,14 +307,14 @@ export const SignupModal: React.FC<SignupModalProps> = ({
       // Reset WhatsApp validation state when typing
       setValidationStates(prev => ({ ...prev, whatsapp: 'idle' }));
     }
-    
+
     if (field === 'cpf') {
       value = formatCPF(value);
       // Validate CPF in real-time
       if (isCPFFormatComplete(value)) {
-        setValidationStates(prev => ({ 
-          ...prev, 
-          cpf: validateCPF(value) ? 'valid' : 'invalid' 
+        setValidationStates(prev => ({
+          ...prev,
+          cpf: validateCPF(value) ? 'valid' : 'invalid'
         }));
       } else {
         setValidationStates(prev => ({ ...prev, cpf: 'idle' }));
@@ -338,7 +338,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
     }
 
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Clear error when user starts typing
     if (field in errors) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
@@ -348,8 +348,8 @@ export const SignupModal: React.FC<SignupModalProps> = ({
   const handlePlanSelect = (plano: Plano) => {
     // Plano selecionado para upgrade
     setSelectedPlan(plano);
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       tipo_conta: plano.tipo_plano,
       plano_codigo: plano.codigo_externo
     }));
@@ -358,21 +358,21 @@ export const SignupModal: React.FC<SignupModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setStep('loading');
 
     try {
       const result = await signup(formData);
-      
+
       if (result.success) {
         setStep('success');
         // Modal permanece aberto - usuário fecha manualmente após ler as instruções
       } else {
         setStep('error');
       }
-      
+
     } catch (error) {
       // Erro no cadastro - error contém detalhes
       setStep('error');
@@ -381,15 +381,15 @@ export const SignupModal: React.FC<SignupModalProps> = ({
 
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.8, y: 50 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
+    visible: {
+      opacity: 1,
+      scale: 1,
       y: 0,
       transition: { type: 'spring', damping: 25, stiffness: 300 }
     },
-    exit: { 
-      opacity: 0, 
-      scale: 0.8, 
+    exit: {
+      opacity: 0,
+      scale: 0.8,
       y: 50,
       transition: { duration: 0.2 }
     }
@@ -442,7 +442,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                   {step === 'error' && 'Vamos tentar novamente'}
                 </p>
               </div>
-              
+
               {step !== 'loading' && (
                 <Button
                   variant="ghost"
@@ -519,11 +519,11 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                                 )}
                               </div>
                             </div>
-                            
+
                             {plano.descricao && (
                               <p className="text-sm text-muted-foreground mt-2">{plano.descricao}</p>
                             )}
-                            
+
                             {/* Features do plano */}
                             {plano.recursos && Object.keys(plano.recursos).length > 0 && (
                               <ul className="mt-3 space-y-1">
@@ -563,8 +563,8 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                                 <div>
                                   <h3 className="font-semibold text-foreground">{plano.nome_plano}</h3>
                                   <p className="text-sm text-muted-foreground">
-                                    {plano.limite_corretores === 999999 
-                                      ? 'Corretores ilimitados' 
+                                    {plano.limite_corretores === 999999
+                                      ? 'Corretores ilimitados'
                                       : `Até ${plano.limite_corretores} corretores`
                                     }
                                   </p>
@@ -580,11 +580,11 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                                 )}
                               </div>
                             </div>
-                            
+
                             {plano.descricao && (
                               <p className="text-sm text-muted-foreground mt-2">{plano.descricao}</p>
                             )}
-                            
+
                             {/* Features do plano */}
                             {plano.recursos && Object.keys(plano.recursos).length > 0 && (
                               <ul className="mt-3 space-y-1">
@@ -683,7 +683,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                           value={formData.whatsapp}
                           onChange={(e) => handleInputChange('whatsapp', e.target.value)}
                           className={cn(
-                            "pl-10 pr-10", 
+                            "pl-10 pr-10",
                             errors.whatsapp && "border-red-500",
                             validationStates.whatsapp === 'valid' && "border-green-500",
                             validationStates.whatsapp === 'invalid' && "border-red-500"
@@ -723,7 +723,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                           value={formData.cpf}
                           onChange={(e) => handleInputChange('cpf', e.target.value)}
                           className={cn(
-                            "pl-10 pr-10", 
+                            "pl-10 pr-10",
                             errors.cpf && "border-red-500",
                             validationStates.cpf === 'valid' && "border-green-500",
                             validationStates.cpf === 'invalid' && "border-red-500"
@@ -760,7 +760,7 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                           value={formData.cep}
                           onChange={(e) => handleInputChange('cep', e.target.value)}
                           className={cn(
-                            "pl-10 pr-10", 
+                            "pl-10 pr-10",
                             errors.cep && "border-red-500",
                             validationStates.cep === 'valid' && "border-green-500",
                             validationStates.cep === 'invalid' && "border-red-500"
@@ -889,20 +889,20 @@ export const SignupModal: React.FC<SignupModalProps> = ({
                       )}
                     </Button>
 
-                                         {/* Login Link */}
-                     <div className="text-center text-sm text-muted-foreground">
-                       Já tem uma conta?{" "}
-                       <a href="/login" className="text-primary hover:underline">
-                         Entrar
-                       </a>
-                     </div>
+                    {/* Login Link */}
+                    <div className="text-center text-sm text-muted-foreground">
+                      Já tem uma conta?{" "}
+                      <a href="/login" className="text-primary hover:underline">
+                        Entrar
+                      </a>
+                    </div>
 
                     {/* Terms */}
                     <p className="text-xs text-muted-foreground text-center">
                       Ao continuar, você concorda com nossos{' '}
-                      <a href="#" className="text-primary hover:underline">Termos de Uso</a>
+                      <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Termos de Uso</a>
                       {' '}e{' '}
-                      <a href="#" className="text-primary hover:underline">Política de Privacidade</a>
+                      <a href="/politica-de-privacidade" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Política de Privacidade</a>
                     </p>
                   </motion.form>
                 )}
