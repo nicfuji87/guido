@@ -20,7 +20,8 @@ const martianMono = Martian_Mono({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://guido.com.br";
+// guido.com.br pertence a outra pessoa — o domínio do produto é .net.br.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://guido.net.br";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
