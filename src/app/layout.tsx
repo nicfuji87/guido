@@ -64,10 +64,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR">
-      <body
-        className={`${fraunces.variable} ${archivo.variable} ${martianMono.variable} antialiased`}
-      >
+    // As variáveis do next/font ficam no <html>, não no <body>: o @theme do
+    // Tailwind resolve --font-display/--font-sans no :root, e se as variáveis
+    // de fonte só existirem no body elas computam vazio — a tipografia inteira
+    // cai para a fonte de sistema sem erro nenhum.
+    <html
+      lang="pt-BR"
+      className={`${fraunces.variable} ${archivo.variable} ${martianMono.variable}`}
+    >
+      <body className="antialiased">
         {/* Sem JS não há IntersectionObserver, e o conteúdo ficaria invisível
             para sempre. Este bloco devolve tudo — inclusive para crawlers que
             não executam script. */}

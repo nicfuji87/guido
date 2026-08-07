@@ -15,13 +15,17 @@ export function FinalCta() {
       <div className="relative mx-auto max-w-3xl px-6 text-center">
         <h2
           data-reveal
-          className="font-display text-4xl leading-[1.02] tracking-[-0.03em] sm:text-6xl"
+          className="font-display leading-[0.98] tracking-[-0.035em]"
         >
-          Amanhã de manhã você vai abrir
-          <br />
-          <span className="text-mute-300">duzentas conversas.</span>
-          <br />
-          <span className="text-signal">Ou três.</span>
+          <span className="block text-[clamp(1.75rem,4.5vw,3.25rem)]">
+            Amanhã de manhã você vai abrir
+          </span>
+          <span className="mt-2 block text-[clamp(3rem,9vw,7rem)] text-mute-300">
+            duzentas conversas.
+          </span>
+          <span className="mt-1 block text-[clamp(3rem,9vw,7rem)] text-signal">
+            Ou três.
+          </span>
         </h2>
 
         <p

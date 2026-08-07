@@ -1,4 +1,5 @@
 import { Reveal } from "@/components/site/Reveal";
+import { NoiseLayer } from "@/components/site/NoiseLayer";
 import { Nav } from "@/components/site/Nav";
 import { Hero } from "@/components/site/Hero";
 import { Problem } from "@/components/site/Problem";
@@ -15,6 +16,7 @@ export default function Home() {
   return (
     <>
       <Reveal />
+      <NoiseLayer />
       <Nav />
       <main>
         <Hero />

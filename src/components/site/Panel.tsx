@@ -1,3 +1,5 @@
+import { SectionShell } from "./SectionShell";
+
 const PERFIL = [
   { campo: "Tipo", valor: "Apartamento, 3 quartos" },
   { campo: "Vagas", valor: "2" },
@@ -10,8 +12,8 @@ const PERFIL = [
 
 export function Panel() {
   return (
-    <section className="relative border-t border-ink-600 py-24 sm:py-32">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-14 px-6 lg:grid-cols-[1fr_0.9fr] lg:gap-20">
+    <SectionShell folio="04 — NA CONVERSA">
+      <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-[1fr_0.82fr] lg:gap-24">
         <div data-reveal>
           <p className="eyebrow">Dentro da conversa</p>
           <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.025em] sm:text-5xl">
@@ -88,6 +90,6 @@ export function Panel() {
           </div>
         </div>
       </div>
-    </section>
+    </SectionShell>
   );
 }

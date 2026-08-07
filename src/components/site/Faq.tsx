@@ -1,3 +1,5 @@
+import { SectionShell } from "./SectionShell";
+
 const PERGUNTAS = [
   {
     p: "Preciso parar de usar o WhatsApp que já uso?",
@@ -31,8 +33,8 @@ const PERGUNTAS = [
 
 export function Faq() {
   return (
-    <section className="relative border-t border-ink-600 py-24 sm:py-32">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+    <SectionShell folio="07 — DÚVIDAS">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:gap-20">
         <div data-reveal>
           <p className="eyebrow">Dúvidas</p>
           <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.025em] sm:text-5xl">
@@ -60,6 +62,6 @@ export function Faq() {
           ))}
         </div>
       </div>
-    </section>
+    </SectionShell>
   );
 }

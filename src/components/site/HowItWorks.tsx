@@ -1,3 +1,5 @@
+import { SectionShell } from "./SectionShell";
+
 const PASSOS = [
   {
     n: "01",
@@ -24,11 +26,8 @@ const PASSOS = [
 
 export function HowItWorks() {
   return (
-    <section
-      id="como-funciona"
-      className="relative border-t border-ink-600 py-24 sm:py-32"
-    >
-      <div className="mx-auto max-w-6xl px-6">
+    <SectionShell id="como-funciona" folio="02 — COMO FUNCIONA">
+      <div className="lg:pl-[30%]">
         <div data-reveal className="max-w-2xl">
           <p className="eyebrow">Como funciona</p>
           <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.025em] sm:text-5xl">
@@ -65,6 +64,6 @@ export function HowItWorks() {
           ))}
         </ol>
       </div>
-    </section>
+    </SectionShell>
   );
 }

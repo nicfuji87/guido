@@ -1,9 +1,16 @@
 import Link from "next/link";
+import { SectionShell } from "./SectionShell";
 
 /**
- * ATENÇÃO — preços provisórios.
- * O custo por agente da licença Chatwoot (CWMKT) ainda não foi confirmado.
- * Ele é o piso da margem: sem esse número, nenhum preço aqui é definitivo.
+ * Base de custo (ago/2026): plano Negócios da CWMKT, R$ 499/mês FIXO —
+ * 25 conexões, usuários ilimitados, Kanban e Perfex CRM inclusos, CRM negociado.
+ *
+ * O gargalo é CONEXÃO, não usuário. Corretor autônomo com número próprio
+ * consome 1 conexão, logo ~25 assinantes por instância. A R$ 97 o break-even
+ * é 6 assinantes; a 25 o custo cai para R$ 19,96 por corretor.
+ *
+ * Imobiliária em número central consome 1 conexão para a equipe inteira —
+ * é onde a economia deste plano fica desproporcional.
  */
 const PLANOS = [
   {
@@ -44,11 +51,8 @@ const PLANOS = [
 
 export function Pricing() {
   return (
-    <section
-      id="planos"
-      className="relative border-t border-ink-600 py-24 sm:py-32"
-    >
-      <div className="mx-auto max-w-6xl px-6">
+    <SectionShell id="planos" folio="06 — PLANOS">
+      <div>
         <div data-reveal className="max-w-2xl">
           <p className="eyebrow">Planos</p>
           <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.025em] sm:text-5xl">
@@ -140,6 +144,6 @@ export function Pricing() {
           </Link>
         </div>
       </div>
-    </section>
+    </SectionShell>
   );
 }

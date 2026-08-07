@@ -1,3 +1,5 @@
+import { SectionShell } from "./SectionShell";
+
 /**
  * `status` controla o selo exibido no card.
  * IMPORTANTE: manter sincronizado com o que realmente está em produção —
@@ -9,127 +11,134 @@ type Recurso = {
   titulo: string;
   texto: string;
   status: Status;
-  destaque?: boolean;
 };
 
-const RECURSOS: Recurso[] = [
+/** O que já sustenta a assinatura hoje. Recebem peso visual. */
+const PILARES: Recurso[] = [
   {
     titulo: "Radar de lead esfriando",
     texto:
       "“Três clientes quentes estão sem resposta há mais de duas horas.” Você descobre antes de perder, não depois.",
     status: "agora",
-    destaque: true,
   },
   {
     titulo: "A ficha se preenche sozinha",
     texto:
       "Quartos, bairro, faixa de preço, FGTS, prazo de mudança. Extraído da conversa, com a mensagem de origem guardada.",
     status: "agora",
-    destaque: true,
   },
   {
     titulo: "A fila do dia — com o porquê",
     texto:
       "Não é uma lista. É “fale com a Márcia agora, porque ela pediu a planta ontem às 19h e está pré-aprovada”.",
     status: "agora",
-    destaque: true,
   },
+];
+
+/** O que vem depois. Compactos de propósito: prometem sem gritar. */
+const HORIZONTE: Recurso[] = [
   {
     titulo: "Ciclo de visita completo",
     texto:
-      "Detecta a intenção, agenda, lembra o cliente na véspera — e no dia seguinte pergunta o que ele achou. Ninguém coleta esse retorno. Você vai.",
+      "Agenda, lembra na véspera e no dia seguinte pergunta o que o cliente achou.",
     status: "em-breve",
   },
   {
     titulo: "Áudio, de verdade",
     texto:
-      "Cliente manda áudio de dois minutos. O Guido ouve, entende e já deixa a resposta pronta. Inclusive em áudio.",
+      "Áudio de dois minutos vira resposta pronta. Inclusive em áudio.",
     status: "em-breve",
   },
   {
     titulo: "Cobrança de documentos",
     texto:
-      "Financiamento não trava por falta de vontade, trava por falta de holerite. O Guido cobra sozinho até chegar.",
+      "Financiamento trava por falta de holerite. O Guido cobra até chegar.",
     status: "em-breve",
   },
   {
-    titulo: "Imóvel certo para o cliente certo",
-    texto:
-      "Com seu estoque conectado, ele cruza o que a pessoa procura com o que você tem — dentro da conversa, com o texto pronto.",
+    titulo: "Imóvel certo, cliente certo",
+    texto: "Cruza seu estoque com o que a pessoa procura, dentro da conversa.",
     status: "em-breve",
   },
   {
-    titulo: "Qual portal dá venda, não lead",
-    texto:
-      "Você sabe quanto paga por portal. O Guido mostra qual deles vira escritura.",
+    titulo: "Qual portal dá venda",
+    texto: "Você sabe quanto paga por portal. Descubra qual vira escritura.",
     status: "em-breve",
   },
 ];
 
 function Selo({ status }: { status: Status }) {
-  if (status === "agora") {
-    return (
-      <span className="font-mono text-[0.625rem] tracking-wide text-sage">
-        disponível
-      </span>
-    );
-  }
   return (
-    <span className="font-mono text-[0.625rem] tracking-wide text-mute-300">
-      em breve
+    <span
+      className={`font-mono text-[0.625rem] tracking-wide ${
+        status === "agora" ? "text-sage" : "text-mute-300"
+      }`}
+    >
+      {status === "agora" ? "disponível" : "em breve"}
     </span>
   );
 }
 
 export function Features() {
   return (
-    <section
-      id="recursos"
-      className="relative border-t border-ink-600 py-24 sm:py-32"
-    >
-      <div className="mx-auto max-w-6xl px-6">
-        <div data-reveal className="max-w-2xl">
-          <p className="eyebrow">Recursos</p>
-          <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.025em] sm:text-5xl">
-            Feito para vender imóvel.
-            <span className="text-mute-300">
-              {" "}
-              Não é chatbot genérico com nome novo.
-            </span>
-          </h2>
-        </div>
-
-        <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-ink-500 bg-ink-500 sm:grid-cols-2 lg:grid-cols-4">
-          {RECURSOS.map((recurso, i) => (
-            <article
-              key={recurso.titulo}
-              data-reveal
-              style={{ transitionDelay: `${(i % 4) * 70}ms` }}
-              className={`group flex flex-col p-6 transition-colors ${
-                recurso.destaque
-                  ? "bg-ink-600 hover:bg-ink-500"
-                  : "bg-ink-700 hover:bg-ink-600"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    recurso.destaque ? "bg-signal" : "bg-ink-400"
-                  }`}
-                />
-                <Selo status={recurso.status} />
-              </div>
-
-              <h3 className="mt-5 font-display text-xl leading-tight tracking-[-0.015em] text-paper">
-                {recurso.titulo}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-mute-200">
-                {recurso.texto}
-              </p>
-            </article>
-          ))}
-        </div>
+    <SectionShell id="recursos" folio="05 — RECURSOS">
+      <div data-reveal className="max-w-2xl">
+        <p className="eyebrow">Recursos</p>
+        <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.025em] sm:text-5xl">
+          Feito para vender imóvel.
+          <span className="text-mute-300">
+            {" "}
+            Não é chatbot genérico com nome novo.
+          </span>
+        </h2>
       </div>
-    </section>
+
+      {/* Hierarquia explícita: três pilares grandes, o resto em faixa estreita.
+          Uma grade uniforme de oito diria que tudo pesa igual — não pesa. */}
+      <div className="mt-16 grid gap-5 lg:grid-cols-3">
+        {PILARES.map((r, i) => (
+          <article
+            key={r.titulo}
+            data-reveal
+            style={{ transitionDelay: `${i * 90}ms` }}
+            className="group relative overflow-hidden rounded-2xl border border-ink-500 bg-ink-700 p-8 transition-colors duration-500 hover:border-signal-dim"
+          >
+            <span
+              aria-hidden
+              className="absolute -top-px left-8 h-px w-16 bg-signal opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            />
+            <div className="flex items-center justify-between">
+              <span className="h-1.5 w-1.5 rounded-full bg-signal" />
+              <Selo status={r.status} />
+            </div>
+            <h3 className="mt-6 font-display text-2xl leading-tight tracking-[-0.02em] text-paper">
+              {r.titulo}
+            </h3>
+            <p className="mt-3.5 text-[0.9375rem] leading-relaxed text-mute-100">
+              {r.texto}
+            </p>
+          </article>
+        ))}
+      </div>
+
+      <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-ink-500 bg-ink-500 sm:grid-cols-2 lg:grid-cols-5">
+        {HORIZONTE.map((r, i) => (
+          <article
+            key={r.titulo}
+            data-reveal
+            style={{ transitionDelay: `${i * 60}ms` }}
+            className="bg-ink-700 p-5 transition-colors duration-500 hover:bg-ink-600"
+          >
+            <Selo status={r.status} />
+            <h3 className="mt-4 font-display text-base leading-snug tracking-[-0.01em] text-paper-dim">
+              {r.titulo}
+            </h3>
+            <p className="mt-2 text-[0.8125rem] leading-relaxed text-mute-300">
+              {r.texto}
+            </p>
+          </article>
+        ))}
+      </div>
+    </SectionShell>
   );
 }

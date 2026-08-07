@@ -17,6 +17,7 @@
 
   /* Papel */
   --color-paper: #f4efe6;
+  --color-paper-lift: #fbf8f2;
   --color-paper-dim: #ddd5c8;
 
   /* Texto sobre tinta */
@@ -39,7 +40,51 @@
 
   --animate-rise: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-glow: glow 3.5s ease-in-out infinite;
-  --animate-marquee: marquee 45s linear infinite;
+  --animate-drift: drift 90s linear infinite;
+  --animate-ignite: ignite 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-numeral: numeral 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-4%, -8%, 0);
+  }
+}
+
+/* O "três" não aparece: ele acende. */
+@keyframes ignite {
+  0% {
+    opacity: 0;
+    color: var(--color-ink-400);
+    text-shadow: none;
+  }
+  55% {
+    opacity: 1;
+    color: var(--color-signal-hot);
+    text-shadow: 0 0 60px var(--color-signal);
+  }
+  100% {
+    opacity: 1;
+    color: var(--color-signal);
+    text-shadow: 0 0 34px color-mix(in oklab, var(--color-signal) 45%, transparent);
+  }
+}
+
+/* O 200 desce pesado, como um número de balanço. */
+@keyframes numeral {
+  from {
+    opacity: 0;
+    transform: translateY(-6%) scale(1.06);
+    letter-spacing: 0.06em;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    letter-spacing: -0.05em;
+  }
 }
 
 @keyframes rise {
@@ -77,6 +122,9 @@
    -------------------------------------------------------------------------- */
 
 html {
+  /* A cor de base fica aqui, e não no body, para que a camada de ruído
+     (fixed, z-index negativo, dentro do body) tenha onde aparecer. */
+  background: var(--color-ink-800);
   scroll-behavior: smooth;
   /* Fraunces é variável: WONK=0 e SOFT=0 deixam a serifa autoritária,
      não artesanal. O produto fala de dinheiro, não de padaria. */
@@ -84,7 +132,7 @@ html {
 }
 
 body {
-  background: var(--color-ink-800);
+  background: transparent;
   color: var(--color-paper);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -116,6 +164,35 @@ body {
     var(--color-ink-500) 88%,
     transparent
   );
+}
+
+/* --------------------------------------------------------------------------
+   Seção invertida — papel dentro da tinta.
+   Um bloco claro no meio de um site escuro quebra a monotonia melhor do que
+   qualquer efeito. Aqui ele marca o momento em que o funil vira algo tangível.
+   -------------------------------------------------------------------------- */
+.invertido {
+  background: var(--color-paper);
+  color: var(--color-ink-800);
+}
+
+.invertido .eyebrow {
+  /* 70% e não 55%: abaixo disso o mono de 11px não alcança 4.5:1 no papel. */
+  color: color-mix(in oklab, var(--color-ink-800) 70%, transparent);
+}
+
+/* Numeração de margem, como revista. Dá ritmo vertical sem pedir atenção. */
+.folio {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--color-ink-400);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.invertido .folio {
+  color: var(--color-paper-dim);
 }
 
 /* Etiqueta de seção — mono, caixa alta, discreta */
