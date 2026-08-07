@@ -1,7 +1,0 @@
-# AI dev note: Configuração da Edge Function uazapi-validate-number
-# Esta função é PÚBLICA - não exige autenticação JWT
-# Usada no modal de cadastro antes do usuário estar logado
-
-[function]
-verify_jwt = false
-

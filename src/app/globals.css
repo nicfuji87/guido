@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Guido — sistema de design
+   Conceito: "sinal no ruído". O corretor tem 200 conversas; 3 valem dinheiro.
+   Tudo é tinta quente e silencioso, exceto o que importa — que é âmbar.
+   ========================================================================== */
+
+@theme {
+  /* Tinta quente — nunca azulada. Papel e tinta, não tela de computador. */
+  --color-ink-900: #0c0a08;
+  --color-ink-800: #100e0b;
+  --color-ink-700: #17140f;
+  --color-ink-600: #1f1b16;
+  --color-ink-500: #2a251e;
+  --color-ink-400: #3a332a;
+
+  /* Papel */
+  --color-paper: #f4efe6;
+  --color-paper-dim: #ddd5c8;
+
+  /* Texto sobre tinta */
+  --color-mute-100: #b3a89a;
+  --color-mute-200: #8c8175;
+  --color-mute-300: #635b52;
+
+  /* SINAL — usar com avareza. Se tudo é âmbar, nada é. */
+  --color-signal: #f2a33c;
+  --color-signal-hot: #ffc46b;
+  --color-signal-dim: #7d5a24;
+
+  /* Secundárias */
+  --color-clay: #b4451f;
+  --color-sage: #7d9471;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-martian), ui-monospace, monospace;
+
+  --animate-rise: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-glow: glow 3.5s ease-in-out infinite;
+  --animate-marquee: marquee 45s linear infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px var(--color-signal-dim), 0 0 22px -6px var(--color-signal);
+  }
+  50% {
+    box-shadow: 0 0 0 1px var(--color-signal), 0 0 40px -4px var(--color-signal);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+
+html {
+  scroll-behavior: smooth;
+  /* Fraunces é variável: WONK=0 e SOFT=0 deixam a serifa autoritária,
+     não artesanal. O produto fala de dinheiro, não de padaria. */
+  font-variation-settings: "SOFT" 0, "WONK" 0;
+}
+
+body {
+  background: var(--color-ink-800);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-ink-900);
+}
+
+/* Grão. Dá peso de impressão à tinta chapada e evita o look de "tela". */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Régua fina que separa seções sem virar uma linha morta */
+.rule {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-ink-500) 12%,
+    var(--color-ink-500) 88%,
+    transparent
+  );
+}
+
+/* Etiqueta de seção — mono, caixa alta, discreta */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-mute-200);
+}
+
+/* Revelação no scroll. Começa escondido em CSS puro — nada de script mutando
+   o <html> antes da hidratação. Sem JS, o <noscript> do layout devolve tudo
+   à visibilidade. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  [data-reveal],
+  [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
