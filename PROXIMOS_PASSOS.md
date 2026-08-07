@@ -116,7 +116,7 @@ Frontend → Edge Functions → UAZapi
 |------|--------|
 | Banco de dados | ✅ COMPLETO |
 | Edge Functions | ✅ DEPLOYADAS |
-| Secrets Supabase | ⚠️ **VOCÊ PRECISA CONFIGURAR** |
+| Secrets Supabase | ✅ CONFIGURADO |
 | Variáveis Vercel | ⚠️ **VOCÊ PRECISA CONFIGURAR** |
 | Frontend | 🔴 PENDENTE |
 
