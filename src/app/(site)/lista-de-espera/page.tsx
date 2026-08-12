@@ -49,7 +49,7 @@ export default function ListaDeEspera() {
     <>
       <Reveal />
       <NoiseLayer />
-      <Nav />
+      <Nav anuncio={false} />
 
       <main className="grain relative overflow-hidden pt-32 pb-24 sm:pt-40">
         <div
@@ -88,9 +88,9 @@ export default function ListaDeEspera() {
                 className="animate-rise mt-8 max-w-lg text-lg leading-relaxed text-mute-100"
                 style={{ animationDelay: "0.44s" }}
               >
-                O Guido ainda está sendo construído. Quem entrar agora entra
-                como fundador — com preço travado e influência no que vai ser
-                feito.
+                O Guido ainda está sendo construído. A lista é aberta a todo
+                mundo — e as {OFERTA.vagas} primeiras pessoas dela entram como
+                fundadoras, por ordem de chegada.
               </p>
 
               <ul className="mt-12 space-y-9">
@@ -120,11 +120,15 @@ export default function ListaDeEspera() {
                 data-reveal
                 className="mt-12 max-w-lg rounded-2xl border border-ink-500 bg-ink-700 p-6"
               >
-                <p className="eyebrow">Por que só {OFERTA.vagas}?</p>
+                <p className="eyebrow">
+                  Por que só {OFERTA.vagas} com preço de fundador?
+                </p>
                 <p className="mt-3 leading-relaxed text-mute-200">
-                  Porque é quantos WhatsApp a nossa infraestrutura atende hoje.
-                  Não é gatilho de venda — é o teto real. Quando ele subir, o
-                  preço de lançamento já vai estar valendo.
+                  Porque é quantos WhatsApp a nossa infraestrutura atende na
+                  primeira turma. Não é gatilho de venda — é o teto real. A
+                  lista continua aberta depois disso: quem entrar além das{" "}
+                  {OFERTA.vagas} primeiras é avisado assim que abrirmos a turma
+                  seguinte, pelo preço de lançamento.
                 </p>
               </div>
             </div>
@@ -137,10 +141,11 @@ export default function ListaDeEspera() {
               >
                 <div className="rounded-2xl border border-ink-500 bg-ink-700 p-7 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] sm:p-8">
                   <p className="font-display text-2xl leading-tight tracking-[-0.02em] text-paper">
-                    Garanta seu preço de fundador
+                    Entre agora, entre cedo
                   </p>
                   <p className="mt-2 text-sm leading-relaxed text-mute-200">
-                    Leva vinte segundos. Aviso você no WhatsApp quando abrir.
+                    Leva vinte segundos. Quanto antes você entrar, mais perto
+                    fica das {OFERTA.vagas} vagas de fundador.
                   </p>
 
                   <div className="mt-7">

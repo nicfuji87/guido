@@ -8,9 +8,28 @@ const LINKS = [
   { href: "#planos", label: "Planos" },
 ];
 
-export function Nav() {
+/**
+ * `anuncio` some na própria página da lista — não faz sentido chamar alguém
+ * para onde ele já está.
+ */
+export function Nav({ anuncio = true }: { anuncio?: boolean } = {}) {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-ink-600/80 bg-ink-800/80 backdrop-blur-xl">
+      {anuncio && (
+        <Link
+          href="/lista-de-espera"
+          className="group block border-b border-signal-dim/30 bg-signal/[0.07] px-6 py-2 text-center transition-colors hover:bg-signal/[0.13]"
+        >
+          <span className="font-mono text-[0.6875rem] tracking-wide text-mute-100">
+            <span className="text-signal">Em construção.</span> 25 vagas de
+            fundador, com preço travado para sempre{" "}
+            <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </span>
+        </Link>
+      )}
+
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link
           href="/"

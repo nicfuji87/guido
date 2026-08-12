@@ -111,8 +111,8 @@ export function DayOne() {
         data-reveal
         className="mt-6 font-mono text-xs leading-relaxed text-ink-400"
       >
-        Exemplo ilustrativo · O import de histórico está disponível na conexão
-        por número próprio
+        Exemplo ilustrativo · O import de histórico virá na conexão por número
+        próprio
       </p>
     </SectionShell>
   );

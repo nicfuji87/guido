@@ -20,7 +20,7 @@ export default function Privacidade() {
     <>
       <Nav />
 
-      <main className="relative mx-auto max-w-3xl px-6 pt-36 pb-24 sm:pt-44">
+      <main className="relative mx-auto max-w-3xl px-6 pt-44 pb-24 sm:pt-52">
         <p className="eyebrow">Privacidade</p>
         <h1 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.03em] sm:text-5xl">
           O que fazemos com os seus dados.

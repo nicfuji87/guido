@@ -14,7 +14,7 @@ function Botao() {
       disabled={pending}
       className="group mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-signal px-7 py-4 text-base font-medium text-ink-900 transition-all duration-300 hover:bg-signal-hot hover:shadow-[0_0_36px_-6px_var(--color-signal)] disabled:cursor-wait disabled:opacity-60"
     >
-      {pending ? "Guardando sua vaga…" : "Garantir minha vaga"}
+      {pending ? "Entrando na lista…" : "Quero minha vaga de fundador"}
       {!pending && (
         <span className="transition-transform duration-300 group-hover:translate-x-1">
           →
@@ -34,11 +34,15 @@ export function WaitlistForm({ origem = "site" }: { origem?: string }) {
     return (
       <div className="rounded-2xl border border-signal-dim bg-ink-700 p-8 text-center">
         <p className="font-display text-3xl tracking-[-0.02em] text-signal">
-          Vaga garantida.
+          Você está na lista.
         </p>
+        {/* Não prometemos a vaga aqui: não temos como saber a posição dele
+            neste momento, e prometer para 200 pessoas o que só 25 recebem
+            destrói a confiança justamente com quem queremos. */}
         <p className="mt-4 leading-relaxed text-mute-100">
-          Você entrou na Turma Fundadores. Vou te chamar no WhatsApp assim que
-          sua conta estiver pronta — e seu preço de fundador já está reservado.
+          Te chamo no WhatsApp para confirmar sua posição. As 25 primeiras
+          entram como fundadoras, com o preço travado — e a ordem é a de
+          chegada.
         </p>
         <p className="mt-5 font-mono text-xs leading-relaxed text-mute-300">
           Se não reconhecer a mensagem quando chegar, é só responder “sair”.

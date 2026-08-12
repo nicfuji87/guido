@@ -1,11 +1,11 @@
 import { SectionShell } from "./SectionShell";
 
 /**
- * `status` controla o selo exibido no card.
- * IMPORTANTE: manter sincronizado com o que realmente está em produção —
- * marcar como "agora" algo que ainda não existe queima a confiança na largada.
+ * Nada está no ar ainda. "lancamento" é o que a Turma Fundadores recebe no
+ * primeiro dia; "depois" vem nas ondas seguintes. Chamar qualquer coisa de
+ * "disponível" hoje seria mentira — e o corretor descobre em uma semana.
  */
-type Status = "agora" | "em-breve";
+type Status = "lancamento" | "depois";
 
 type Recurso = {
   titulo: string;
@@ -13,25 +13,25 @@ type Recurso = {
   status: Status;
 };
 
-/** O que já sustenta a assinatura hoje. Recebem peso visual. */
+/** O que o fundador recebe no primeiro dia. Recebem peso visual. */
 const PILARES: Recurso[] = [
   {
     titulo: "Radar de lead esfriando",
     texto:
       "“Três clientes quentes estão sem resposta há mais de duas horas.” Você descobre antes de perder, não depois.",
-    status: "agora",
+    status: "lancamento",
   },
   {
     titulo: "A ficha se preenche sozinha",
     texto:
       "Quartos, bairro, faixa de preço, FGTS, prazo de mudança. Extraído da conversa, com a mensagem de origem guardada.",
-    status: "agora",
+    status: "lancamento",
   },
   {
     titulo: "A fila do dia — com o porquê",
     texto:
       "Não é uma lista. É “fale com a Márcia agora, porque ela pediu a planta ontem às 19h e está pré-aprovada”.",
-    status: "agora",
+    status: "lancamento",
   },
 ];
 
@@ -41,29 +41,29 @@ const HORIZONTE: Recurso[] = [
     titulo: "Ciclo de visita completo",
     texto:
       "Agenda, lembra na véspera e no dia seguinte pergunta o que o cliente achou.",
-    status: "em-breve",
+    status: "depois",
   },
   {
     titulo: "Áudio, de verdade",
     texto:
       "Áudio de dois minutos vira resposta pronta. Inclusive em áudio.",
-    status: "em-breve",
+    status: "depois",
   },
   {
     titulo: "Cobrança de documentos",
     texto:
       "Financiamento trava por falta de holerite. O Guido cobra até chegar.",
-    status: "em-breve",
+    status: "depois",
   },
   {
     titulo: "Imóvel certo, cliente certo",
     texto: "Cruza seu estoque com o que a pessoa procura, dentro da conversa.",
-    status: "em-breve",
+    status: "depois",
   },
   {
     titulo: "Qual portal dá venda",
     texto: "Você sabe quanto paga por portal. Descubra qual vira escritura.",
-    status: "em-breve",
+    status: "depois",
   },
 ];
 
@@ -71,10 +71,10 @@ function Selo({ status }: { status: Status }) {
   return (
     <span
       className={`font-mono text-[0.625rem] tracking-wide ${
-        status === "agora" ? "text-sage" : "text-mute-300"
+        status === "lancamento" ? "text-sage" : "text-mute-300"
       }`}
     >
-      {status === "agora" ? "disponível" : "em breve"}
+      {status === "lancamento" ? "no lançamento" : "depois"}
     </span>
   );
 }

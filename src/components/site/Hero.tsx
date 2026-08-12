@@ -3,7 +3,7 @@ import { ConversationField } from "./ConversationField";
 
 export function Hero() {
   return (
-    <section className="grain relative overflow-hidden pt-36 pb-24 sm:pt-44 sm:pb-32">
+    <section className="grain relative overflow-hidden pt-44 pb-24 sm:pt-52 sm:pb-32">
       {/* Halo âmbar frio — profundidade, não decoração */}
       <div
         aria-hidden
