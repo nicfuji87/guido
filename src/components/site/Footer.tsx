@@ -7,15 +7,12 @@ const GRUPOS = [
       { href: "#como-funciona", label: "Como funciona" },
       { href: "#recursos", label: "Recursos" },
       { href: "#planos", label: "Planos" },
-      { href: "/imobiliarias", label: "Para imobiliárias" },
+      { href: "/lista-de-espera", label: "Turma Fundadores" },
     ],
   },
   {
-    titulo: "Conta",
-    links: [
-      { href: "/entrar", label: "Entrar" },
-      { href: "/cadastro", label: "Criar conta" },
-    ],
+    titulo: "Começar",
+    links: [{ href: "/lista-de-espera", label: "Entrar na lista" }],
   },
   {
     titulo: "Legal",

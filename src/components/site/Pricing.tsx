@@ -27,7 +27,7 @@ const PLANOS = [
       "Mensagens prontas para aprovar",
       "Conversas ilimitadas",
     ],
-    cta: "Testar 7 dias grátis",
+    cta: "Garantir preço de fundador",
     destaque: false,
   },
   {
@@ -44,7 +44,7 @@ const PLANOS = [
       "Follow-up automático por etapa",
       "Ciclo de visita completo",
     ],
-    cta: "Testar 7 dias grátis",
+    cta: "Garantir preço de fundador",
     destaque: true,
   },
 ];
@@ -110,7 +110,7 @@ export function Pricing() {
               </ul>
 
               <Link
-                href="/cadastro"
+                href="/lista-de-espera"
                 className={`mt-8 inline-flex items-center justify-center rounded-full px-6 py-3.5 font-medium transition-all ${
                   plano.destaque
                     ? "bg-signal text-ink-900 hover:bg-signal-hot hover:shadow-[0_0_30px_-6px_var(--color-signal)]"
@@ -137,7 +137,7 @@ export function Pricing() {
             </p>
           </div>
           <Link
-            href="/imobiliarias"
+            href="/lista-de-espera"
             className="inline-flex shrink-0 items-center justify-center rounded-full border border-ink-400 px-6 py-3 text-sm text-paper transition-colors hover:border-mute-300"
           >
             Falar sobre imobiliária

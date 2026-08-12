@@ -68,10 +68,10 @@ export function Hero() {
               style={{ animationDelay: "1.22s" }}
             >
               <Link
-                href="/cadastro"
+                href="/lista-de-espera"
                 className="group inline-flex items-center justify-center gap-2 rounded-full bg-signal px-7 py-3.5 font-medium text-ink-900 transition-all duration-300 hover:bg-signal-hot hover:shadow-[0_0_36px_-6px_var(--color-signal)]"
               >
-                Testar 7 dias grátis
+                Garantir vaga de fundador
                 <span className="transition-transform duration-300 group-hover:translate-x-1">
                   →
                 </span>
@@ -88,8 +88,8 @@ export function Hero() {
               className="animate-rise mt-7 font-mono text-xs leading-relaxed text-mute-300"
               style={{ animationDelay: "1.32s" }}
             >
-              Sem cartão de crédito · Conecta no seu número atual · Você
-              continua atendendo no WhatsApp
+              25 vagas de fundador · Preço travado para sempre · Sem cartão de
+              crédito agora
             </p>
           </div>
 

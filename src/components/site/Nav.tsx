@@ -33,17 +33,12 @@ export function Nav() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Sem "Entrar" enquanto não existe conta para entrar. */}
           <Link
-            href="/entrar"
-            className="hidden text-sm text-mute-100 transition-colors hover:text-paper sm:block"
-          >
-            Entrar
-          </Link>
-          <Link
-            href="/cadastro"
+            href="/lista-de-espera"
             className="rounded-full bg-paper px-5 py-2 text-sm font-medium text-ink-900 transition-colors hover:bg-signal"
           >
-            Testar grátis
+            Entrar na lista
           </Link>
         </div>
       </nav>

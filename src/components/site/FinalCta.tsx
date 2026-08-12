@@ -32,13 +32,13 @@ export function FinalCta() {
           data-reveal
           className="mx-auto mt-8 max-w-lg text-lg leading-relaxed text-mute-100"
         >
-          Sete dias grátis. Conecta em dois minutos, no seu número atual. Se não
-          fizer sentido, você desconecta e não perdeu nada.
+          O Guido está sendo construído agora. São 25 vagas de fundador, com
+          preço travado para sempre e o primeiro mês por nossa conta.
         </p>
 
         <div data-reveal className="mt-10">
           <Link
-            href="/cadastro"
+            href="/lista-de-espera"
             className="group inline-flex items-center justify-center gap-2 rounded-full bg-signal px-9 py-4 text-lg font-medium text-ink-900 transition-all hover:bg-signal-hot hover:shadow-[0_0_44px_-8px_var(--color-signal)]"
           >
             Começar agora
