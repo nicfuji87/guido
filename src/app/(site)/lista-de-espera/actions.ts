@@ -1,5 +1,7 @@
 "use server";
 
+import { credenciaisSupabase } from "@/lib/supabase-env";
+
 export type EstadoLista =
   | { status: "inicial" }
   | { status: "ok" }
@@ -46,8 +48,7 @@ export async function entrarNaLista(
     return { status: "erro", mensagem: "Confira o e-mail.", campo: "email" };
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const { url, chave } = credenciaisSupabase();
 
   if (!url || !chave) {
     // Sem banco configurado, é melhor gritar no log do servidor do que
