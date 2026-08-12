@@ -48,15 +48,27 @@ export async function entrarNaLista(
     return { status: "erro", mensagem: "Confira o e-mail.", campo: "email" };
   }
 
+  /**
+   * Rede de segurança: se a gravação falhar por qualquer motivo, o lead sai
+   * no log do servidor com um marcador fácil de procurar. Perder um cadastro
+   * em silêncio é pior do que ter nome e telefone num log de acesso restrito
+   * por alguns dias — foi exatamente assim que a primeira leva se perdeu.
+   */
+  const registrarPerda = (motivo: string) =>
+    console.error(
+      `[LEAD-NAO-SALVO] motivo=${motivo} nome=${nome} whatsapp=${whatsapp} email=${email || "-"} perfil=${perfil || "-"}`,
+    );
+
   const { url, chave } = credenciaisSupabase();
 
   if (!url || !chave) {
     // Sem banco configurado, é melhor gritar no log do servidor do que
     // engolir o cadastro e o corretor achar que entrou na lista.
-    console.error("[lista-de-espera] Supabase não configurado no ambiente.");
+    registrarPerda("env-ausente");
     return {
       status: "erro",
-      mensagem: "Não consegui salvar agora. Tente de novo em instantes.",
+      mensagem:
+        "Seu cadastro NÃO foi salvo. Tente de novo — se continuar dando erro, nos chame que a gente inscreve você na mão.",
     };
   }
 
@@ -86,6 +98,7 @@ export async function entrarNaLista(
     if (!resposta.ok) {
       const corpo = await resposta.text();
       if (corpo.includes("23505")) return { status: "ok" };
+      registrarPerda(`http-${resposta.status}`);
       console.error(
         "[lista-de-espera] Supabase respondeu",
         resposta.status,
@@ -93,16 +106,19 @@ export async function entrarNaLista(
       );
       return {
         status: "erro",
-        mensagem: "Não consegui salvar agora. Tente de novo em instantes.",
+        mensagem:
+          "Seu cadastro NÃO foi salvo. Tente de novo — se continuar dando erro, nos chame que a gente inscreve você na mão.",
       };
     }
 
     return { status: "ok" };
   } catch (erro) {
+    registrarPerda("rede");
     console.error("[lista-de-espera] Falha de rede:", erro);
     return {
       status: "erro",
-      mensagem: "Não consegui salvar agora. Tente de novo em instantes.",
+      mensagem:
+        "Seu cadastro NÃO foi salvo. Tente de novo — se continuar dando erro, nos chame que a gente inscreve você na mão.",
     };
   }
 }
